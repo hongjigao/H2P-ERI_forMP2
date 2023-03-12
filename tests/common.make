@@ -1,9 +1,9 @@
 LIBXC_INSTALL_DIR    = /home/mkurisu/Workspace/libxc/install
 H2PERI_INSTALL_DIR   = ..
-SIMINT_INSTALL_DIR   = /home/mkurisu/Workspace/simint/build-avx/install
-YATDFT_INSTALL_DIR   = /home/mkurisu/Workspace/YATDFT
-H2PACK_INSTALL_DIR   = /home/mkurisu/Workspace/H2Pack
-OPENBLAS_INSTALL_DIR = /home/mkurisu/Workspace/OpenBLAS-git/install
+SIMINT_INSTALL_DIR   = /gpfs/projects/JiaoGroup/hongjigao/simint/build-avx512/install
+YATDFT_INSTALL_DIR   = /gpfs/projects/JiaoGroup/hongjigao/YATDFT_forMP2
+H2PACK_INSTALL_DIR   = /gpfs/projects/JiaoGroup/hongjigao/H2Pack
+OPENBLAS_INSTALL_DIR = /gpfs/software/openblas/0.3.21/
 
 DEFS    = 
 INCS    = -I$(H2PERI_INSTALL_DIR)/include -I$(H2PACK_INSTALL_DIR)/include -I$(YATDFT_INSTALL_DIR)/include -I$(SIMINT_INSTALL_DIR)/include
@@ -53,7 +53,7 @@ all: $(EXES)
 %.c.o: %.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
-%.exe: %.c.o $(LIBS)
+%.exe: %.c.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 clean:
