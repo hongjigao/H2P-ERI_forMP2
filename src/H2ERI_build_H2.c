@@ -870,7 +870,9 @@ void H2ERI_compress_BD_blk(
     int blk_rank = J->length;
     int old_size = blk_nrow * blk_ncol;
     int new_size = (blk_nrow + blk_ncol) * blk_rank;
-    if (new_size > (old_size * 4 / 5))
+    //Now we test the case where everything is used dense
+//    if (new_size > (old_size * 4 / 5))
+      if(1)
     {
         // The compressed form is not small enough, use the original block
         H2P_dense_mat_init(res_blk_, blk_nrow, blk_ncol);
@@ -1250,6 +1252,8 @@ void H2ERI_build_D(H2ERI_p h2eri)
         D_pair_v[D_pair_cnt] = -(ii + 1);
         D_pair_cnt++;
     }
+    h2eri->nD0element=D0_total_size;
+    h2eri->nD1element=D1_total_size;
     H2P_partition_workload(n_r_inadm_pair, D_ptr + n_leaf_node + 1, D1_total_size, n_thread * BD_ntask_thread, D_blk1);
     for (int i = 1; i <= n_leaf_node + n_r_inadm_pair; i++) D_ptr[i] += D_ptr[i - 1];
 

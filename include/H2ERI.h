@@ -25,4 +25,7 @@
 // H2ERI exchange matrix construction
 #include "H2ERI_build_exchange.h"
 
+// H2ERI build S matrices
+#include "H2ERI_build_Smat.h"
+
 #endif

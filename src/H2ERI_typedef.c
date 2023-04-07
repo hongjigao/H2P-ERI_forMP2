@@ -88,6 +88,12 @@ void H2ERI_destroy(H2ERI_p h2eri)
     free(h2eri->shells);
     free(h2eri->sp_shells);
     free(h2eri->sp);
+    free(h2eri->rowD);
+    free(h2eri->colD);
+    free(h2eri->DataD);
+    free(h2eri->rowDCSR);
+    free(h2eri->colDCSR);
+    free(h2eri->DataDCSR);
     
     for (int i = 0; i < h2eri->h2pack->n_node; i++)
     {

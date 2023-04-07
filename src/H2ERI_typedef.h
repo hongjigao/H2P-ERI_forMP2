@@ -38,6 +38,8 @@ struct H2ERI
     int    *dlist;                      // Array, size unknown, each shell's pair shells s.t. the corresponding density matrix block is large enough
     int    *dlist_sidx;                 // Array, size nshell+1, index of each node's first item in dlist
     void   **thread_Kmat_workbuf;       // Array, size h2pack->n_thread, pointers to each thread's K mat build work buffer
+    size_t nD0element;                  // Added: the number of nonzero elements in D0(Diagonal blocks)
+    size_t nD1element;                  // Added: the number of nonzero elements in D1(inadmissible blocks)
     double scr_tol;                     // Tolerance of Schwarz screening
     double ext_tol;                     // Tolerance of shell pair extent
     double *sp_center;                  // Array, size 3 * num_sp, each column is a SSP's center
@@ -45,6 +47,12 @@ struct H2ERI
     double *box_extent;                 // Array, size h2pack->n_node, extents of each H2 node box
     double *unc_denmat_x;               // Array, size num_sp_bfp, uncontracted density matrix as a vector
     double *H2_matvec_y;                // Array, size num_sp_bfp, H2 matvec result 
+    int    *rowD;                       // Added: array of rows of COO matrix of D.
+    int    *colD;                       // Added: array of columns of COO matrix of D.
+    double *DataD;                      // Added: array of data of COO matrix of D.
+    int    *rowDCSR;                    // Added: array of rows of COO matrix of D.
+    int    *colDCSR;                    // Added: array of rows of COO matrix of D.
+    double *DataDCSR;                   // Added: array of rows of COO matrix of D.
     shell_t          *shells;           // Array, size nshell, contracted shells
     shell_t          *sp_shells;        // Array, size 2 * num_sp, each column is a SSP
     multi_sp_t       *sp;               // Array, size num_sp, SSP
