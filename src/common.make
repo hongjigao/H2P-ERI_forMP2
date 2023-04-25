@@ -10,7 +10,8 @@ OPENBLAS_INSTALL_DIR = /gpfs/software/openblas/0.3.21/
 
 DEFS    = 
 INCS    = -I$(SIMINT_INSTALL_DIR)/include -I$(H2PACK_INSTALL_DIR)/include
-CFLAGS  = $(INCS) -Wall -g -std=gnu11 -O3 -fPIC $(DEFS)
+CFLAGS  = $(INCS) -Wall -g -std=gnu11 -fPIC $(DEFS)
+#-O3 
 
 ifeq ($(shell $(CC) --version 2>&1 | grep -c "icc"), 1)
 AR      = xiar rcs

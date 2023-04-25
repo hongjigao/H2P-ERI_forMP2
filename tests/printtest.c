@@ -66,6 +66,7 @@ int main(int argc, char **argv)
     err_l2 = sqrt(err_l2);
     printf("||J_{H2} - J_{ref}||_2 / ||J_{ref}||_2 = %e\n", err_l2 / ref_l2);\
     printf("D0totalsize=%lu,D1totalsize=%lu\n",h2eri->nD0element,h2eri->nD1element);
+    /*
     H2ERI_build_COO_Diamat(h2eri,1);
     int nnz=h2eri->nD0element+2*h2eri->nD1element;
     double maxv=0;
@@ -83,6 +84,7 @@ int main(int argc, char **argv)
         }
         detectsum=detectsum+h2eri->DataD[i];
     }
+
     printf("The max value is %e\n",maxv);
     printf("The sum is %Le \n",detectsum);
     for(size_t i=0;i<nnz;i++)
@@ -101,22 +103,28 @@ int main(int argc, char **argv)
     printf("The number of elements is %d\n",lg0tst);
     h2eri->rowDCSR = (int*) malloc(sizeof(int) * (h2eri->num_bf*h2eri->num_bf+1));
     h2eri->colDCSR = (int*) malloc(sizeof(int) * h2eri->nD0element+2*h2eri->nD1element);
-    printf("Malloc success");
     h2eri->DataDCSR = (double*) malloc(sizeof(double) * h2eri->nD0element+2*h2eri->nD1element);
-
+    ASSERT_PRINTF(
+        h2eri->rowDCSR != NULL && h2eri->colDCSR != NULL && h2eri->DataDCSR != NULL,
+        "Failed to allocate working buffer for D matrices indexing\n"
+    );
     maxv=0;
     detectsum=0;
+    int detectcol=0;
     for(size_t i=0;i<nnz;i++)
     {
         if(fabs(h2eri->DataD[i])>maxv)
         {
             maxv=fabs(h2eri->DataD[i]);
-            printf("%e\n",maxv);
+//            printf("%e\n",maxv);
         }
         detectsum=detectsum+h2eri->DataD[i];
+        detectcol=detectcol+h2eri->colD[i];
     }
+    printf("Before CSR copy:\n");
     printf("The max value is %e\n",maxv);
     printf("The sum is %Le \n",detectsum);
+    printf("The sumcol is %d \n",detectcol);
 
  //   Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  h2eri->nD0element+2*h2eri->nD1element, h2eri->rowD, h2eri->colD, 
   //  h2eri->DataD, h2eri->rowDCSR, h2eri->colDCSR, h2eri->DataDCSR);
@@ -138,9 +146,10 @@ int main(int argc, char **argv)
     // Reset row_ptr
     for (int i = nrow; i >= 1; i--) h2eri->rowDCSR[i] = h2eri->rowDCSR[i - 1];
     h2eri->rowDCSR[0] = 0;
-    printf("Outer test ------------------\n");
+    printf("After CSR copy: ------------------\n");
     maxv=0;
     detectsum=0;
+    detectcol=0;
     larger1e5=0;
     larger1e9=0;
     larger1e2=0;
@@ -150,12 +159,14 @@ int main(int argc, char **argv)
         if(fabs(h2eri->DataD[i])>maxv)
         {
             maxv=fabs(h2eri->DataD[i]);
-            printf("%e\n",maxv);
+//            printf("%e\n",maxv);
         }
         detectsum=detectsum+h2eri->DataD[i];
+        detectcol=detectcol+h2eri->colD[i];
     }
     printf("The max value is %e\n",maxv);
     printf("The sum is %Le \n",detectsum);
+    printf("The sumcol is %d \n",detectcol);
     for(size_t i=0;i<h2eri->nD0element+2*h2eri->nD1element;i++)
     {
         if(fabs(h2eri->DataDCSR[i])>maxv*1e-2)
@@ -172,13 +183,32 @@ int main(int argc, char **argv)
     printf("The number of elements is %d\n",lg0tst);
     long double dtd=0;
     long double dtcsr=0;
+    detectcol=0;
+    maxv=0;
+    detectsum=0;
+    printf("The CSR data:\n");
+    for(size_t i=0;i<h2eri->nD0element+2*h2eri->nD1element;i++)
+    {
+        if(fabs(h2eri->DataDCSR[i])>maxv)
+        {
+            maxv=fabs(h2eri->DataDCSR[i]);
+//            printf("%e\n",maxv);
+        }
+        detectsum=detectsum+h2eri->DataDCSR[i];
+        detectcol=detectcol+h2eri->colDCSR[i];
+    }
+    printf("The max value is %e\n",maxv);
+    printf("The sum is %Le \n",detectsum);
+    printf("The sumcol is %d \n",detectcol);
+
     for(size_t i=0;i<h2eri->nD0element+2*h2eri->nD1element;i++)
     {
         dtd+=maxv;
         dtcsr+=h2eri->DataDCSR[i];
     }
-    printf("Norm of DataD is %Le while norm of DataDCSR is %Le\n",dtd,dtcsr);
+    printf("Norm of DataD is %Le while norm of DataDCSR is %Le while colsum is %d\n",dtd,dtcsr,detectcol);
     printf("%d",h2eri->rowDCSR[h2eri->num_bf*h2eri->num_bf]);
+    */
     free(J_ref);
     free(J_mat);
     free(D_mat);

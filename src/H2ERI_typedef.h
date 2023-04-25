@@ -68,6 +68,29 @@ struct H2ERI
 
 typedef struct H2ERI* H2ERI_p;
 
+struct COOmat
+{
+    int nrow;                           // number of rows of the matrix
+    int ncol;                           // number of columns of the matrix
+    size_t nnz;                            // number of nonzero elements of the matrix
+    int             * coorow;           // Array, size nnz, the row information in COOMatrix form.
+    int             * coocol;           // Array, size nnz, the column information in COOMatrix form.
+    double          * cooval;           // Array, size nnz, the value information in COOMatrix form.
+};
+typedef struct COOmat* COOmat_p;
+
+struct CSRmat
+{
+    int nrow;                           // number of rows of the matrix
+    int ncol;                           // number of columns of the matrix
+    size_t nnz;                            // number of nonzero elements of the matrix
+    size_t          * csrrow;           // Array, size nrow+1, the row information in CSRMatrix form.
+    int             * csrcol;           // Array, size nnz, the column information in CSRMatrix form.
+    double          * csrval;           // Array, size nnz, the value information in CSRMatrix form.
+};
+typedef struct CSRmat* CSRmat_p;
+
+
 #define ALPHA_SUP 1.0
 
 // Initialize a H2ERI structure
@@ -88,6 +111,20 @@ void H2ERI_destroy(H2ERI_p h2eri);
 // Input parameter:
 //   h2eri : H2ERI structure to be destroyed
 void H2ERI_print_statistic(H2ERI_p h2eri);
+
+
+//Initialize a COOmat structure
+void COOmat_init(COOmat_p *COOmat_, const int nrow, const int ncol);
+
+// Destroy a COOmat structure
+void COOmat_destroy(COOmat_p COOmat);
+
+//Initialize a CSRmat structure
+void CSRmat_init(CSRmat_p *CSRmat_, const int nrow, const int ncol);
+
+// Destroy a CSRmat structure
+void CSRmat_destroy(CSRmat_p CSRmat);
+
 
 #ifdef __cplusplus
 }

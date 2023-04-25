@@ -141,3 +141,44 @@ void H2ERI_print_statistic(H2ERI_p h2eri)
     
     H2P_print_statistic(h2eri->h2pack);
 }
+
+
+void COOmat_init(COOmat_p *COOmat_, const int nrow, const int ncol)
+{
+    COOmat_p COOmat = (COOmat_p) malloc(sizeof(struct COOmat));
+    assert(COOmat != NULL);
+    memset(COOmat, 0, sizeof(struct COOmat));
+    COOmat->nrow=nrow;
+    COOmat->ncol=ncol;
+    COOmat->coocol  =  NULL;
+    COOmat->coorow  =  NULL;
+    COOmat->cooval  =  NULL;
+    *COOmat_ = COOmat;
+}
+
+void COOmat_destroy(COOmat_p COOmat)
+{
+    free(COOmat->coocol);
+    free(COOmat->coorow);
+    free(COOmat->cooval);
+}
+
+void CSRmat_init(CSRmat_p *CSRmat_, const int nrow, const int ncol)
+{
+    CSRmat_p CSRmat = (CSRmat_p) malloc(sizeof(struct CSRmat));
+    assert(CSRmat != NULL);
+    memset(CSRmat, 0, sizeof(struct CSRmat));
+    CSRmat->nrow=nrow;
+    CSRmat->ncol=ncol;
+    CSRmat->csrcol  =  NULL;
+    CSRmat->csrrow  =  NULL;
+    CSRmat->csrval  =  NULL;
+    *CSRmat_ = CSRmat;
+}
+
+void CSRmat_destroy(CSRmat_p CSRmat)
+{
+    free(CSRmat->csrcol);
+    free(CSRmat->csrrow);
+    free(CSRmat->csrval);
+}
