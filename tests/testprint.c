@@ -93,8 +93,8 @@ int main(int argc, char **argv)
     {
         printf("Initial value:%e\n",val[i]);
     }
-    double energy;
-    energy=Calc_S1energy(csrmat);
-    printf("The energy is %f\n",energy);
+//    double energy;
+//    energy=Calc_S1energy(csrmat);
+//    printf("The energy is %f\n",energy);
     return 0;
 }

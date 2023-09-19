@@ -11,9 +11,11 @@ extern "C" {
 // Build H2 representation for ERI tensor
 // Input parameter:
 //   h2eri  : H2ERI structure with D matrix info
+//   D1tst  : the parameter determining whether to use neighbor blocks. If D1tst==1, then use. If 0 then only diagonal ones.
 
 // Output parameter:
 //   coomat : Dmat information stored in COO format
+
 void H2ERI_build_COO_Diamat(H2ERI_p h2eri, COOmat_p coomat, int D1tst, int threstest);
 
 
@@ -31,6 +33,14 @@ void Qsort_double_long0(int *key, double *val, int l, int r);
 void Qsort_double_long(int *key, double *val, size_t l, size_t r);
 
 void Qsort_double_long1(int *key, double *val, size_t l, size_t r);
+
+
+
+// Compress the COO matrices
+// Input cooini and output coofinal. coofinal contains all the values whose absolute value is larger than thres*maximum
+void compresscoo(COOmat_p cooini, COOmat_p coofinal, double thres);
+
+
 
 // Convert a double COO matrix to a CSR matrix 
 // Input parameters:
@@ -94,13 +104,32 @@ void Xindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
 void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans);
 
 
+// Provided the row oriented CSR matrix, compute the column oriented CSC matrix.
+// Attension: The new CSC matrix is still applying the previous CSRmat data type.
+// In cscmat, cscmat->csrrow is actually the column while cscmat->csrcol is actually the row.
+// Need to pay attension to it to avoid confusion and errors.
+// Input parameters:
+// csrmat          : The row oriented CSR matrix
+// Output parameters:
+// cscmat          : The column oriented CSC matrix stored in CSRmat form
+
+void CSR_to_CSC(const int ncol, CSRmat_p csrmat, CSRmat_p cscmat);
+
+
+
 // Calculate the S1 energy
 // Input parameters:
 // csrs1            : S1 matrix in CSR form
-
+// cscs1            : S1 matrix in CSC form but cscs1->csrrow stores the information of columns
 // Output
 // return: S1 energy
-double Calc_S1energy(CSRmat_p csrs1);
+double Calc_S1energy(CSRmat_p csrs1, CSRmat_p cscs1);
+
+
+
+
+
+
 
 #ifdef __cplusplus
 }

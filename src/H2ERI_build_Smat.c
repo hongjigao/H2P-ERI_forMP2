@@ -32,9 +32,10 @@ void H2ERI_build_COO_Diamat(H2ERI_p h2eri , COOmat_p coomat, int D1tst, int thre
     int    *leaf_nodes    = h2pack->height_nodes;
     int    *r_inadm_pairs = h2pack->r_inadm_pairs;
     coomat->nnz=h2eri->nD0element+2*h2eri->nD1element;
-    coomat->coorow = (int*) malloc(sizeof(int) * (h2eri->nD0element+2*h2eri->nD1element));
-    coomat->coocol = (int*) malloc(sizeof(int) * (h2eri->nD0element+2*h2eri->nD1element));
-    coomat->cooval = (double*) malloc(sizeof(double) * (h2eri->nD0element+2*h2eri->nD1element));
+    if(D1tst==0) coomat->nnz=h2eri->nD0element;
+    coomat->coorow = (int*) malloc(sizeof(int) * (coomat->nnz));
+    coomat->coocol = (int*) malloc(sizeof(int) * (coomat->nnz));
+    coomat->cooval = (double*) malloc(sizeof(double) * (coomat->nnz));
     ASSERT_PRINTF(coomat->coorow != NULL, "Failed to allocate arrays for D matrices indexing\n");
     ASSERT_PRINTF(coomat->coocol != NULL, "Failed to allocate arrays for D matrices indexing\n");
     ASSERT_PRINTF(coomat->cooval    != NULL, "Failed to allocate arrays for D matrices indexing\n");
@@ -158,10 +159,10 @@ void H2ERI_build_COO_Diamat(H2ERI_p h2eri , COOmat_p coomat, int D1tst, int thre
         }
         numdata+=loopval;
     }
-    printf("The number of total elements is %lu\n",h2eri->nD0element+2*h2eri->nD1element);
+    printf("The number of total elements is %lu\n",coomat->nnz);
     if (threstest==0)
         return;
-    size_t nnz=h2eri->nD0element+2*h2eri->nD1element;
+    size_t nnz=coomat->nnz;
     double maxv=0;
     for(size_t i=0;i<nnz;i++)
     {
@@ -363,7 +364,40 @@ void Qsort_double_long1(int *key, double *val, size_t l, size_t r)
         Qsort_double_long1(key,val,r-nlart+1,r);
 }
 
-
+void compresscoo(COOmat_p cooini, COOmat_p coofinal, double thres)
+{
+    size_t nva=0;
+    double max = 0;
+    for(size_t i=0;i<cooini->nnz;i++)
+    {
+        if(fabs(cooini->cooval[i])>max)
+            max=fabs(cooini->cooval[i]);
+    }
+    for(size_t i=0;i<cooini->nnz;i++)
+    {
+        if(fabs(cooini->cooval[i])>max*thres)
+            nva+=1;
+    }
+    coofinal->nnz=nva;
+    coofinal->coorow = (int*) malloc(sizeof(int) * (nva));
+    coofinal->coocol = (int*) malloc(sizeof(int) * (nva));
+    coofinal->cooval = (double*) malloc(sizeof(double) * (nva));
+    ASSERT_PRINTF(coofinal->coorow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(coofinal->coocol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(coofinal->cooval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    size_t pointer=0;
+    for(size_t i=0;i<cooini->nnz;i++)
+    {
+        if(fabs(cooini->cooval[i])>max*thres)
+        {
+            coofinal->coorow[pointer]=cooini->coorow[i];
+            coofinal->coocol[pointer]=cooini->coocol[i];
+            coofinal->cooval[pointer]=cooini->cooval[i];
+            pointer +=1;
+        }
+    }
+    COOmat_destroy(cooini);
+}
 
 void Double_COO_to_CSR(
     const int nrow, const size_t nnz, COOmat_p coomat, CSRmat_p csrmat
@@ -705,17 +739,20 @@ void Xindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
             }
         }
     }
-    printf("Compute coo success\n");
+ //   printf("Compute coo success\n");
     et1 = get_wtime_sec();
     printf("Calculate coomat time is %.3lf (s)\n",et1-st1);
     
     st1 = get_wtime_sec();
+    COOmat_p tmpcoo;
+    COOmat_init(&tmpcoo,coomat->nrow,coomat->ncol);
+    compresscoo(coomat, tmpcoo, 1e-7);
     CSRmat_p tmpcsr;
-    CSRmat_init(&tmpcsr,coomat->nrow,coomat->ncol);
-    Double_COO_to_CSR(nbf*nbf,nto,coomat,tmpcsr);
-    printf("Transform succes\n");
+    CSRmat_init(&tmpcsr,tmpcoo->nrow,tmpcoo->ncol);
+    Double_COO_to_CSR(nbf*nbf,tmpcoo->nnz,tmpcoo,tmpcsr);
      et1 = get_wtime_sec();
-    printf("Calculate transformed csr mat time is %.3lf (s)\n",et1-st1);
+//    printf("Calculate transformed csr mat time is %.3lf (s)\n",et1-st1);
+/*
    int tests=0;
    size_t teste=0;
 
@@ -741,8 +778,8 @@ void Xindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
         printf("Ascending order correct!\n");
     if(tests==1)
         printf("Ascending order wrong\n");
-    
-    printf("The same value is %lu\n",teste);
+  */  
+//    printf("The same value is %lu\n",teste);
     size_t ntotal=0;
     for(int i=0; i<nbf*nbf;i++)
     {
@@ -768,9 +805,9 @@ void Xindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
     ASSERT_PRINTF(csrtrans->csrrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
     ASSERT_PRINTF(csrtrans->csrcol != NULL, "Failed to allocate arrays for D matrices indexing\n");
     ASSERT_PRINTF(csrtrans->csrval != NULL, "Failed to allocate arrays for D matrices indexing\n");
-    printf("Allocate csrtrans success\n");
+//    printf("Allocate csrtrans success\n");
     csrtrans->nnz=ntotal;
-    printf("So the ntotal is %lu \n",ntotal);
+    printf("The number of elements in csr is %lu \n",ntotal);
     memset(csrtrans->csrrow, 0, sizeof(size_t) * (nbf*nbf+1));
     //Calculate the CSR matrix of transformed version
     for(int i=1; i<nbf*nbf+1;i++)
@@ -782,7 +819,7 @@ void Xindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
     {
         csrtrans->csrrow[i]+=csrtrans->csrrow[i-1];
     }
-    printf("Now last line is %lu\n",csrtrans->csrrow[csrtrans->nrow]);
+//    printf("Now last line is %lu\n",csrtrans->csrrow[csrtrans->nrow]);
     for(int i=0;i<nbf*nbf;i++)
     {
         if(nelec[i]>0)
@@ -805,12 +842,12 @@ void Xindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
             }
         }
     }
-    printf("The difference should be zero:%lu\n",teste+csrtrans->nnz-tmpcsr->nnz);
+//    printf("The difference should be zero:%lu\n",teste+csrtrans->nnz-tmpcsr->nnz);
     et1 = get_wtime_sec();
     printf("Calculate transformed csr elements time is %.3lf (s)\n",et1-st1);
     free(nele);
     free(nelec);
-    COOmat_destroy(coomat);
+    COOmat_destroy(tmpcoo);
     CSRmat_destroy(tmpcsr);
 }
 
@@ -825,7 +862,7 @@ void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtran
     nelec = (int*) malloc(sizeof(int) * (nbf*nbf));
     memset(nele, 0, sizeof(int) * (nbf*nbf));
     memset(nelec, 0, sizeof(int) * (nbf*nbf));
-    printf("Memset success\n");
+//    printf("Memset success\n");
     int nn0=nbf*nbf;
     for ( int i=0;i<nbf*nbf;i++)
     {
@@ -841,7 +878,7 @@ void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtran
         }
         
     }
-    printf("elements computing success, the number of empty rows is %d\n", nn0);
+//    printf("elements computing success, the number of empty rows is %d\n", nn0);
     // compute the number of merged elements in each row
     size_t nto=0;
     for(int i=0;i<nbf*nbf;i++)
@@ -880,13 +917,17 @@ void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtran
             }
         }
     }
-    printf("Compute coo success\n");
-    int maxr=0;
-    int maxc=0;
+ //   printf("Compute coo success\n");
+//    int maxr=0;
+//    int maxc=0;
+    COOmat_p tmpcoo;
+    COOmat_init(&tmpcoo,coomat->nrow,coomat->ncol);
+    compresscoo(coomat, tmpcoo, 1e-7);
     CSRmat_p tmpcsr;
-    CSRmat_init(&tmpcsr,coomat->nrow,coomat->ncol);
-    Double_COO_to_CSR(nbf*nbf,nto,coomat,tmpcsr);
-    printf("Transform succes\n");
+    CSRmat_init(&tmpcsr,tmpcoo->nrow,tmpcoo->ncol);
+    Double_COO_to_CSR(nbf*nbf,tmpcoo->nnz,tmpcoo,tmpcsr);
+//    printf("Transform succes\n");
+/*
    int tests=0;
    size_t teste=0;
     for(int i=0;i<tmpcsr->nrow;i++)
@@ -913,6 +954,7 @@ void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtran
         printf("Ascending order wrong\n");
     
     printf("The same value is %lu\n",teste);
+    */
     size_t ntotal=0;
     for(int i=0; i<nbf*nbf;i++)
     {
@@ -937,9 +979,9 @@ void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtran
     ASSERT_PRINTF(csrtrans->csrrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
     ASSERT_PRINTF(csrtrans->csrcol != NULL, "Failed to allocate arrays for D matrices indexing\n");
     ASSERT_PRINTF(csrtrans->csrval != NULL, "Failed to allocate arrays for D matrices indexing\n");
-    printf("Allocate csrtrans success\n");
+//    printf("Allocate csrtrans success\n");
     csrtrans->nnz=ntotal;
-    printf("So the ntotal is %lu \n",ntotal);
+    printf("NNZ in csr is %lu \n",ntotal);
     memset(csrtrans->csrrow, 0, sizeof(size_t) * (nbf*nbf+1));
     //Calculate the CSR matrix of transformed version
     for(int i=1; i<nbf*nbf+1;i++)
@@ -951,7 +993,7 @@ void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtran
     {
         csrtrans->csrrow[i]+=csrtrans->csrrow[i-1];
     }
-    printf("Now last line is %lu\n",csrtrans->csrrow[csrtrans->nrow]);
+//    printf("Now last line is %lu\n",csrtrans->csrrow[csrtrans->nrow]);
     for(int i=0;i<nbf*nbf;i++)
     {
         if(nelec[i]>0)
@@ -974,43 +1016,93 @@ void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtran
             }
         }
     }
-    printf("The difference should be zero:%lu\n",teste+csrtrans->nnz-tmpcsr->nnz);
+//    printf("The difference should be zero:%lu\n",teste+csrtrans->nnz-tmpcsr->nnz);
     free(nele);
     free(nelec);
-    COOmat_destroy(coomat);
+    COOmat_destroy(tmpcoo);
     CSRmat_destroy(tmpcsr);
 }
 
-double Calc_S1energy(CSRmat_p csrs1)
+void CSR_to_CSC(const int ncol, CSRmat_p csrmat, CSRmat_p cscmat)
 {
-    double energy = 0;
-    for(int i=0;i<csrs1->nrow;i++)
+    cscmat->nnz=csrmat->nnz;
+    cscmat->csrrow = (size_t*) malloc(sizeof(size_t) * (ncol+1));
+    cscmat->csrcol = (int*) malloc(sizeof(int) * (cscmat->nnz));
+    cscmat->csrval = (double*) malloc(sizeof(double) * (cscmat->nnz));
+    ASSERT_PRINTF(cscmat->csrrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(cscmat->csrcol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(cscmat->csrval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(cscmat->csrrow, 0, sizeof(size_t) * (ncol + 1));
+    printf("Allocate csc matrix success!\n");
+    for(size_t i=0;i<cscmat->nnz;i++)
     {
-        // find the csr elements in this row
-        if(csrs1->csrrow[i]!=csrs1->csrrow[i+1])
+        cscmat->csrrow[csrmat->csrcol[i]+1]+=1;
+    }
+    //printf("1\n");
+    for(int j=1;j<ncol+1;j++)
+    {
+        cscmat->csrrow[j]+=cscmat->csrrow[j-1];
+    }
+    //printf("2\n");
+    size_t* posi;
+    int tmpcol;
+    posi=(size_t*) malloc(sizeof(size_t) * (ncol+1));
+    //printf("3\n");
+    ASSERT_PRINTF(posi != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(posi, 0, sizeof(size_t) * (ncol));
+    //printf("before\n");
+    for(int j=0;j<csrmat->nrow;j++)
+    {
+        if(csrmat->csrrow[j]!=csrmat->csrrow[j+1])
         {
-            for(size_t j=csrs1->csrrow[i];j<csrs1->csrrow[i+1];j++)
+            for(size_t i=csrmat->csrrow[j];i<csrmat->csrrow[j+1];i++)
             {
-                int column = csrs1->csrcol[j];
-                if(csrs1->csrrow[column]!=csrs1->csrrow[column+1])
-                {
-                    for(size_t k=csrs1->csrrow[column];k<csrs1->csrrow[column+1];k++)
-                    {
-                        if(csrs1->csrcol[k]==i)
-                        {
-//                            printf("col1 %lu,col2 %lu are\n",j,k);
-                            energy += csrs1->csrval[j]*csrs1->csrval[k];
-                            break;
-                        }
-                        if(csrs1->csrcol[k]>i)
-                        {
-                            break;
-                        }
-                    }
-                }
+                tmpcol=csrmat->csrcol[i];
+                cscmat->csrcol[cscmat->csrrow[tmpcol]+posi[tmpcol]]=j;
+                cscmat->csrval[cscmat->csrrow[tmpcol]+posi[tmpcol]]=csrmat->csrval[i];
+                posi[tmpcol]+=1;
             }
         }
     }
-
-    return energy;
 }
+
+
+double Calc_S1energy(CSRmat_p csrs1, CSRmat_p cscs1)
+{
+    double trace = 0;
+//    #pragma omp parallel for
+    if(csrs1->nrow!=cscs1->ncol)
+        printf("Error~!\n");
+    for(int i=0;i<csrs1->nrow;i++)
+    {
+        if(csrs1->csrrow[i]!=csrs1->csrrow[i+1])
+            if(cscs1->csrrow[i]!=cscs1->csrrow[i+1])
+            {
+                //Compare the elements in the i-th row of csr and i-th column of csc
+                size_t j=csrs1->csrrow[i];
+                size_t k=cscs1->csrrow[i];
+                while(j<csrs1->csrrow[i+1] && k<cscs1->csrrow[i+1])
+                {
+                    if(csrs1->csrcol[j]==cscs1->csrcol[k])
+                    {
+                        trace += csrs1->csrval[j]*cscs1->csrval[k];
+                        j+=1;
+                        k+=1;
+                    }
+                    else if (csrs1->csrcol[j]<cscs1->csrcol[k])
+                    {
+                        j+=1;
+                    }
+                    else if (csrs1->csrcol[j]>cscs1->csrcol[k])
+                    {
+                        k+=1;
+                    }
+                    
+                }
+            }
+    }
+
+    return trace;
+}
+
+

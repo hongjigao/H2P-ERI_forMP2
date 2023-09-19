@@ -250,7 +250,7 @@ int main(int argc, char **argv)
     
     // Print H2P-ERI statistic info
     H2ERI_print_statistic(h2eri);
-
+    int nbf = h2eri->num_bf;
     int * tmpshellidx;
     tmpshellidx=(int *) malloc(sizeof(int) * (h2eri->nshell+1));
     for(int j=0;j<h2eri->nshell;j++)
@@ -275,12 +275,14 @@ int main(int argc, char **argv)
     size_t nnz=cooh2d->nnz;
     printf("Now print COO H2D Matrix info--------\n");
     TestCOO(cooh2d);
+    
     double thres1=1e-7;
     COOmat_p cooh2d1;
     COOmat_init(&cooh2d1,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
     compresscoo(cooh2d, cooh2d1, thres1);
     TestCOO(cooh2d1);
-    printf("DEWDEeaf %lu \n", cooh2d1->nnz);
+    printf("The number of values above threshold is %lu \n", cooh2d1->nnz);
+    
     CSRmat_p csrh2d;
     CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
 
@@ -288,7 +290,7 @@ int main(int argc, char **argv)
     Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d1->nnz, cooh2d1,csrh2d);
     printf("Now print CSR H2D Matrix info--------\n");
     TestCSR(csrh2d);
-
+    
     TinyDFT_build_MP2info_eig(TinyDFT, TinyDFT->F_mat,
                                TinyDFT->X_mat, TinyDFT->D_mat,
                                TinyDFT->Cocc_mat, TinyDFT->DC_mat,
@@ -319,13 +321,15 @@ int main(int argc, char **argv)
     int ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->DC_mat, coodc);
     printf("Now print COO DC Matrix info--------\n");
     TestCOO(coodc);
-    printf("The total elements of DC are %d and the rate of survival by threshold 1e-6 is %e \n",h2eri->num_bf*h2eri->num_bf,(double)ndc/(h2eri->num_bf*h2eri->num_bf));
+    printf("The total elements of DC are %d and the rate of survival by threshold %e is %e \n",h2eri->num_bf*h2eri->num_bf,thres,(double)ndc/(h2eri->num_bf*h2eri->num_bf));
 
     CSRmat_p csrdc;
     CSRmat_init(&csrdc,h2eri->num_bf,h2eri->num_bf);
     Double_COO_to_CSR( h2eri->num_bf,  ndc, coodc,csrdc);
     printf("Now print CSR DC Matrix info--------\n");
     TestCSR(csrdc);
+    printf("Build energy weighted matrices success\n");
+    /*
     printf("Now do index transformation\n");
     CSRmat_p gdle;
     CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
@@ -333,33 +337,40 @@ int main(int argc, char **argv)
     double st1,et1;
     st1 = get_wtime_sec();
     Xindextransform1(h2eri->num_bf,csrh2d,csrden,gdle);
-//    et1 = get_wtime_sec();
-//    printf("Index transformation time is %.3lf (s)\n",et1-st1);
-//    TestCSR(gdle);
+    et1 = get_wtime_sec();
+    printf("The X Index transformation time is %.3lf (s)\n",et1-st1);
+    TestCSR(gdle);
     printf("Xindex transformation finished\n");
     CSRmat_p gdls;
     CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
     
-//    st1 = get_wtime_sec();
+    st1 = get_wtime_sec();
     Yindextransform1(h2eri->num_bf,gdle,csrdc,gdls);
     et1 = get_wtime_sec();
     
     TestCSR(gdls);
-    printf("Index transformation time is %.3lf (s)\n",et1-st1);
-    /*
+    printf("The Y Index transformation time is %.3lf (s)\n",et1-st1);
+    
     printf("Now do energy calculation \n");
     st1 = get_wtime_sec();
+//    double energy;
+//    energy = Calc_S1energy(gdls);
+//    printf("The energy is %f\n",energy);
+    CSRmat_p colgdls;
+    CSRmat_init(&colgdls,nbf*nbf,nbf*nbf);
+    CSR_to_CSC(nbf*nbf, gdls,colgdls);
+    TestCSR(colgdls);
     double energy;
-    energy = Calc_S1energy(gdls);
+    energy = Calc_S1energy(gdls,colgdls);
     printf("The energy is %f\n",energy);
     et1 = get_wtime_sec();
     printf("Energy computation time is %.3lf (s)\n",et1-st1);
     */
-    CSRmat_destroy(gdls);
+    //CSRmat_destroy(gdls);
     
     COOmat_destroy(cooden);
     CSRmat_destroy(csrden);
-    CSRmat_destroy(gdle);
+    //CSRmat_destroy(gdle);
     COOmat_destroy(coodc);
     CSRmat_destroy(csrdc);
 
