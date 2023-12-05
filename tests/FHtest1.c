@@ -7,7 +7,6 @@
 
 #include "TinyDFT.h"
 #include "H2ERI.h"
-#include "H2Pack.h"
 
 void TinyDFT_copy_shells_to_H2ERI(TinyDFT_p TinyDFT, H2ERI_p h2eri)
 {
@@ -201,6 +200,34 @@ void TestCSR(CSRmat_p csrmat)
         printf("Ascending order correct!\n");
 }
 
+
+int count_unique(H2ERI_p h2eri, int *array, int length) {
+    int count = 0;
+    int* hashTable;  // Initialize hash table with 0
+    hashTable = (int*) malloc(sizeof(int) * h2eri->num_bf);
+    memset(hashTable, 0, sizeof(int) * h2eri->num_bf);
+    for (int i = 0; i < length; i++) {
+        if (!hashTable[array[i]]) {  // If the integer is not yet encountered
+            hashTable[array[i]] = 1; // Mark it as encountered
+            count++;                // Increment unique count
+        }
+    }
+
+    return count;
+}
+
+double Calc2norm(const double *mat, int siz1, int siz2) 
+{
+  double norms = 0;
+  for (int i = 0; i < siz1; i++)
+    for (int j = 0; j < siz2; j++) 
+    {
+      norms = norms + mat[i * siz2 + j] * mat[i * siz2 + j];
+    }
+
+  return norms;
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 5)
@@ -251,97 +278,51 @@ int main(int argc, char **argv)
     }
 
     free(tmpshellidx);
-    COOmat_p cooh2d;
-    COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    H2ERI_build_COO_Diamat(h2eri,cooh2d,1,1);
-    size_t nnz=cooh2d->nnz;
-    printf("Now print COO H2D Matrix info--------\n");
-    TestCOO(cooh2d);
-    CSRmat_p csrh2d;
-    CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
 
-
-    Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  nnz, cooh2d,csrh2d);
-    printf("Now print CSR H2D Matrix info--------\n");
-    TestCSR(csrh2d);
-
-    int maxr=0;
-    int maxc=0;
-    for(size_t i=0;i<cooh2d->nnz;i++)
+    int *tmpptr1 = NULL;
+    int *tmpptr2 = NULL;
+    int length=0;
+    for(int i=0;i<h2eri->n_node;i++)
     {
-        if(cooh2d->coorow[i]>maxr)
-            maxr=cooh2d->coorow[i];
-        if(cooh2d->coocol[i]>maxc)
-            maxc=cooh2d->coocol[i];
+        tmpptr1=h2eri->bf1st+h2eri->mat_cluster[2*i];
+        tmpptr2=h2eri->bf2nd+h2eri->mat_cluster[2*i];
+        length=h2eri->mat_cluster[2*i+1]-h2eri->mat_cluster[2*i];
+        int count1=count_unique(h2eri,tmpptr1,length);
+        int count2=count_unique(h2eri,tmpptr2,length);
+        printf("In the %d node of height %d, number of BFP is %d, number of unique 1st bf is%d, 2nd bf is %d\n",i,h2eri->node_height[i],length,count1,count2);
+
     }
-    printf("The largest row and column are %d and %d\n",maxr,maxc);
-    printf("They should be no more than %d\n",cooh2d->nrow);
-    
-    TinyDFT_build_MP2info_eig(TinyDFT, TinyDFT->F_mat,
-                               TinyDFT->X_mat, TinyDFT->D_mat,
-                               TinyDFT->Cocc_mat, TinyDFT->DC_mat,
-                               TinyDFT->Cvir_mat, TinyDFT->orbitenergy_array);
-    double Fermie =0;
-    double talpha=1;
-    
-    TinyDFT_build_energyweightedDDC(TinyDFT, TinyDFT->Cocc_mat,TinyDFT->Cvir_mat,TinyDFT->orbitenergy_array,TinyDFT->D_mat,TinyDFT->DC_mat,Fermie,talpha);
-    COOmat_p cooden;
-    COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
-    double thres = 1e-6;
-    int nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->D_mat, cooden);
-    printf("Now print COO Den Matrix info--------\n");
-    TestCOO(cooden);
-    printf("The total elements of D are %d and the rate of survival by threshold %e is %e \n",h2eri->num_bf*h2eri->num_bf,thres,(double)nden/(h2eri->num_bf*h2eri->num_bf));
-    printf("Now print CSR Den Matrix info--------\n");
-    CSRmat_p csrden;
-    CSRmat_init(&csrden,h2eri->num_bf,h2eri->num_bf);
-    Double_COO_to_CSR( h2eri->num_bf,  nden, cooden,csrden);
-    TestCSR(csrden);
-    COOmat_p coodc;
-    COOmat_init(&coodc,h2eri->num_bf,h2eri->num_bf);
-    int ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->DC_mat, coodc);
-    printf("Now print COO DC Matrix info--------\n");
-    TestCOO(coodc);
-    printf("The total elements of DC are %d and the rate of survival by threshold 1e-6 is %e \n",h2eri->num_bf*h2eri->num_bf,(double)ndc/(h2eri->num_bf*h2eri->num_bf));
+    double normd=0;
+    double normb=0;
 
-    CSRmat_p csrdc;
-    CSRmat_init(&csrdc,h2eri->num_bf,h2eri->num_bf);
-    Double_COO_to_CSR( h2eri->num_bf,  ndc, coodc,csrdc);
-    printf("Now print CSR DC Matrix info--------\n");
-    TestCSR(csrdc);
-    printf("Now do index transformation\n");
-    CSRmat_p gdle;
-    CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    printf("test numbf is%d\n",h2eri->num_bf);
-    double st1,et1;
-    st1 = get_wtime_sec();
-    Xindextransform1(h2eri->num_bf,csrh2d,csrden,gdle);
-    et1 = get_wtime_sec();
-    printf("Index transformation time is %.3lf (s)\n",et1-st1);
-    TestCSR(gdle);
-    
-    CSRmat_p gdls;
-    CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    
-    st1 = get_wtime_sec();
-    Yindextransform1(h2eri->num_bf,gdle,csrdc,gdls);
-    et1 = get_wtime_sec();
-    printf("Index transformation time is %.3lf (s)\n",et1-st1);
-    TestCSR(gdls);
-//    double energy;
-//    energy = Calc_S1energy(gdls);
-//    printf("The energy is %f\n",energy);
+    printf("Now print D matrix information\n");
+    for(int i=0;i<h2eri->n_D;i++)
+    {
+        printf("The %d th D block",i);
+        double norm = Calc2norm(h2eri->c_D_blks[i]->data,h2eri->c_D_blks[i]->nrow,h2eri->c_D_blks[i]->ncol);
+        normd+=norm;
+        printf("Its norm is %f\n",norm);
+    }
 
-    CSRmat_destroy(gdls);
-    
-    COOmat_destroy(cooden);
-    CSRmat_destroy(csrden);
-    CSRmat_destroy(gdle);
-    COOmat_destroy(coodc);
-    CSRmat_destroy(csrdc);
+    printf("Now print B matrix information\n");
+    for(int i=0;i<h2eri->n_B;i++)
+    {
+        printf("The %d th B block",i);
+        double norm = Calc2norm(h2eri->c_B_blks[i]->data,h2eri->c_B_blks[i]->nrow,h2eri->c_B_blks[i]->ncol);
+        printf("Its norm is %f\n",norm);
+        normb+=norm;
+    }
 
-    COOmat_destroy(cooh2d);
-    CSRmat_destroy(csrh2d);
+    printf("Now print U matrix information\n");
+    for(int i=0;i<h2eri->n_node;i++)
+    {
+        printf("The %d th U block",i);
+        double norm = Calc2norm(h2eri->U[i]->data,h2eri->U[i]->nrow,h2eri->U[i]->ncol);
+        printf("Its norm is %f\n",norm);
+    }
+    printf("The total norm of D is %f while B is %f\n",normd,normb);
+
+   
     
     // Free TinyDFT and H2P-ERI
     TinyDFT_destroy(&TinyDFT);

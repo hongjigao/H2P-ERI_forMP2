@@ -7,7 +7,6 @@
 
 #include "TinyDFT.h"
 #include "H2ERI.h"
-#include "H2Pack.h"
 
 void TinyDFT_copy_shells_to_H2ERI(TinyDFT_p TinyDFT, H2ERI_p h2eri)
 {

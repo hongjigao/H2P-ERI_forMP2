@@ -2,21 +2,20 @@ LIBXC_INSTALL_DIR    = /home/mkurisu/Workspace/libxc/install
 H2PERI_INSTALL_DIR   = ..
 SIMINT_INSTALL_DIR   = /gpfs/projects/JiaoGroup/hongjigao/simint/build-avx512/install
 YATDFT_INSTALL_DIR   = /gpfs/projects/JiaoGroup/hongjigao/YATDFT_forMP2
-H2PACK_INSTALL_DIR   = /gpfs/projects/JiaoGroup/hongjigao/H2Pack
 OPENBLAS_INSTALL_DIR = /gpfs/software/openblas/0.3.21/
 
 DEFS    = 
-INCS    = -I$(H2PERI_INSTALL_DIR)/include -I$(H2PACK_INSTALL_DIR)/include -I$(YATDFT_INSTALL_DIR)/include -I$(SIMINT_INSTALL_DIR)/include
+INCS    = -I$(H2PERI_INSTALL_DIR)/include -I$(YATDFT_INSTALL_DIR)/include -I$(SIMINT_INSTALL_DIR)/include
 CFLAGS  = $(INCS) -Wall -g -std=gnu11 -O3 -fPIC $(DEFS)
 LDFLAGS = -g -O3 -fopenmp
-LIBS    = $(H2PERI_INSTALL_DIR)/lib/libH2PERI.a $(H2PACK_INSTALL_DIR)/lib/libH2Pack.a $(YATDFT_INSTALL_DIR)/lib/libYATDFT.a $(SIMINT_INSTALL_DIR)/lib64/libsimint.a 
+LIBS    = $(H2PERI_INSTALL_DIR)/lib/libH2PERI.a $(YATDFT_INSTALL_DIR)/lib/libYATDFT.a $(SIMINT_INSTALL_DIR)/lib64/libsimint.a 
 
 ifeq ($(shell $(CC) --version 2>&1 | grep -c "icc"), 1)
 CFLAGS  += -fopenmp -xHost
 endif
 
 ifeq ($(shell $(CC) --version 2>&1 | grep -c "gcc"), 1)
-CFLAGS  += -fopenmp -march=native -Wno-unused-result -Wno-unused-function
+CFLAGS  += -fopenmp -march=native
 LIBS    += -lgfortran -lm
 endif
 

@@ -7,7 +7,6 @@
 
 #include "TinyDFT.h"
 #include "H2ERI.h"
-#include "H2Pack.h"
 
 void TinyDFT_copy_shells_to_H2ERI(TinyDFT_p TinyDFT, H2ERI_p h2eri)
 {
@@ -271,7 +270,7 @@ int main(int argc, char **argv)
 
     COOmat_p cooh2d;
     COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    H2ERI_build_COO_Diamat(h2eri,cooh2d,1,1);
+    H2ERI_build_COO_Diamat(h2eri,cooh2d,0,0);
     size_t nnz=cooh2d->nnz;
     printf("Now print COO H2D Matrix info--------\n");
     TestCOO(cooh2d);
@@ -305,7 +304,7 @@ int main(int argc, char **argv)
     COOmat_p cooden;
     COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
     double thres = 1e-4;
-    int nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->D_mat, cooden);
+    size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->D_mat, cooden);
     printf("Now print COO Den Matrix info--------\n");
     TestCOO(cooden);
     printf("The total elements of D are %d and the rate of survival by threshold %e is %e \n",h2eri->num_bf*h2eri->num_bf,thres,(double)nden/(h2eri->num_bf*h2eri->num_bf));
@@ -316,7 +315,7 @@ int main(int argc, char **argv)
     TestCSR(csrden);
     COOmat_p coodc;
     COOmat_init(&coodc,h2eri->num_bf,h2eri->num_bf);
-    int ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->DC_mat, coodc);
+    size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->DC_mat, coodc);
     printf("Now print COO DC Matrix info--------\n");
     TestCOO(coodc);
     printf("The total elements of DC are %d and the rate of survival by threshold 1e-6 is %e \n",h2eri->num_bf*h2eri->num_bf,(double)ndc/(h2eri->num_bf*h2eri->num_bf));

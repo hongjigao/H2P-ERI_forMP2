@@ -2,7 +2,6 @@
 //#define __H2ERI_BUILD_H2_H__
 
 #include "H2ERI_typedef.h"
-#include "H2Pack_aux_structs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,7 +17,7 @@ extern "C" {
 
 void H2ERI_build_COO_Diamat(H2ERI_p h2eri, COOmat_p coomat, int D1tst, int threstest);
 
-
+void H2ERI_build_COO_Diamattest(H2ERI_p h2eri , COOmat_p coomat, int D1tst, int threstest);
 
 
 // Quick sorting a double key-value pair array by key
@@ -74,7 +73,7 @@ void Double_COO_to_CSR_nosort(
 //   mat            : The matrix with remaining elements. The large values are extracted out and the values in their position are replaced by 0.
 //   coomat         : The COO Matrix containing the information of large elements.
 
-int Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, double * mat, COOmat_p coomat);
+size_t Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, double * mat, COOmat_p coomat);
 
 
 // Do the X index transformation

@@ -7,30 +7,25 @@
 
 #include "CMS.h"
 #include "H2ERI_typedef.h"
-#include "H2Pack_build.h"
-#include "H2Pack_utils.h"
-#include "H2Pack_aux_structs.h"
-#include "H2Pack_ID_compress.h"
 #include "H2ERI_utils.h"
 #include "linalg_lib_wrapper.h"
 #include "H2ERI_build_Smat.h"
 
 void H2ERI_build_COO_Diamat(H2ERI_p h2eri , COOmat_p coomat, int D1tst, int threstest)
 {
-    H2Pack_p h2pack = h2eri->h2pack;
-    int n_leaf_node      = h2pack->n_leaf_node;
-    int n_r_inadm_pair   = h2pack->n_r_inadm_pair;
+    int n_leaf_node      = h2eri->n_leaf_node;
+    int n_r_inadm_pair   = h2eri->n_r_inadm_pair;
     int num_bf           = h2eri->num_bf;
     int *sp_bfp_sidx     = h2eri->sp_bfp_sidx;
-//    int *D_nrow          = h2pack->D_nrow;
-    int *D_ncol          = h2pack->D_ncol;
+//    int *D_nrow          = h2eri->D_nrow;
+    int *D_ncol          = h2eri->D_ncol;
     int num_sp = h2eri->num_sp;
     int *shell_bf_sidx = h2eri->shell_bf_sidx;
     int *sp_shell_idx  = h2eri->sp_shell_idx;
-    H2P_dense_mat_p  *c_D_blks   = h2eri->c_D_blks;
-    int *pt_cluster      = h2pack->pt_cluster;
-    int    *leaf_nodes    = h2pack->height_nodes;
-    int    *r_inadm_pairs = h2pack->r_inadm_pairs;
+    H2E_dense_mat_p  *c_D_blks   = h2eri->c_D_blks;
+    int *pt_cluster      = h2eri->pt_cluster;
+    int    *leaf_nodes    = h2eri->height_nodes;
+    int    *r_inadm_pairs = h2eri->r_inadm_pairs;
     coomat->nnz=h2eri->nD0element+2*h2eri->nD1element;
     if(D1tst==0) coomat->nnz=h2eri->nD0element;
     coomat->coorow = (int*) malloc(sizeof(int) * (coomat->nnz));
@@ -60,7 +55,7 @@ void H2ERI_build_COO_Diamat(H2ERI_p h2eri , COOmat_p coomat, int D1tst, int thre
  //       int node_npts = pt_e - pt_s + 1;
 //        int Di_nrow = D_nrow[i];
         int Di_ncol = D_ncol[i];
-        H2P_dense_mat_p Di = c_D_blks[i];
+        H2E_dense_mat_p Di = c_D_blks[i];
         rowspot=rowD+numdata;
         colspot=colD+numdata;
         Dataspot=DataD+numdata;
@@ -86,6 +81,7 @@ void H2ERI_build_COO_Diamat(H2ERI_p h2eri , COOmat_p coomat, int D1tst, int thre
                             for(int sigma=shell_bf_sidx[colshell1];sigma<shell_bf_sidx[colshell1+1];sigma++)
                             {
                                 rowspot[loopval]=nu*num_bf+mu;
+                                //Here temperatory exchange and need to double check
                                 colspot[loopval]=sigma*num_bf+lambda;
                                 Dataspot[loopval]=pt_Dblock[loopinrow];
                                 loopinrow+=1;
@@ -113,7 +109,7 @@ void H2ERI_build_COO_Diamat(H2ERI_p h2eri , COOmat_p coomat, int D1tst, int thre
         int pt_e0 = pt_cluster[2 * node0 + 1];
         int pt_e1 = pt_cluster[2 * node1 + 1];
         int Di_ncol = D_ncol[i+n_leaf_node];
-        H2P_dense_mat_p Di = c_D_blks[i+n_leaf_node];
+        H2E_dense_mat_p Di = c_D_blks[i+n_leaf_node];
         rowspot=rowD+numdata;
         colspot=colD+numdata;
         Dataspot=DataD+numdata;
@@ -216,6 +212,188 @@ void H2ERI_build_COO_Diamat(H2ERI_p h2eri , COOmat_p coomat, int D1tst, int thre
     COOmat_destroy(coonew);
 }
 
+
+void H2ERI_build_COO_Diamattest(H2ERI_p h2eri , COOmat_p coomat, int D1tst, int threstest)
+{
+    int n_leaf_node      = h2eri->n_leaf_node;
+    int n_r_inadm_pair   = h2eri->n_r_inadm_pair;
+    int num_bf           = h2eri->num_bf;
+    int *sp_bfp_sidx     = h2eri->sp_bfp_sidx;
+    int *D_nrow          = h2eri->D_nrow;
+    int *D_ncol          = h2eri->D_ncol;
+    int num_sp = h2eri->num_sp;
+    int *shell_bf_sidx = h2eri->shell_bf_sidx;
+    int *sp_shell_idx  = h2eri->sp_shell_idx;
+    H2E_dense_mat_p  *c_D_blks   = h2eri->c_D_blks;
+    int *pt_cluster      = h2eri->pt_cluster;
+    int    *leaf_nodes    = h2eri->height_nodes;
+    int    *r_inadm_pairs = h2eri->r_inadm_pairs;
+    coomat->nnz=h2eri->nD0element+2*h2eri->nD1element;
+    if(D1tst==0) coomat->nnz=h2eri->nD0element;
+    coomat->coorow = (int*) malloc(sizeof(int) * (coomat->nnz));
+    coomat->coocol = (int*) malloc(sizeof(int) * (coomat->nnz));
+    coomat->cooval = (double*) malloc(sizeof(double) * (coomat->nnz));
+    ASSERT_PRINTF(coomat->coorow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(coomat->coocol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(coomat->cooval    != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    int *rowD            = coomat->coorow;
+    int *colD            = coomat->coocol;
+    double *DataD           = coomat->cooval;
+    int *rowspot;
+    int *colspot;
+    double *Dataspot;
+    int rowspotupdate=0;
+    int colspotupdate=0;
+    int mu;
+    int nu;
+    int lambda;
+    int sigma;
+    int rowidx;
+    int rowvalue;
+    int colidx;
+    int colvalue;
+
+    size_t numdata=0;
+    //Store the information in D0 into COO matrix
+    for(int i=0;i<n_leaf_node;i++)
+    {
+        int node = leaf_nodes[i];
+        int pt_s = pt_cluster[2 * node];
+        int pt_e = pt_cluster[2 * node + 1];
+        //number of shell pairs in the node
+ //       int node_npts = pt_e - pt_s + 1;
+        int Di_nrow = D_nrow[i];
+        int Di_ncol = D_ncol[i];
+        int dspot=0;
+        H2E_dense_mat_p Di = c_D_blks[i];
+        rowspot=rowD+numdata;
+        colspot=colD+numdata;
+        Dataspot=DataD+numdata;
+        int startpoint = h2eri->mat_cluster[2*node];
+        for(int j=0;j<Di_nrow;j++)
+        {
+            rowidx=startpoint+j;
+            mu = h2eri->bf1st[rowidx];
+            nu = h2eri->bf2nd[rowidx];
+            rowvalue = nu * num_bf + mu;
+            for(int k=0;k<Di_ncol;k++)
+            {
+                colidx=startpoint+k;
+                lambda = h2eri->bf1st[colidx];
+                sigma = h2eri->bf2nd[colidx];
+                colvalue = sigma * num_bf + lambda;
+                rowspot[dspot]=rowvalue;
+                colspot[dspot]=colvalue;
+                Dataspot[dspot]=Di->data[dspot];
+//                Di->data[dspot]=0;
+                dspot+=1;
+            }
+        }
+        if(dspot != Di->size) printf("Wrong\n");
+        numdata += dspot;
+        dspot = 0;
+    }
+    if(D1tst==0) return;
+    //store the information in D1 in COO matrix
+    for (int i = 0; i < n_r_inadm_pair; i++)
+    {
+        int node0 = r_inadm_pairs[2 * i];
+        int node1 = r_inadm_pairs[2 * i + 1];
+        int vec_s0 = h2eri->mat_cluster[2 * node0];
+        int vec_s1 = h2eri->mat_cluster[2 * node1];
+        int Di_ncol = D_ncol[i+n_leaf_node];
+        int Di_nrow = D_nrow[i+n_leaf_node];
+        H2E_dense_mat_p Di = c_D_blks[i+n_leaf_node];
+        rowspot=rowD+numdata;
+        colspot=colD+numdata;
+        Dataspot=DataD+numdata;
+        int mspot=0;
+        int dspot=0;
+        for(int j=0;j<Di_nrow;j++)
+        {
+            rowidx=vec_s0+j;
+            mu = h2eri->bf1st[rowidx];
+            nu = h2eri->bf2nd[rowidx];
+            rowvalue = nu * num_bf + mu;
+            for(int k=0;k<Di_ncol;k++)
+            {
+                colidx=vec_s1+k;
+                lambda = h2eri->bf1st[colidx];
+                sigma = h2eri->bf2nd[colidx];
+                colvalue = sigma * num_bf + lambda;
+                rowspot[dspot]=rowvalue;
+                colspot[dspot]=colvalue;
+                Dataspot[dspot]=Di->data[mspot];
+                rowspot[dspot+1]=colvalue;
+                colspot[dspot+1]=rowvalue;
+                Dataspot[dspot+1]=Di->data[mspot];
+                mspot+=1;
+                dspot+=2;
+            }
+        }
+        if(mspot != Di->size) printf("Wrong\n");
+        numdata += dspot;
+        dspot = 0;
+
+
+    }
+    printf("The number of total elements is %lu and %lu\n",coomat->nnz, numdata);
+
+    if (threstest==0)
+        return;
+    size_t nnz=coomat->nnz;
+    double maxv=0;
+    for(size_t i=0;i<nnz;i++)
+    {
+        if(fabs(coomat->cooval[i])>maxv)
+        {
+            maxv=fabs(coomat->cooval[i]);
+        }
+    }
+    size_t newnz=0;
+    for(size_t i=0;i<nnz;i++)
+    {
+        if(fabs(coomat->cooval[i])>maxv*1e-9)
+        {
+            newnz+=1;
+        }
+    }
+    COOmat_p coonew;
+    COOmat_init(&coonew,num_bf*num_bf,num_bf*num_bf);
+    coonew->nnz=newnz;
+    coonew->coorow = (int*) malloc(sizeof(int) * newnz);
+    coonew->coocol = (int*) malloc(sizeof(int) * newnz);
+    coonew->cooval = (double*) malloc(sizeof(double) * newnz);
+    ASSERT_PRINTF(coonew->coocol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(coonew->coorow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(coonew->cooval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    size_t newptr=0;
+    for(size_t i=0;i<nnz;i++)
+    {
+        if(fabs(coomat->cooval[i])>maxv*1e-9)
+        {
+            coonew->coorow[newptr]=coomat->coorow[i];
+            coonew->coocol[newptr]=coomat->coocol[i];
+            coonew->cooval[newptr]=coomat->cooval[i];
+            newptr+=1;
+        }
+    }
+    printf("nnz after prescreening is %lu",newnz);
+    coomat->nnz=newnz;
+    coomat->coorow = (int*) malloc(sizeof(int) * newnz);
+    coomat->coocol = (int*) malloc(sizeof(int) * newnz);
+    coomat->cooval = (double*) malloc(sizeof(double) * newnz);
+    ASSERT_PRINTF(coomat->coocol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(coomat->coorow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(coomat->cooval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    for(size_t i=0;i<newnz;i++)
+    {        
+        coomat->coorow[i]=coonew->coorow[i];
+        coomat->coocol[i]=coonew->coocol[i];
+        coomat->cooval[i]=coonew->cooval[i];      
+    }
+    COOmat_destroy(coonew);
+}
 
 void Qsort_double_long0(int *key, double *val, int l, int r)
 {
@@ -485,7 +663,7 @@ void Double_COO_to_CSR_nosort(
 
 }
 
-int Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, double * mat, COOmat_p coomat)
+size_t Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, double * mat, COOmat_p coomat)
 {
     // Firstly, go through the elements of the matrix and find the maximum absolute value
     double maxval=0;
@@ -495,9 +673,11 @@ int Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, doubl
         {
             maxval=fabs(mat[i]);
         }
+        
     }
-    // Then computer the number of elements that is no less than maxval*thres
-    int nlarge=0;
+    printf("find maxv success, which is %f\n", maxval);
+    // Then compute the number of elements that is no less than maxval*thres
+    size_t nlarge=0;
     for(int i=0;i<nrow*ncol;i++)
     {
         if(fabs(mat[i])>maxval*thres)
@@ -505,6 +685,8 @@ int Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, doubl
             nlarge +=1 ;
         }
     }
+    
+//    coomat->nnz=nlarge;
     // Allocate 
     coomat->coorow = (int*) malloc(sizeof(int) * (nlarge));
     coomat->coocol = (int*) malloc(sizeof(int) * (nlarge));
@@ -512,12 +694,13 @@ int Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, doubl
     ASSERT_PRINTF(coomat->coorow != NULL, "Failed to allocate arrays for COO matrices indexing\n");
     ASSERT_PRINTF(coomat->coocol != NULL, "Failed to allocate arrays for COO matrices indexing\n");
     ASSERT_PRINTF(coomat->cooval    != NULL, "Failed to allocate arrays for COO matrices indexing\n");
+    //printf("alloc success\n");
     // Go through the elements and extract the large points into COO and delete the value and so only the remainder left.
-    int pt_idx=0;
+    size_t pt_idx=0;
     for(int i=0;i<nrow;i++)
         for(int j=0;j<ncol;j++)
         {
-            if(fabs(mat[i*ncol+j])>maxval*thres)
+            if(fabs(mat[i*ncol+j])>maxval*thres+1e-10)
             {
                 coomat->coorow[pt_idx]=i ;
                 coomat->coocol[pt_idx]=j ;
@@ -526,11 +709,16 @@ int Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, doubl
                 mat[i*ncol+j]=0;
             }
         }
+    printf("finished extract\n");
     coomat->nnz=nlarge;
     if(nlarge==pt_idx)
         return nlarge;
     else
-        return 0;
+        {
+            printf("Something wrong!\n");
+            return 0;
+        }
+        
 }
 
 
@@ -545,7 +733,6 @@ void Xindextransform(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtran
     int maxnele=0;
     memset(nele, 0, sizeof(int) * (nbf*nbf));
     memset(nelec, 0, sizeof(int) * (nbf*nbf));
-    printf("Memset success\n");
     double st1,et1;
     st1 = get_wtime_sec();
     for ( int i=0;i<nbf*nbf;i++)
@@ -560,7 +747,6 @@ void Xindextransform(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtran
             maxnele=nele[i];
     }
     et1 = get_wtime_sec();
-    printf("Calculate nele[i] time is %.3lf (s)\n",et1-st1);
     //2, compute the number of merged elements in each row
     int * tmpcol = (int*) malloc(sizeof(int) * (maxnele));
     double * tmpval = (double*) malloc(sizeof(double) * (maxnele));
@@ -1078,6 +1264,7 @@ double Calc_S1energy(CSRmat_p csrs1, CSRmat_p cscs1)
         if(csrs1->csrrow[i]!=csrs1->csrrow[i+1])
             if(cscs1->csrrow[i]!=cscs1->csrrow[i+1])
             {
+                double testtrace=trace;
                 //Compare the elements in the i-th row of csr and i-th column of csc
                 size_t j=csrs1->csrrow[i];
                 size_t k=cscs1->csrrow[i];
@@ -1088,6 +1275,7 @@ double Calc_S1energy(CSRmat_p csrs1, CSRmat_p cscs1)
                         trace += csrs1->csrval[j]*cscs1->csrval[k];
                         j+=1;
                         k+=1;
+                        
                     }
                     else if (csrs1->csrcol[j]<cscs1->csrcol[k])
                     {
@@ -1096,12 +1284,12 @@ double Calc_S1energy(CSRmat_p csrs1, CSRmat_p cscs1)
                     else if (csrs1->csrcol[j]>cscs1->csrcol[k])
                     {
                         k+=1;
-                    }
-                    
+                    }                   
                 }
             }
+        
     }
-
+//    printf("The energy is %f\n", trace);
     return trace;
 }
 

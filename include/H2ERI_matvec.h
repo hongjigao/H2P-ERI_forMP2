@@ -14,6 +14,9 @@ extern "C" {
 // Output parameter:
 //   y : Output dense vector
 void H2ERI_matvec(H2ERI_p h2eri, const double *x, double *y);
+void H2ERI_matvectest(H2ERI_p h2eri, const double *x, double *y);
+void H2ERI_matvectest1(H2ERI_p h2eri, const double *x, double *y);
+void H2ERI_matvectest2(H2ERI_p h2eri, const double *x, double *y);
 
 #ifdef __cplusplus
 }

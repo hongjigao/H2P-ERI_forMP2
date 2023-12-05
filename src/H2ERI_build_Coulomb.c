@@ -5,12 +5,9 @@
 
 #include <omp.h>
 
-#include "H2Pack_matvec.h"
-#include "H2Pack_utils.h"
 #include "H2ERI_typedef.h"
 #include "H2ERI_build_Coulomb.h"
 #include "H2ERI_matvec.h"
-#include "utils.h"  // In H2Pack
 
 // "Uncontract" the density matrix according to SSP and unroll 
 // the result to a column for H2 matvec.
@@ -30,11 +27,15 @@ void H2ERI_uncontract_den_mat(H2ERI_p h2eri, const double *den_mat)
 {
     int num_bf = h2eri->num_bf;
     int num_sp = h2eri->num_sp;
+    int num_sp_bfp = h2eri->num_sp_bfp;
     int *shell_bf_sidx = h2eri->shell_bf_sidx;
     int *sp_bfp_sidx   = h2eri->sp_bfp_sidx;
     int *sp_shell_idx  = h2eri->sp_shell_idx;
     double *x = h2eri->unc_denmat_x;
-    
+    h2eri->bf1st = (int*) malloc(sizeof(int) * num_sp_bfp);
+    h2eri->bf2nd = (int*) malloc(sizeof(int) * num_sp_bfp);
+    int *bf1st = h2eri->bf1st;
+    int *bf2nd = h2eri->bf2nd;
     #pragma omp parallel for schedule(dynamic, 16)
     for (int i = 0; i < num_sp; i++)
     {
@@ -57,9 +58,17 @@ void H2ERI_uncontract_den_mat(H2ERI_p h2eri, const double *den_mat)
         {
             const double *den_mat_ptr = den_mat + (scol + j) * num_bf + srow;
             double *x_ptr = x + x_spos + j * nrow;
+            int *bf1st_ptr = bf1st + x_spos + j * nrow;
+            int *bf2nd_ptr = bf2nd + x_spos + j * nrow;
+
             #pragma omp simd 
             for (int k = 0; k < nrow; k++)
+            {
                 x_ptr[k] = sym_coef * den_mat_ptr[k];
+                bf1st_ptr[k]=srow+k;
+                bf2nd_ptr[k]=scol+j;
+            }
+                
         }
     }
 }
@@ -150,6 +159,41 @@ void H2ERI_build_Coulomb(H2ERI_p h2eri, const double *den_mat, double *J_mat)
     H2ERI_uncontract_den_mat(h2eri, den_mat);
     
     H2ERI_matvec(h2eri, h2eri->unc_denmat_x, h2eri->H2_matvec_y);
+    
+    H2ERI_contract_H2_matvec(h2eri, J_mat);
+}
+
+
+void H2ERI_build_Coulombtest(H2ERI_p h2eri, const double *den_mat, double *J_mat)
+{
+    if (h2eri->unc_denmat_x == NULL)
+    {
+        size_t vec_msize = sizeof(double) * h2eri->num_sp_bfp;
+        h2eri->unc_denmat_x = (double *) malloc(vec_msize);
+        h2eri->H2_matvec_y  = (double *) malloc(vec_msize);
+        assert(h2eri->unc_denmat_x != NULL && h2eri->H2_matvec_y != NULL);
+    }
+    
+    H2ERI_uncontract_den_mat(h2eri, den_mat);
+    
+    H2ERI_matvectest(h2eri, h2eri->unc_denmat_x, h2eri->H2_matvec_y);
+    
+    H2ERI_contract_H2_matvec(h2eri, J_mat);
+}
+
+void H2ERI_build_Coulombtest1(H2ERI_p h2eri, const double *den_mat, double *J_mat)
+{
+    if (h2eri->unc_denmat_x == NULL)
+    {
+        size_t vec_msize = sizeof(double) * h2eri->num_sp_bfp;
+        h2eri->unc_denmat_x = (double *) malloc(vec_msize);
+        h2eri->H2_matvec_y  = (double *) malloc(vec_msize);
+        assert(h2eri->unc_denmat_x != NULL && h2eri->H2_matvec_y != NULL);
+    }
+    
+    H2ERI_uncontract_den_mat(h2eri, den_mat);
+    
+    H2ERI_matvectest1(h2eri, h2eri->unc_denmat_x, h2eri->H2_matvec_y);
     
     H2ERI_contract_H2_matvec(h2eri, J_mat);
 }
