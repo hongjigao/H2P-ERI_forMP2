@@ -48,7 +48,7 @@ void H2ERI_HFSCF(TinyDFT_p TinyDFT, H2ERI_p h2eri, const int max_iter)
     double *E_two_elec    = &TinyDFT->E_two_elec;
     double *E_HF_exchange = &TinyDFT->E_HF_exchange;
 
-    while ((TinyDFT->iter < TinyDFT->max_iter) && (fabs(E_delta) >= 0.1))
+    while ((TinyDFT->iter < TinyDFT->max_iter) && (fabs(E_delta) >= 1e-10))
     {
         printf("--------------- Iteration %d ---------------\n", TinyDFT->iter);
         
@@ -295,24 +295,17 @@ int main(int argc, char **argv)
 
     COOmat_p cooh2d;
     COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    H2ERI_build_COO_Diamattest(h2eri,cooh2d,1,0);
+    H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
 //    size_t nnz=cooh2d->nnz;
-    printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    printf("arggfdsadgf!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     printf("Now print COO H2D Matrix info--------\n");
     TestCOO(cooh2d);
-    
-    double thres1=1e-7;
-    COOmat_p cooh2d1;
-    COOmat_init(&cooh2d1,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    compresscoo(cooh2d, cooh2d1, thres1);
-    TestCOO(cooh2d1);
-    printf("The number of values above threshold is %lu \n", cooh2d1->nnz);
     
     CSRmat_p csrh2d;
     CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
 
 
-    Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d1->nnz, cooh2d1,csrh2d);
+    Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d->nnz, cooh2d,csrh2d);
     printf("Now print CSR H2D Matrix info--------\n");
     TestCSR(csrh2d);
     
@@ -362,26 +355,6 @@ int main(int argc, char **argv)
     //Now we compute the total norm of the Dmat in H2 form. This is to make sure that the extraction step is correct
     double eone=0;
     H2E_dense_mat_p  *c_D_blks   = h2eri->c_D_blks;
-    double normd=0;
-
-    for(int i=0;i<h2eri->n_leaf_node;i++)
-    {
-        H2E_dense_mat_p Di = c_D_blks[i];
-        for(int j=0;j<Di->nrow*Di->ncol;j++)
-        {
-            normd+=Di->data[j]*Di->data[j];
-        }
-    }
-    for(int i=0;i<h2eri->n_r_inadm_pair;i++)
-    {
-        H2E_dense_mat_p Di = c_D_blks[i+h2eri->n_leaf_node];
-        for(int j=0;j<Di->size;j++)
-        {
-            normd+=2*Di->data[j]*Di->data[j];
-        }
-    }
-    printf("The norm of the dense part is %f\n",normd);
-    printf("It should be equal to the norm square printed in the coo and csr tests\n");
     memset(productmat,  0, sizeof(double) * nbf * nbf);
 
     // Now we apply only the dense multiplication to the initial ERI tensor and get the productmat to be the J matrix
@@ -607,14 +580,14 @@ int main(int argc, char **argv)
     CSRmat_destroy(colgdls);
     */
 
-    COOmat_destroy(cooh2d1);
-    CSRmat_destroy(csrh2d);
+    
+
 
     // Free TinyDFT and H2P-ERI
     TinyDFT_destroy(&TinyDFT);
     H2ERI_destroy(h2eri);
     
-    COOmat_destroy(cooh2d1);
+    COOmat_destroy(cooh2d);
     CSRmat_destroy(csrh2d);
     return 0;
 }

@@ -110,7 +110,11 @@ struct H2ERI
     int    *D_ncol;                 // Size n_D, numbers of columns of dense blocks in the original matrix
 
     int    *bf1st;                     // Added: size num_sp_bfp, the first basis function of the corresponding bfp
-    int    *bf2nd;                     // Added: size num_sp_bfp, the second basis function of the corresponding bfp 
+    int    *bf2nd;                     // Added: size num_sp_bfp, the second basis function of the corresponding bfp
+    int    *sameshell;                 // Added: size num_sp_bfp, whether the two basis functions are in the same shell 
+    int    *leafidx;                   // Added: size nbf*nbf, the index of the leaf node that contains the corresponding bfp
+    int    *bfpidx;                    // Added: size nbf*nbf, the index of the bfp with element
+
     size_t *B_ptr;                  // Size n_B, offset of each generator matrix's data in B_data
     size_t *D_ptr;                  // Size n_D, offset of each dense block's data in D_data
     size_t nD0element;                 // Added: the number of nonzero elements in D0(Diagonal blocks)

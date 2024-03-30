@@ -521,7 +521,9 @@ void H2ERI_build_UJ_proxy(H2ERI_p h2eri)
                 double extent = box_extent[node];
                 double r1 = width * (0.5 + ALPHA_SUP);
                 double r2 = width * (0.5 + extent);
-                double d_nlayer = (extent - ALPHA_SUP) * (pp_nlayer_ext - 1);
+                //changed! added max 
+                double d_nlayer = MAX((extent - ALPHA_SUP) * (pp_nlayer_ext - 1),0);
+                //double d_nlayer = (extent - ALPHA_SUP) * (pp_nlayer_ext - 1);
                 int nlayer_node = 1 + ceil(d_nlayer);
                 H2ERI_generate_proxy_point_layers(r1, r2, nlayer_node, pp_npts_layer, pp);
                 int num_pp = pp->ncol;
@@ -867,6 +869,7 @@ void H2ERI_compress_BD_blk(
     int old_size = blk_nrow * blk_ncol;
     int new_size = (blk_nrow + blk_ncol) * blk_rank;
     if (1)
+    //if (new_size > (old_size * 4 / 5))
     {
         // The compressed form is not small enough, use the original block
         H2E_dense_mat_init(res_blk_, blk_nrow, blk_ncol);
@@ -936,11 +939,13 @@ void H2ERI_build_B(H2ERI_p h2eri)
         int level1 = node_level[node1];
         node_n_r_adm[node0]++;
         node_n_r_adm[node1]++;
-        if (level0 == level1)
+        if(1)
+        //if (level0 == level1)
         {
             B_nrow[i] = J_row[node0]->length;
             B_ncol[i] = J_row[node1]->length;
         }
+        /*
         if (level0 > level1)
         {
             int pt_s1 = pt_cluster[2 * node1];
@@ -955,6 +960,7 @@ void H2ERI_build_B(H2ERI_p h2eri)
             B_nrow[i] = sp_bfp_sidx[pt_e0 + 1] - sp_bfp_sidx[pt_s0];
             B_ncol[i] = J_row[node1]->length;
         }
+        */
         size_t Bi_size = (size_t) B_nrow[i] * (size_t) B_ncol[i];
         B_total_size += Bi_size;
         B_ptr[i + 1] = Bi_size;
@@ -1026,7 +1032,8 @@ void H2ERI_build_B(H2ERI_p h2eri)
                 int level1 = node_level[node1];
                 
                 // (1) Two nodes are of the same level, compress on both sides
-                if (level0 == level1)
+                if(1)
+                //if (level0 == level1)
                 {
                     int tmpB_nrow  = H2ERI_gather_sum_int(sp_nbfp, J_pair[node0]->length, J_pair[node0]->data);
                     int tmpB_ncol  = H2ERI_gather_sum_int(sp_nbfp, J_pair[node1]->length, J_pair[node1]->data);
@@ -1045,6 +1052,7 @@ void H2ERI_build_B(H2ERI_p h2eri)
                 
                 // (2) node1 is a leaf node and its level is higher than node0's level, 
                 //     only compress on node0's side
+                /*
                 if (level0 > level1)
                 {
                     int tmpB_nrow  = H2ERI_gather_sum_int(sp_nbfp, J_pair[node0]->length, J_pair[node0]->data);
@@ -1082,7 +1090,7 @@ void H2ERI_build_B(H2ERI_p h2eri)
                     );
                     H2E_dense_mat_select_columns(tmpB, J_row[node1]);
                 }
-                
+                */
                 H2ERI_compress_BD_blk(tmpB, tmpB0, U_mat, QR_buff, J, ID_buff, stop_param, &c_B_blks[i]);
             }  // End of i loop
         }  // End of i_blk loop

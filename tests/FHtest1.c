@@ -282,6 +282,10 @@ int main(int argc, char **argv)
     int *tmpptr1 = NULL;
     int *tmpptr2 = NULL;
     int length=0;
+    int nlevel=h2eri->max_level+1;
+    double* maxdiv;
+    maxdiv =(double *) malloc(sizeof(double) * (nlevel));
+    memset(maxdiv, 0, sizeof(double) * (nlevel));
     for(int i=0;i<h2eri->n_node;i++)
     {
         tmpptr1=h2eri->bf1st+h2eri->mat_cluster[2*i];
@@ -290,7 +294,16 @@ int main(int argc, char **argv)
         int count1=count_unique(h2eri,tmpptr1,length);
         int count2=count_unique(h2eri,tmpptr2,length);
         printf("In the %d node of height %d, number of BFP is %d, number of unique 1st bf is%d, 2nd bf is %d\n",i,h2eri->node_height[i],length,count1,count2);
-
+        double div=(double)count1*count2/length;
+        if(div>maxdiv[h2eri->node_height[i]])
+        {
+            printf("update maxdif\n");
+            maxdiv[h2eri->node_height[i]]=div;
+        }
+    }
+    for(int i=0;i<nlevel;i++)
+    {
+        printf("The maximum value of difference in height %d is %f",i,maxdiv[i]);
     }
     double normd=0;
     double normb=0;
@@ -298,27 +311,27 @@ int main(int argc, char **argv)
     printf("Now print D matrix information\n");
     for(int i=0;i<h2eri->n_D;i++)
     {
-        printf("The %d th D block",i);
+    //    printf("The %d th D block",i);
         double norm = Calc2norm(h2eri->c_D_blks[i]->data,h2eri->c_D_blks[i]->nrow,h2eri->c_D_blks[i]->ncol);
         normd+=norm;
-        printf("Its norm is %f\n",norm);
+    //    printf("Its norm is %f\n",norm);
     }
 
     printf("Now print B matrix information\n");
     for(int i=0;i<h2eri->n_B;i++)
     {
-        printf("The %d th B block",i);
+    //    printf("The %d th B block",i);
         double norm = Calc2norm(h2eri->c_B_blks[i]->data,h2eri->c_B_blks[i]->nrow,h2eri->c_B_blks[i]->ncol);
-        printf("Its norm is %f\n",norm);
+    //    printf("Its norm is %f\n",norm);
         normb+=norm;
     }
 
     printf("Now print U matrix information\n");
     for(int i=0;i<h2eri->n_node;i++)
     {
-        printf("The %d th U block",i);
+    //    printf("The %d th U block",i);
         double norm = Calc2norm(h2eri->U[i]->data,h2eri->U[i]->nrow,h2eri->U[i]->ncol);
-        printf("Its norm is %f\n",norm);
+    //    printf("Its norm is %f\n",norm);
     }
     printf("The total norm of D is %f while B is %f\n",normd,normb);
 

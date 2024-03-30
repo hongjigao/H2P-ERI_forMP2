@@ -295,7 +295,9 @@ int main(int argc, char **argv)
 
     COOmat_p cooh2d;
     COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    H2ERI_build_COO_Diamattest(h2eri,cooh2d,1,0);
+    printf("Init success\n");
+    H2ERI_build_COO_halfdensetest(h2eri,cooh2d);
+    printf("Build COO success\n");
 //    size_t nnz=cooh2d->nnz;
     printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     printf("Now print COO H2D Matrix info--------\n");
@@ -315,7 +317,7 @@ int main(int argc, char **argv)
     Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d1->nnz, cooh2d1,csrh2d);
     printf("Now print CSR H2D Matrix info--------\n");
     TestCSR(csrh2d);
-    
+    //productmat is W*J where only diagonal part of the W matrix is contained
     double *productmat;
     productmat = (double*) malloc_aligned(sizeof(double) * nbf * nbf,    64);
     memset(productmat,  0, sizeof(double) * nbf * nbf);
@@ -336,7 +338,7 @@ int main(int argc, char **argv)
     }
     //Now theoretically productmat is the J matrix in the COO product
     double normj=Calc2norm(productmat,nbf);
-    printf("The dense csr extracted matrix computed J norm square is %f\n",normj);
+    printf("The diag csr extracted matrix computed J norm square is %f\n",normj);
     normj=Calc2norm(TinyDFT->J_mat,nbf);
     printf("It should be (in TinyDFT->J_mat) %f\n",normj);
     for(int i=0;i<nbf*nbf;i++)
@@ -350,92 +352,12 @@ int main(int argc, char **argv)
     {
         energy+=productmat[i]*TinyDFT->D_mat[i];
     }
-    printf("And the energy computed is %f\n",energy);
-    double eone=0;
-    H2E_dense_mat_p  *c_D_blks   = h2eri->c_D_blks;
-    double normd=0;
-
-    for(int i=0;i<h2eri->n_leaf_node;i++)
-    {
-        H2E_dense_mat_p Di = c_D_blks[i];
-        for(int j=0;j<Di->nrow*Di->ncol;j++)
-        {
-            normd+=Di->data[j]*Di->data[j];
-        }
-    }
-    for(int i=0;i<h2eri->n_r_inadm_pair;i++)
-    {
-        H2E_dense_mat_p Di = c_D_blks[i+h2eri->n_leaf_node];
-        for(int j=0;j<Di->size;j++)
-        {
-            normd+=2*Di->data[j]*Di->data[j];
-        }
-    }
-    printf("The norm of the dense part is %f\n",normd);
-    printf("It should be equal to the norm square printed in the coo and csr tests\n");
-    memset(productmat,  0, sizeof(double) * nbf * nbf);
-    H2ERI_build_Coulombtest(h2eri, TinyDFT->D_mat, productmat);
-    for(int i=0;i<nbf*nbf;i++)
-    {
-        diffmat[i]=productmat[i]-TinyDFT->J_mat[i];
-    }
-    normj=Calc2norm(productmat,nbf);
-    printf("The norm square of diagonal J in delete D test is %f\n",normj);
-    normj=Calc2norm(diffmat,nbf);
-    printf("The norm square of difference matrix is %f\n",normj);
-    eone = 0;
-    for(int i=0;i<nbf*nbf;i++)
-    {
-//        printf(" %f ", productmat[i]);
-        eone += productmat[i]*TinyDFT->D_mat[i];
-    }
-    printf("\n D part computation eone in test is %f\n",eone);
-
-    memset(productmat,  0, sizeof(double) * nbf * nbf);
-    H2ERI_build_Coulombtest1(h2eri, TinyDFT->D_mat, productmat);
-    for(int i=0;i<nbf*nbf;i++)
-    {
-        diffmat[i]=productmat[i]-TinyDFT->J_mat[i];
-    }
-    normj=Calc2norm(productmat,nbf);
-    printf("The norm square of diagonal J in zero B test is %f\n",normj);
-    normj=Calc2norm(diffmat,nbf);
-    printf("The norm square of difference matrix is %f\n",normj);
-    eone = 0;
-    for(int i=0;i<nbf*nbf;i++)
-    {
-//        printf(" %f ", productmat[i]);
-        eone += productmat[i]*TinyDFT->D_mat[i];
-    }
-    printf("\n D part computation eone in test is %f\n",eone);
-    eone = 0;
-    for(int i=0;i<nbf*nbf;i++)
-    {
-//        printf(" %f ", productmat[i]);
-        eone += TinyDFT->J_mat[i]*TinyDFT->D_mat[i];
-    }
-    printf("\nIt should be %f\n",eone);
-    memset(productmat,  0, sizeof(double) * nbf * nbf);
-    H2ERI_build_Coulomb(h2eri, TinyDFT->D_mat, productmat);
-    for(int i=0;i<nbf*nbf;i++)
-    {
-        diffmat[i]=productmat[i]-TinyDFT->J_mat[i];
-    }
-    normj=Calc2norm(productmat,nbf);
-    printf("Come back. The norm square of diagonal J in zero B test is %f\n",normj);
-    normj=Calc2norm(diffmat,nbf);
-    printf("The norm square of difference matrix is %f\n",normj);
-    eone = 0;
-    for(int i=0;i<nbf*nbf;i++)
-    {
-//        printf(" %f ", productmat[i]);
-        eone += productmat[i]*TinyDFT->D_mat[i];
-    }
-    printf("\n D part computation eone in test is %f\n",eone);
-
+    printf("And the energy computed (D.*J) is %f\n",energy);
 
     COOmat_destroy(cooh2d1);
     CSRmat_destroy(csrh2d);
+
+
 
     // Free TinyDFT and H2P-ERI
     TinyDFT_destroy(&TinyDFT);

@@ -19,8 +19,11 @@
 // H2ERI Coulomb matrix construction
 #include "H2ERI_build_Coulomb.h"
 
-// H2ERI build Smat
-#include "H2ERI_build_Smat.h"
+// H2ERI build S1mat
+#include "H2ERI_build_S1.h"
+
+// H2ERI build S5mat
+#include "H2ERI_build_S5.h"
 
 // H2ERI exchange matrix construction
 #include "H2ERI_build_exchange.h"

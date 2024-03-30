@@ -337,7 +337,8 @@ void H2ERI_matvec_intmd_mult_AOT(H2ERI_p h2eri, const double *x)
                 H2E_dense_mat_p Bi = c_B_blks[i];
                 
                 // (1) Two nodes are of the same level, compress on both sides
-                if (level0 == level1)
+                if(1)
+                //if (level0 == level1)
                 {
                     int ncol0 = y1[node0]->ncol;
                     int ncol1 = y1[node1]->ncol;
@@ -353,6 +354,7 @@ void H2ERI_matvec_intmd_mult_AOT(H2ERI_p h2eri, const double *x)
                 
                 // (2) node1 is a leaf node and its level is higher than node0's level, 
                 //     only compress on node0's side
+                /*
                 if (level0 > level1)
                 {
                     int vec_s1 = mat_cluster[node1 * 2];
@@ -384,6 +386,7 @@ void H2ERI_matvec_intmd_mult_AOT(H2ERI_p h2eri, const double *x)
                     double *x_out_1 = y1_dst_1;
                     H2ERI_BD_blk_bi_matvec(Bi, tmp_v, x_in_0, x_in_1, x_out_0, x_out_1);
                 }
+                */
             }  // End of i loop
         }  // End of i_blk loop
         thread_buf[tid]->timer += get_wtime_sec();
@@ -460,7 +463,8 @@ void H2ERI_matvec_intmd_mult_JIT(H2ERI_p h2eri, const double *x)
                 int level1 = node_level[node1];
                 
                 // (1) Two nodes are of the same level, compress on both sides
-                if (level0 == level1)
+                if(1)
+                //if (level0 == level1)
                 {
                     int tmpB_nrow  = H2ERI_gather_sum_int(sp_nbfp, J_pair[node0]->length, J_pair[node0]->data);
                     int tmpB_ncol  = H2ERI_gather_sum_int(sp_nbfp, J_pair[node1]->length, J_pair[node1]->data);
@@ -488,6 +492,7 @@ void H2ERI_matvec_intmd_mult_JIT(H2ERI_p h2eri, const double *x)
                 
                 // (2) node1 is a leaf node and its level is higher than node0's level, 
                 //     only compress on node0's side
+                /*
                 if (level0 > level1)
                 {
                     int tmpB_nrow  = H2ERI_gather_sum_int(sp_nbfp, J_pair[node0]->length, J_pair[node0]->data);
@@ -545,6 +550,7 @@ void H2ERI_matvec_intmd_mult_JIT(H2ERI_p h2eri, const double *x)
                         y0[node1]->data, x_spos, y_spos, y1_dst_1
                     );
                 }
+                */
             }  // End of i loop
         }  // End of i_blk loop
         thread_buf[tid]->timer += get_wtime_sec();
@@ -1280,7 +1286,7 @@ void H2ERI_matvectest2(H2ERI_p h2eri, const double *x, double *y)
 static void H2ERI_matvec_dense_mult_AOTdiag(H2ERI_p h2eri, const double *x)
 {
     int n_thread       = h2eri->n_thread;
-    int n_leaf_node    = h2eri->n_leaf_node;W
+    int n_leaf_node    = h2eri->n_leaf_node;
     int *leaf_nodes    = h2eri->height_nodes;
     int *mat_cluster   = h2eri->mat_cluster;
     int *r_inadm_pairs = h2eri->r_inadm_pairs;

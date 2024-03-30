@@ -56,6 +56,9 @@ void H2ERI_init(H2ERI_p *h2eri_, const double scr_tol, const double ext_tol, con
 
     h2eri->bf1st                 = NULL;
     h2eri->bf2nd                 = NULL;
+    h2eri->sameshell             = NULL;
+    h2eri->leafidx               = NULL;
+    h2eri->bfpidx                = NULL;
     
     h2eri->n_thread = omp_get_max_threads();
     h2eri->pt_dim    = 3;
@@ -145,6 +148,11 @@ void H2ERI_destroy(H2ERI_p h2eri)
             H2E_dense_mat_destroy(&c_D_blks[i]);
         free(c_D_blks);
     }
+    free(h2eri->bf1st);
+    free(h2eri->bf2nd);
+    free(h2eri->sameshell);
+    free(h2eri->leafidx);
+    free(h2eri->bfpidx);
 }
 
 // Print H2ERI statistic information

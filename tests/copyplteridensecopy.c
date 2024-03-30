@@ -96,7 +96,8 @@ void H2ERI_HFSCF(TinyDFT_p TinyDFT, H2ERI_p h2eri, const int max_iter)
         printf("* Energy = %.10lf", E_curr);
         if (TinyDFT->iter > 0) 
         {
-            printf(", delta = %e\n", E_delta); 
+            printf(", delta = %e\n", E_delta);
+            printf("The Eoe, Ete and Eex are respectively %f, %f and %f\n",*E_one_elec,*E_two_elec,*E_HF_exchange); 
         } else {
             printf("\n");
             E_delta = 19241112.0;  // Prevent the SCF exit after 1st iteration when no SAD initial guess
@@ -111,6 +112,7 @@ void H2ERI_HFSCF(TinyDFT_p TinyDFT, H2ERI_p h2eri, const int max_iter)
 void TestCOO(COOmat_p coomat)
 {
     double maxv=0;
+    double norm=0;
     int larger1e5=0;
     int larger1e9=0;
     int larger1e2=0;
@@ -125,7 +127,8 @@ void TestCOO(COOmat_p coomat)
     }
 
     printf("The max value is %e\n",maxv);
- 
+
+
     for(size_t i=0;i<coomat->nnz;i++)
     {
         if(fabs(coomat->cooval[i])>maxv*1e-2)
@@ -136,15 +139,18 @@ void TestCOO(COOmat_p coomat)
             larger1e9+=1;
         if(fabs(coomat->cooval[i])>0)
             lg0tst+=1;
+        norm+=coomat->cooval[i]*coomat->cooval[i];
 
     }
     printf("The number of values larger than 1e-2,1e-5 and 1e-9 are respectively %d,%d,%d\n",larger1e2,larger1e5,larger1e9);
     printf("The number of elements is %d\n",lg0tst);
+    printf("The norm square of the COO matrix is %f\n",norm);
 }
 
 void TestCSR(CSRmat_p csrmat)
 {
     double maxv=0;
+    double norm=0;
     size_t larger1e5=0;
     size_t larger1e9=0;
     size_t larger1e2=0;
@@ -170,6 +176,7 @@ void TestCSR(CSRmat_p csrmat)
             larger1e9+=1;
         if(fabs(csrmat->csrval[i])>0)
             lg0tst+=1;
+        norm += csrmat->csrval[i]*csrmat->csrval[i];
 
     }
     int nn0 = csrmat->nrow;
@@ -186,6 +193,7 @@ void TestCSR(CSRmat_p csrmat)
     }
     printf("The number of values larger than 1e-2,1e-5 and 1e-9 are respectively %lu,%lu,%lu\n",larger1e2,larger1e5,larger1e9);
     printf("The number of elements is %lu\n",lg0tst);
+    printf("The norm of the csrmat is %f\n", norm);
     printf("The number of nonzero rows is %d, the totol rows is %d, the longest row is %d\n",nn0,csrmat->nrow,nlong);
     printf("Test the ascending order:\n");
     int tests=0;
@@ -214,6 +222,23 @@ void TestCSR(CSRmat_p csrmat)
     else
         printf("Same value %d\n",tests);
 }
+
+
+double Calc2norm(const double *mat, int siz) 
+{
+  double norms = 0;
+  for (int i = 0; i < siz; i++)
+    for (int j = 0; j < siz; j++) 
+    {
+      norms = norms + mat[i * siz + j] * mat[i * siz + j];
+    }
+
+  return norms;
+}
+
+
+
+
 
 int main(int argc, char **argv)
 {
@@ -249,7 +274,7 @@ int main(int argc, char **argv)
     
     // Print H2P-ERI statistic info
     H2ERI_print_statistic(h2eri);
-
+    int nbf = h2eri->num_bf;
     int * tmpshellidx;
     tmpshellidx=(int *) malloc(sizeof(int) * (h2eri->nshell+1));
     for(int j=0;j<h2eri->nshell;j++)
@@ -266,108 +291,62 @@ int main(int argc, char **argv)
 
     free(tmpshellidx);
 
-
-
-    COOmat_p cooh2d;
-    COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    H2ERI_build_COO_Diamat(h2eri,cooh2d,0,0);
-    size_t nnz=cooh2d->nnz;
-    printf("Now print COO H2D Matrix info--------\n");
-    TestCOO(cooh2d);
-    double thres1=1e-7;
-    COOmat_p cooh2d1;
-    COOmat_init(&cooh2d1,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    compresscoo(cooh2d, cooh2d1, thres1);
-    TestCOO(cooh2d1);
-    printf("DEWDEeaf %lu \n", cooh2d1->nnz);
-    CSRmat_p csrh2d;
-    CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-
-
-    Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d1->nnz, cooh2d1,csrh2d);
-    printf("Now print CSR H2D Matrix info--------\n");
-    TestCSR(csrh2d);
-
     TinyDFT_build_MP2info_eig(TinyDFT, TinyDFT->F_mat,
                                TinyDFT->X_mat, TinyDFT->D_mat,
                                TinyDFT->Cocc_mat, TinyDFT->DC_mat,
                                TinyDFT->Cvir_mat, TinyDFT->orbitenergy_array);
-    double Fermie =0;
-    double talpha=1;
-    double st0,et0;
-    st0 = get_wtime_sec();
+    
 
-    TinyDFT_build_energyweightedDDC(TinyDFT, TinyDFT->Cocc_mat,TinyDFT->Cvir_mat,TinyDFT->orbitenergy_array,TinyDFT->D_mat,TinyDFT->DC_mat,Fermie,talpha);
-    et0 = get_wtime_sec();
-    printf("D/DC building time is %.3lf (s)\n",et0-st0);
     
-    COOmat_p cooden;
-    COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
-    double thres = 1e-4;
-    size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->D_mat, cooden);
-    printf("Now print COO Den Matrix info--------\n");
-    TestCOO(cooden);
-    printf("The total elements of D are %d and the rate of survival by threshold %e is %e \n",h2eri->num_bf*h2eri->num_bf,thres,(double)nden/(h2eri->num_bf*h2eri->num_bf));
-    printf("Now print CSR Den Matrix info--------\n");
-    CSRmat_p csrden;
-    CSRmat_init(&csrden,h2eri->num_bf,h2eri->num_bf);
-    Double_COO_to_CSR( h2eri->num_bf,  nden, cooden,csrden);
-    TestCSR(csrden);
-    COOmat_p coodc;
-    COOmat_init(&coodc,h2eri->num_bf,h2eri->num_bf);
-    size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->DC_mat, coodc);
-    printf("Now print COO DC Matrix info--------\n");
-    TestCOO(coodc);
-    printf("The total elements of DC are %d and the rate of survival by threshold 1e-6 is %e \n",h2eri->num_bf*h2eri->num_bf,(double)ndc/(h2eri->num_bf*h2eri->num_bf));
+    
+    COOmat_p cooh2d;
+    COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+    H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
+    //    size_t nnz=cooh2d->nnz;
+    printf("arggfdsadgf!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    printf("Now print COO H2D Matrix info--------\n");
+    TestCOO(cooh2d);
+    
+    CSRmat_p csrh2d;
+    CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
 
-    CSRmat_p csrdc;
-    CSRmat_init(&csrdc,h2eri->num_bf,h2eri->num_bf);
-    Double_COO_to_CSR( h2eri->num_bf,  ndc, coodc,csrdc);
-    printf("Now print CSR DC Matrix info--------\n");
-    TestCSR(csrdc);
-    printf("Now do index transformation\n");
-    CSRmat_p gdle;
-    CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    printf("test numbf is%d\n",h2eri->num_bf);
-    double st1,et1;
-    st1 = get_wtime_sec();
-    Xindextransform1(h2eri->num_bf,csrh2d,csrden,gdle);
-//    et1 = get_wtime_sec();
-//    printf("Index transformation time is %.3lf (s)\n",et1-st1);
-//    TestCSR(gdle);
-    printf("Xindex transformation finished\n");
-    CSRmat_p gdls;
-    CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    
-//    st1 = get_wtime_sec();
-    Yindextransform1(h2eri->num_bf,gdle,csrdc,gdls);
-    et1 = get_wtime_sec();
-    
-    TestCSR(gdls);
-    printf("Index transformation time is %.3lf (s)\n",et1-st1);
-    /*
-    printf("Now do energy calculation \n");
-    st1 = get_wtime_sec();
-    double energy;
-    energy = Calc_S1energy(gdls);
-    printf("The energy is %f\n",energy);
-    et1 = get_wtime_sec();
-    printf("Energy computation time is %.3lf (s)\n",et1-st1);
-    */
-    CSRmat_destroy(gdls);
-    
-    COOmat_destroy(cooden);
-    CSRmat_destroy(csrden);
-    CSRmat_destroy(gdle);
-    COOmat_destroy(coodc);
-    CSRmat_destroy(csrdc);
 
-    COOmat_destroy(cooh2d1);
-    CSRmat_destroy(csrh2d);
+    Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d->nnz, cooh2d,csrh2d);
+    printf("Now print CSR H2D Matrix info--------\n");
+    TestCSR(csrh2d);
+    FILE *file = fopen("outeri.txt", "w");
+    if (file == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < csrh2d->nrow; i++) {
+        for (size_t j = csrh2d->csrrow[i]; j < csrh2d->csrrow[i+1]; j++) {
+            fprintf(file, "%d %d %d %d %f ", i%nbf,i/nbf,csrh2d->csrcol[j]%nbf,csrh2d->csrcol[j]/nbf,csrh2d->csrval[j]);
+            fprintf(file, "\n");
+        }
+    }
+    fclose(file);
+
+    FILE *file1 = fopen("outputsp.txt", "w");
+    if (file1 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < h2eri->num_sp_bfp; i++) 
+    {
+        fprintf(file1, "%d %d %d ", h2eri->sp_bfp_sidx[i],h2eri->bf1st[i],h2eri->bf2nd[i]);
+        fprintf(file1, "\n");
+    }
+
+
+    fclose(file1);
     
+
     // Free TinyDFT and H2P-ERI
     TinyDFT_destroy(&TinyDFT);
     H2ERI_destroy(h2eri);
-    
+
     return 0;
 }

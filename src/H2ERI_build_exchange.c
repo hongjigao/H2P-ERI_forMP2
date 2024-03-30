@@ -1211,7 +1211,8 @@ static void H2ERI_build_exchange_H2_matmul_partial(H2ERI_p h2eri, Kmat_workbuf_p
             int level1 = node_level[node1];
 
             // (1) Two nodes are of the same level, compress on both sides
-            if (level0 == level1)
+            if(1)
+            //if (level0 == level1)
             {
                 double *y0_node1 = y0 + y0_sidx[node1];
                 double *y1_node0 = y1 + y1_sidx[node0];
@@ -1220,6 +1221,7 @@ static void H2ERI_build_exchange_H2_matmul_partial(H2ERI_p h2eri, Kmat_workbuf_p
 
             // (2) node1 is a leaf node and its level is higher than node0's level, 
             //     only compress on node0's side
+            /*
             if (level0 > level1)
             {
                 double *node1_vec_in = nvi_nnz + nvi_nnz_sidx[node1];
@@ -1245,6 +1247,7 @@ static void H2ERI_build_exchange_H2_matmul_partial(H2ERI_p h2eri, Kmat_workbuf_p
                     tmp_idx1->length,  tmp_idx1->data
                 );
             }
+            */
         }  // End of j loop
     }  // End of node0 loop
     et = get_wtime_sec();

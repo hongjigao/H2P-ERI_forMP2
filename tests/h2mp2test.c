@@ -270,7 +270,7 @@ int main(int argc, char **argv)
 
     COOmat_p cooh2d;
     COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    H2ERI_build_COO_Diamattest(h2eri,cooh2d,1,1);
+    H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
     size_t nnz=cooh2d->nnz;
     
     double thres1=1e-7;
@@ -287,12 +287,13 @@ int main(int argc, char **argv)
                                TinyDFT->Cocc_mat, TinyDFT->DC_mat,
                                TinyDFT->Cvir_mat, TinyDFT->orbitenergy_array);
     double Fermie = 0;
-    double talpha=1;
+    double talpha=0;
     double st0,et0;
-    double weight[4]={0.0527171,0.2757647,0.7858024,2.2786679};
-    double point[4]={0.0135967,0.1646374,0.6569702,2.0357815};
+    #define TAU 1
+double weight[TAU] = {1};
+double point[TAU] = {0};
     double totalenergy = 0;
-    for(int i=0;i<4;i++)
+    for(int i=0;i<TAU;i++)
     {   
         printf("Test energy of point %f\n",point[i]);
         st0 = get_wtime_sec();
@@ -301,7 +302,7 @@ int main(int argc, char **argv)
         printf("D/DC building time is %.3lf (s)\n",et0-st0);        
         COOmat_p cooden;
         COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
-        double thres = 1e-4;
+        double thres = 1e-6;
         int nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->D_mat, cooden);
         CSRmat_p csrden;
         CSRmat_init(&csrden,h2eri->num_bf,h2eri->num_bf);
@@ -342,7 +343,8 @@ int main(int argc, char **argv)
         TestCSR(colgdls);
         double energy;
         energy = Calc_S1energy(gdls,colgdls);
-        printf("The energy is %f\n",energy);
+        energy=energy*weight[i];
+        printf("The %dth energy in point %.8f is %.8f\n",i,point[i],energy);
         totalenergy+=energy;
 
         COOmat_destroy(cooden);
@@ -360,7 +362,7 @@ int main(int argc, char **argv)
     
     
     printf("The total MP2 energy is %f\n", totalenergy);
-
+    printf("Finish the test\n");
     COOmat_destroy(cooh2d1);
     CSRmat_destroy(csrh2d);
     

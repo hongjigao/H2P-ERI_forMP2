@@ -6,9 +6,10 @@ C_OBJS  = $(C_SRCS:.c=.c.o)
 
 SIMINT_INSTALL_DIR   = /gpfs/projects/JiaoGroup/hongjigao/gccmp2test/simint/build-avx512/install
 OPENBLAS_INSTALL_DIR = /gpfs/software/openblas/0.3.21/
+YATDFT_INSTALL_DIR   = /gpfs/projects/JiaoGroup/hongjigao/YATDFT_forMP2
 
 DEFS    = 
-INCS    = -I$(SIMINT_INSTALL_DIR)/include
+INCS    = -I$(SIMINT_INSTALL_DIR)/include -I$(YATDFT_INSTALL_DIR)/include
 CFLAGS  = $(INCS) -Wall -g -std=gnu11 -O2 -fPIC $(DEFS)
 
 ifeq ($(shell $(CC) --version 2>&1 | grep -c "icc"), 1)

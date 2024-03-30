@@ -32,8 +32,8 @@ void H2ERI_partition_sp_centers(H2ERI_p h2eri, int max_leaf_points, double max_l
     double *sp_center = h2eri->sp_center;
     if (max_leaf_points <= 0)   max_leaf_points = 300;
     //changed!
-    //if (max_leaf_size   <= 0.0) max_leaf_size   = 1.0;
-    if (max_leaf_size   <= 0.0) max_leaf_size   = 5.0;
+    if (max_leaf_size   <= 0.0) max_leaf_size   = 30.0;
+    //if (max_leaf_size   <= 0.0) max_leaf_size   = 20.0;
     // Manually set the kernel matrix size for h2eri->tb allocation.
     shell_t *sp_shells = h2eri->sp_shells;
     int num_sp_bfp = 0;
@@ -170,9 +170,10 @@ void H2ERI_calc_box_extent(H2ERI_p h2eri)
     h2eri->box_extent = (double *) malloc(sizeof(double) * n_node);
     assert(h2eri->box_extent != NULL);
     double *box_extent = h2eri->box_extent;
-    
+    //printf("max_level = %d\n", max_level);
     for (int i = max_level; i >= 1; i--)
     {
+        //printf("Start to calculate box_extent\n");
         int *level_i_nodes = level_nodes + i * n_leaf_node;
         int level_i_n_node = level_n_node[i];
         for (int j = 0; j < level_i_n_node; j++)
@@ -208,8 +209,11 @@ void H2ERI_calc_box_extent(H2ERI_p h2eri)
                         // enclosing box, make it 0.1 to make sure the box_extent >= 1
                         tmp_extent_d_k  = MAX(tmp_extent_d_k, 0.1);
                         box_extent_node = MAX(box_extent_node, tmp_extent_d_k);
+                        
                     }
+                    
                 }
+                //printf("1box_extent_node = %f\n", box_extent_node);
                 box_extent[node] = ceil(box_extent_node);
             } else {
                 // Since the out-reach width is the same, the extent of this box 
@@ -221,6 +225,7 @@ void H2ERI_calc_box_extent(H2ERI_p h2eri)
                     int child_k = child_nodes[k];
                     box_extent_node = MAX(box_extent_node, box_extent[child_k]);
                 }
+                //printf("2box_extent_node = %f\n", box_extent_node);
                 box_extent[node] = ceil(0.5 * box_extent_node);
             }  // End of "if (n_child_node == 0)"
         }  // End of j loop
@@ -241,7 +246,9 @@ void H2ERI_calc_mat_cluster(H2ERI_p h2eri)
     int *n_child     = h2eri->n_child;
     int *mat_cluster = h2eri->mat_cluster;
     int *sp_bfp_sidx = h2eri->sp_bfp_sidx;
-    
+    int n_leaf_node  = h2eri->n_leaf_node;
+    int *leaf_nodes  = h2eri->height_nodes;
+
     int offset = 0;
     for (int i = 0; i < n_node; i++)
     {
@@ -264,6 +271,7 @@ void H2ERI_calc_mat_cluster(H2ERI_p h2eri)
             mat_cluster[i21] = mat_cluster[2 * child_n + 1];
         }
     }
+    
 }
 
 // Find each node's admissible and inadmissible pair nodes

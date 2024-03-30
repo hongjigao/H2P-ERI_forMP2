@@ -15,10 +15,26 @@ extern "C" {
 // Output parameter:
 //   coomat : Dmat information stored in COO format
 
-void H2ERI_build_COO_Diamat(H2ERI_p h2eri, COOmat_p coomat, int D1tst, int threstest);
-
 void H2ERI_build_COO_Diamattest(H2ERI_p h2eri , COOmat_p coomat, int D1tst, int threstest);
 
+void H2ERI_build_COO_fulldiag(H2ERI_p h2eri , COOmat_p coomat);
+
+void H2ERI_build_COO_fulldense(H2ERI_p h2eri , COOmat_p coomat);
+
+void H2ERI_build_COO_fulldensetest(H2ERI_p h2eri , COOmat_p coomat);
+
+void H2ERI_build_COO_halfdensetest(H2ERI_p h2eri , COOmat_p coomat);
+
+void H2ERI_build_COO_neighbortest(H2ERI_p h2eri , COOmat_p coomat);
+
+
+//Provided the COO matrix ERI tensor (\mu\nu|\lambda\sigma)
+//Calculate the ERI tensor (\mu\sigma|\lambda\nu) in COO form
+// Input parameters:
+//   cooin : COO matrix information of (\mu\nu|\lambda\sigma)
+// Output parameters:
+//   cooout : COO matrix information of (\mu\sigma|\lambda\nu)
+void H2ERI_build_COO_transpose(COOmat_p cooin, COOmat_p cooout, int nbf);
 
 // Quick sorting a double key-value pair array by key
 // Input parameters:

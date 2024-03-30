@@ -57,3 +57,4 @@ all: $(EXES)
 
 clean:
 	rm -f $(EXES) $(C_OBJS)
+	rm -rf out*
