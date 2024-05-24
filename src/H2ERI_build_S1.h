@@ -48,8 +48,8 @@ void Qsort_double_long0(int *key, double *val, int l, int r);
 void Qsort_double_long(int *key, double *val, size_t l, size_t r);
 
 void Qsort_double_long1(int *key, double *val, size_t l, size_t r);
-
-
+void Qsort_double_long2(int *key, double *val, size_t low, size_t high);
+void insertionSort(int *key, double *val, size_t l, size_t r);
 
 // Compress the COO matrices
 // Input cooini and output coofinal. coofinal contains all the values whose absolute value is larger than thres*maximum
@@ -104,6 +104,7 @@ size_t Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, do
 void Xindextransform(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtrans);
 
 void Xindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtrans);
+void Xindextransform2(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtrans);
 
 
 
@@ -117,7 +118,7 @@ void Xindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
 // csrtrans         : the X index transformation result in csr form
 
 void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans);
-
+void Yindextransform2(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans);
 
 // Provided the row oriented CSR matrix, compute the column oriented CSC matrix.
 // Attension: The new CSC matrix is still applying the previous CSRmat data type.

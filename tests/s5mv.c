@@ -492,13 +492,65 @@ int main(int argc, char **argv)
     H2ERI_contract_H2_matvec(h2eri, j);
     
     nm=Calc2norm(j,nbf*nbf);
-    printf("The norm of j is %f\n",nm);
+    //printf("The norm of j is %f\n",nm);
     for(int i=0;i<nbf*nbf;i++)
     {
         energy += TinyDFT->D_mat[i]*j[i];
     }
-    printf("The energy is %f\n",energy);
+    printf("The adm energy is %f\n",energy);
+    COOmat_p cooh2d;
+    COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+    H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
+//    size_t nnz=cooh2d->nnz;
+//    printf("arggfdsadgf!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+//    printf("Now print COO H2D Matrix info--------\n");
+//    TestCOO(cooh2d);
     
+    CSRmat_p csrh2d;
+    CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+
+
+    Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d->nnz, cooh2d,csrh2d);
+    printf("Now build CSR H2D Matrix info--------\n");
+//    TestCSR(csrh2d);
+    
+
+    //Now we have finished the Construction of the dense part of the ERI tensor. The next step is to compute J=W*D
+    //Then we compute D.*J and compare with the final Eone
+    double *productmat;
+    productmat = (double*) malloc_aligned(sizeof(double) * nbf * nbf,    64);
+    memset(productmat,  0, sizeof(double) * nbf * nbf);
+    double *diffmat;
+    diffmat = (double*) malloc_aligned(sizeof(double) * nbf * nbf,    64);
+    memset(diffmat,  0, sizeof(double) * nbf * nbf);
+    int tmpcol;
+    //Now compute J=W*D
+    for(int j=0;j<csrh2d->nrow;j++)
+    {
+        if(csrh2d->csrrow[j]!=csrh2d->csrrow[j+1])
+        {
+            for(size_t i=csrh2d->csrrow[j];i<csrh2d->csrrow[j+1];i++)
+            {
+                tmpcol=csrh2d->csrcol[i];
+                productmat[j]+=TinyDFT->D_mat[tmpcol]*csrh2d->csrval[i];
+            }
+        }
+    }
+    //Now theoretically productmat is the J matrix
+
+    double energyd=0;
+    for(int i=0;i<nbf*nbf;i++)
+    {
+        energyd+=productmat[i]*TinyDFT->D_mat[i];
+    }
+    printf("Dense energy computed is %f\n",energyd);
+    double energytot=0;
+    for(int i=0;i<nbf*nbf;i++)
+    {
+        energytot+=TinyDFT->J_mat[i]*TinyDFT->D_mat[i];
+    }
+    printf("The total energy is %f\n",energytot);
+    printf("In comparison the energy is %f\n",energy+energyd);
     /*
     double *y1;
     y1 = (double *) malloc(sizeof(double) * h2eri->num_sp_bfp);

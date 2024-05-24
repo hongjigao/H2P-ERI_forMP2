@@ -191,8 +191,8 @@ void TestCSR(CSRmat_p csrmat)
                 nlong=csrmat->csrrow[j+1]-csrmat->csrrow[j];
         }
     }
-    //printf("The number of values larger than 1e-2,1e-5 and 1e-9 are respectively %lu,%lu,%lu\n",larger1e2,larger1e5,larger1e9);
-    printf("The number of elements is %lu, ",lg0tst);
+    printf("The number of values larger than 1e-2,1e-5 and 1e-9 are respectively %lu,%lu,%lu\n",larger1e2,larger1e5,larger1e9);
+    printf("The number of elements is %lu\n",lg0tst);
     printf("The norm of the csrmat is %.16g\n", norm);
     printf("The number of nonzero rows is %d, the totol rows is %d, the longest row is %d\n",nn0,csrmat->nrow,nlong);
     //printf("Test the ascending order:\n");
@@ -276,7 +276,6 @@ int main(int argc, char **argv)
     
     // Print H2P-ERI statistic info
     H2ERI_print_statistic(h2eri);
-    double thres=1e-6;
     int nbf = h2eri->num_bf;
     int * tmpshellidx;
     tmpshellidx=(int *) malloc(sizeof(int) * (h2eri->nshell+1));
@@ -358,7 +357,7 @@ int main(int argc, char **argv)
         if(Ucbasis[i]!=NULL)
         {
         //    printf("In the admissible pair %d and %d ",admpair1st[i],admpair2nd[i]);
-            printf("The %dth Ucbasis has %d rows and %d columns\n",i,Ucbasis[i]->nrow,Ucbasis[i]->ncol);
+         //   printf("The %dth Ucbasis has %d rows and %d columns\n",i,Ucbasis[i]->nrow,Ucbasis[i]->ncol);
         }
     }
     h2eri->leafidx= (int *) malloc(sizeof(int) * h2eri->num_bf*h2eri->num_bf);
@@ -453,12 +452,6 @@ int main(int argc, char **argv)
     double talpha=0.0;
     double Fermie=0.0;
     TinyDFT_build_energyweightedDDC(TinyDFT, TinyDFT->Cocc_mat,TinyDFT->Cvir_mat,TinyDFT->orbitenergy_array,TinyDFT->D_mat,TinyDFT->DC_mat,Fermie,talpha);
-    double norm=0;
-    for(int i=0;i<nbf*nbf;i++)
-    {
-        norm+=TinyDFT->D_mat[i]*TinyDFT->D_mat[i];
-    }
-    printf("The norm of the D matrix is %f\n",norm);
     
     CSRmat_p csrd5;
     CSRmat_init(&csrd5, nbf, nbf);
@@ -469,267 +462,110 @@ int main(int argc, char **argv)
     CSRmat_p csrdc5rm;
     CSRmat_init(&csrdc5rm, nbf, nbf);
 
-    H2ERI_divide_xy(h2eri, TinyDFT, csrd5, csrdc5,csrd5rm,csrdc5rm, 15, 1e-6);
-    printf("CSRD5\n");
-    TestCSR(csrd5);
-    printf("CSRDC5\n");
-    TestCSR(csrdc5);
-    printf("CSRD5RM\n");
+    H2ERI_divide_xy(h2eri, TinyDFT, csrd5, csrdc5,csrd5rm,csrdc5rm, 15, 1e-8);
+    double nm=0;
+    nm=Calc2norm(TinyDFT->D_mat,nbf);
+    printf("The norm of D is %.16g\n",nm);
+    TestCSR(csrd5);    
     TestCSR(csrd5rm);
-    printf("CSRDC5RM\n");
+    nm=Calc2norm(TinyDFT->DC_mat,nbf);
+    printf("The norm of DC is %.16g\n",nm);
+    TestCSR(csrdc5);
     TestCSR(csrdc5rm);
-    COOmat_p cooden;
-    COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
-    size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->D_mat, cooden);
-    //printf("Now build csrden\n");
-    CSRmat_p csrden;
-    CSRmat_init(&csrden,h2eri->num_bf,h2eri->num_bf);
-    Double_COO_to_CSR( h2eri->num_bf,  nden, cooden,csrden);
-    printf("Test CSRden\n");
-    TestCSR(csrden);
-    //printf("Now build coodc\n");
-    COOmat_p coodc;
-    COOmat_init(&coodc,h2eri->num_bf,h2eri->num_bf);
-    size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->DC_mat, coodc);
-    //printf("Now build csrdc\n");
-    CSRmat_p csrdc;
-    CSRmat_init(&csrdc,h2eri->num_bf,h2eri->num_bf);
-    Double_COO_to_CSR( h2eri->num_bf,  ndc, coodc,csrdc);
-    printf("Test CSRdc\n");
-    TestCSR(csrdc);
-
-    
-    
 
     
     H2E_dense_mat_p *Upinv;
     Upinv = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_node);
     printf("Now we are going to build the Upinv\n");
     build_pinv_rmat(h2eri,Upinv);
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        if(Upinv[i]->nrow!=0)
-        {
-            printf("The %dth Upinv has %d rows and %d columns\n",i,Upinv[i]->nrow,Upinv[i]->ncol);
-        }
-    }
 
     // Now we need to build the column basis set for every node pair including the inadmissible and self
     H2E_dense_mat_p *S51cbasis;
     S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-    H2ERI_build_S5test(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
-    for(int i=0;i<npairs;i++)
-    {
-        if(S51cbasis[i]!=NULL)
-        {
-            printf("The %dth S51cbasis has %d rows and %d columns\n",i,S51cbasis[i]->nrow,S51cbasis[i]->ncol);
-        }
-    }
+    H2ERI_build_S5(h2eri,Urbasis,Ucbasis,csrd5,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis);
 
 
-
-    double tmpval=0;
     // Now write the admissible blocks of ERI tensor into a file
-    FILE *file = fopen("outadmeri.txt", "w");
-    if (file == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<2*h2eri->n_r_adm_pair;i++)
-    {
-        int node0 = admpair1st[i];
-        int node1 = admpair2nd[i];
-        int size0 = Ucbasis[i]->nrow;
-        int ncol = Ucbasis[i]->ncol;
-        int nrow = Urbasis[node0]->nrow;
-        int startrow = h2eri->mat_cluster[2 * node0];
-        int startcol = h2eri->mat_cluster[2 * node1];
-        for(int j=0;j<nrow;j++)
-        {
-            int rowidx = startrow+j;
-            for(int k=0;k<ncol;k++)
-            {
-                int colidx = startcol+k;
-                tmpval = 0;
-                for(int l=0;l<size0;l++)
-                {
-                    tmpval += Ucbasis[i]->data[l*ncol+k]*Urbasis[node0]->data[j*size0+l];
-                }
-                fprintf(file, "%d %d %.16g \n", rowidx, colidx, tmpval);
-            }
-        }
-    }
-
-    fclose(file);
-
-
-    FILE *file1 = fopen("outputsp.txt", "w");
-    if (file1 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < h2eri->num_sp_bfp; i++) 
-    {
-        fprintf(file1, "%d %d %d ", h2eri->sp_bfp_sidx[i],h2eri->bf1st[i],h2eri->bf2nd[i]);
-        fprintf(file1, "\n");
-    }
-
-    fclose(file1);
-
-
-    // Now print the sameshell information
-    FILE *file2 = fopen("outputsameshell.txt", "w");
-    if (file2 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<h2eri->num_sp_bfp;i++)
-    {
-        fprintf(file2, "%d ", h2eri->sameshell[i]);
-    }
-
-    fclose(file2);
-
-    // Now print X and Y matrix
-    FILE *file3 = fopen("outputx.txt", "w");
-    if (file3 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<nbf;i++)
-    {
-        for(size_t j=csrd5->csrrow[i];j<csrd5->csrrow[i+1];j++)
-        {
-            fprintf(file3, "%d %d %.16g ", i,csrd5->csrcol[j],csrd5->csrval[j]);
-            fprintf(file3, "\n");
-        }
-    }
-    fclose(file3);
+    COOmat_p cooh2d;
+    COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+    H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
+    size_t nnz=cooh2d->nnz;
     
-    FILE *file4 = fopen("outputy.txt", "w");
-    if (file4 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<nbf;i++)
-    {
-        for(size_t j=csrdc5->csrrow[i];j<csrdc5->csrrow[i+1];j++)
-        {
-            fprintf(file4, "%d %d %.16g ", i,csrdc5->csrcol[j],csrdc5->csrval[j]);
-            fprintf(file4, "\n");
-        }
-    }
-    fclose(file4);
+    double thres1=1e-7;
+    COOmat_p cooh2d1;
+    COOmat_init(&cooh2d1,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+    compresscoo(cooh2d, cooh2d1, thres1);
+    CSRmat_p csrh2d;
+    CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
 
-    double *s51sp;
-    s51sp=(double*) malloc(sizeof(double)*h2eri->num_sp_bfp*h2eri->num_sp_bfp);
-    memset(s51sp,0,sizeof(double)*h2eri->num_sp_bfp*h2eri->num_sp_bfp);
-    FILE *file5 = fopen("outputs51.txt", "w");
-    if (file5 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<npairs;i++)
-    {
-        int node0 = pair1st[i];
-        int node1 = pair2nd[i];
-        int startrow = h2eri->mat_cluster[2 * node0];
-        int startcol = h2eri->mat_cluster[2 * node1];
-        int nrow = Urbasis[node0]->nrow;
-        int ncol = S51cbasis[i]->nrow;
-        int size0 = S51cbasis[i]->ncol;
-        for(int j=0;j<nrow;j++)
-        {
-            int rowidx = startrow+j;
-            for(int k=0;k<ncol;k++)
-            {
-                int colidx = startcol+k;
-                tmpval = 0;
-                for(int l=0;l<size0;l++)
-                {
-                    tmpval += S51cbasis[i]->data[k*size0+l]*Urbasis[node0]->data[j*size0+l];
-                }
-                fprintf(file, "%d %d %.16g \n", rowidx, colidx, tmpval);
-                s51sp[rowidx*h2eri->num_sp_bfp+colidx]=tmpval;
-            }
-        }
-    }
+    Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d1->nnz, cooh2d1,csrh2d);
 
-    fclose(file5);
+    COOmat_p cooden;
+    COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
+    double thres = 1e-8;
+    size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->D_mat, cooden);
+    CSRmat_p csrden;
+    CSRmat_init(&csrden,h2eri->num_bf,h2eri->num_bf);
+    Double_COO_to_CSR( h2eri->num_bf,  nden, cooden,csrden);
+    COOmat_p coodc;
+    COOmat_init(&coodc,h2eri->num_bf,h2eri->num_bf);
+    size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->DC_mat, coodc);
+    TestCOO(coodc);
 
-    FILE *file9 = fopen("u17.txt", "w");
-    if (file9 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
+    CSRmat_p csrdc;
+    CSRmat_init(&csrdc,h2eri->num_bf,h2eri->num_bf);
+    Double_COO_to_CSR( h2eri->num_bf,  ndc, coodc,csrdc);
 
-    for (int i = 0; i < h2eri->U[17]->nrow; i++) 
-    {
-        for(int j=0;j<h2eri->U[17]->ncol;j++)
-        {
-            fprintf(file9, "%.16g ", h2eri->U[17]->data[i*h2eri->U[17]->ncol+j]);            
-        }
-        fprintf(file9, "\n");
-    }
+    CSRmat_p gdle;
+    CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+    double st1,et1;
+    st1 = get_wtime_sec();
+    Xindextransform2(h2eri->num_bf,csrh2d,csrden,gdle);
+    et1 = get_wtime_sec();
+    CSRmat_p gdls;
+    CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+        
+    st1 = get_wtime_sec();
+    Yindextransform2(h2eri->num_bf,gdle,csrdc,gdls);
+    et1 = get_wtime_sec();
+        
+    printf("Now do energy calculation \n");
+    st1 = get_wtime_sec();
+    //    double energy;
+    //    energy = Calc_S1energy(gdls);
+    //    printf("The energy is %f\n",energy);
+    CSRmat_p colgdls;
+    CSRmat_init(&colgdls,nbf*nbf,nbf*nbf);
+    CSR_to_CSC(nbf*nbf, gdls,colgdls);
+    TestCSR(colgdls);
 
-    fclose(file9);
-
-    FILE *file10 = fopen("uc59_35.txt", "w");
-    if (file10 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < Ucbasis[59]->nrow; i++) 
-    {
-
-        fprintf(file10, "%.16g ", Ucbasis[59]->data[i*Ucbasis[59]->ncol+35]);            
-    }
-
-    fclose(file10);
-
+    //Now we build S52 and S53 interactions
     
-    
-
-    printf("Pairs\n");
-    for(int i=0;i<npairs;i++)
-    {
-        printf("%d %d %d\n",i,pair1st[i],pair2nd[i]);
-    }
-    printf("Pairsidx\n");
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        for(int j=0;j<nodepairs[i]->length;j++)
-        {
-            printf("%d %d %d\n",i,nodepairs[i]->data[j],nodepairidx[i]->data[j]);
-        }
-    }
-
-
-    printf("Adm pairs\n");
-    for(int i=0;i<2 * h2eri->n_r_adm_pair;i++)
-    {
-        printf("%d %d %d\n",i, admpair1st[i],admpair2nd[i]);
-    }
-    printf("Nodeadmpairs\n");
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        for(int j=0;j<nodeadmpairs[i]->length;j++)
-        {
-            printf("%d %d %d\n",i,nodeadmpairs[i]->data[j],nodeadmpairidx[i]->data[j]);
-        }
-    }
-
-
+    double energy;
+    energy = Calc_S1energy(gdls,colgdls);
+    printf("The S1 energy is %.16g\n",energy);
     double s51energy=0;
     s51energy = calc_S51_self_interaction(h2eri, Urbasis, S51cbasis, npairs, pair1st, pair2nd);
     printf("The S51 energy is %.16g\n",s51energy);
 
 
     
-    
+    double s1s5 = 0;
+    s1s5 = calc_S1S51(gdls,h2eri, Urbasis,S51cbasis, nodepairs, nodepairidx);
+    printf("The S1S5 energy is %.16g\n",s1s5);
 
+
+    
+    /*
+    for(int i=0;i<nbf*nbf;i++)
+    {
+        if(prodhalf[i]!=0)
+        {
+            printf("%d %.16g\n",i,prodhalf[i]);
+        }
+    }
+    */
+    printf("Finish the test of the D matrix\n");
 
 
 

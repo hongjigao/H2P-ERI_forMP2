@@ -658,38 +658,141 @@ int main(int argc, char **argv)
 
     fclose(file5);
 
-    FILE *file9 = fopen("u17.txt", "w");
+    FILE *file9 = fopen("urbasis9.txt", "w");
     if (file9 == NULL) {
         printf("Error opening file!\n");
         return 1;
     }
 
-    for (int i = 0; i < h2eri->U[17]->nrow; i++) 
+    for (int i = 0; i < Urbasis[9]->nrow; i++) 
     {
-        for(int j=0;j<h2eri->U[17]->ncol;j++)
+        for(int j=0;j<Urbasis[9]->ncol;j++)
         {
-            fprintf(file9, "%.16g ", h2eri->U[17]->data[i*h2eri->U[17]->ncol+j]);            
+            fprintf(file9, "%.16g ", Urbasis[9]->data[i*Urbasis[9]->ncol+j]);            
         }
         fprintf(file9, "\n");
     }
 
     fclose(file9);
 
-    FILE *file10 = fopen("uc59_35.txt", "w");
+    FILE *file10 = fopen("urbasis10.txt", "w");
     if (file10 == NULL) {
         printf("Error opening file!\n");
         return 1;
     }
 
-    for (int i = 0; i < Ucbasis[59]->nrow; i++) 
+    for (int i = 0; i < Urbasis[10]->nrow; i++) 
     {
-
-        fprintf(file10, "%.16g ", Ucbasis[59]->data[i*Ucbasis[59]->ncol+35]);            
+        for(int j=0;j<Urbasis[10]->ncol;j++)
+        {
+            fprintf(file10, "%.16g ", Urbasis[10]->data[i*Urbasis[10]->ncol+j]);            
+        }
+        fprintf(file10, "\n");
     }
 
     fclose(file10);
 
+    FILE *file11 = fopen("urbasis11.txt", "w");
+    if (file11 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[11]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[11]->ncol;j++)
+        {
+            fprintf(file11, "%.16g ",Urbasis[11]->data[i*Urbasis[11]->ncol+j]);            
+        }
+        fprintf(file11, "\n");
+    }
+
+    fclose(file11);
+
+    FILE *file12 = fopen("urbasis12.txt", "w");
+    if (file12 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[12]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[12]->ncol;j++)
+        {
+            fprintf(file12, "%.16g ", Urbasis[12]->data[i*Urbasis[12]->ncol+j]);            
+        }
+        fprintf(file12, "\n");
+    }
+
+    fclose(file12);
+
+    FILE *file13 = fopen("urbasis13.txt", "w");
+    if (file13 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[13]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[13]->ncol;j++)
+        {
+            fprintf(file13, "%.16g ", Urbasis[13]->data[i*Urbasis[13]->ncol+j]);            
+        }
+        fprintf(file13, "\n");
+    }
+
+    fclose(file13);
+
+    FILE *file131 = fopen("u13.txt", "w");
+    if (file131 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < h2eri->U[13]->nrow; i++) 
+    {
+        for(int j=0;j<h2eri->U[13]->ncol;j++)
+        {
+            fprintf(file131, "%.16g ", h2eri->U[13]->data[i*h2eri->U[13]->ncol+j]);            
+        }
+        fprintf(file131, "\n");
+    }
+
+    fclose(file131);
+
+
+
+    COOmat_p cooh2d;
+    COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+    H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
+    size_t nnz=cooh2d->nnz;
     
+    
+    COOmat_p cooh2d1;
+    COOmat_init(&cooh2d1,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+    //compresscoo(cooh2d, cooh2d1, thres);
+    CSRmat_p csrh2d;
+    CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+
+    Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d->nnz, cooh2d,csrh2d);
+    printf("TestCSRh2d\n");
+    TestCSR(csrh2d);
+
+
+    FILE *file7 = fopen("outeri.txt", "w");
+    if (file7 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < csrh2d->nrow; i++) {
+        for (size_t j = csrh2d->csrrow[i]; j < csrh2d->csrrow[i+1]; j++) {
+            fprintf(file7, "%d %d %d %d %.16g ", i%nbf,i/nbf,csrh2d->csrcol[j]%nbf,csrh2d->csrcol[j]/nbf,csrh2d->csrval[j]);
+            fprintf(file7, "\n");
+        }
+    }
+    fclose(file7);
+    //printf("Now build cooden\n");
     
 
     printf("Pairs\n");
@@ -721,16 +824,70 @@ int main(int argc, char **argv)
         }
     }
 
-
+    
+    printf("Now build gdle\n");
+    CSRmat_p gdle;
+    CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+    double st1,et1;
+    st1 = get_wtime_sec();
+    Xindextransform2(h2eri->num_bf,csrh2d,csrden,gdle);
+    printf("GDLE\n");
+    TestCSR(gdle);
+    
+    printf("Now build gdls\n");
+    et1 = get_wtime_sec();
+    CSRmat_p gdls;
+    CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+        
+    st1 = get_wtime_sec();
+    Yindextransform2(h2eri->num_bf,gdle,csrdc,gdls);
+    et1 = get_wtime_sec();
+        
+    printf("The Y Index transformation time is %.3lf (s)\n",et1-st1);
+    printf("GDLS\n");
+    TestCSR(gdls);
+    printf("Now do energy calculation \n");
+    st1 = get_wtime_sec();
+    //    double energy;
+    //    energy = Calc_S1energy(gdls);
+    //    printf("The energy is %f\n",energy);
+    CSRmat_p colgdls;
+    CSRmat_init(&colgdls,nbf*nbf,nbf*nbf);
+    CSR_to_CSC(nbf*nbf, gdls,colgdls);
+    //TestCSR(colgdls);
+    
+    double energy;
+    energy = Calc_S1energy(gdls,colgdls);
+    printf("The S1 energy is %.16g\n",energy);
     double s51energy=0;
     s51energy = calc_S51_self_interaction(h2eri, Urbasis, S51cbasis, npairs, pair1st, pair2nd);
     printf("The S51 energy is %.16g\n",s51energy);
 
 
     
-    
+    double s1s5 = 0;
+    s1s5 = calc_S1S51(gdls,h2eri, Urbasis,S51cbasis, nodepairs, nodepairidx);
+    printf("The S1S51 energy is %.16g\n",s1s5);
+    printf("The total energy is %.16g\n",energy+2*s1s5+s51energy);
 
+    int * childlist;
+    childlist=(int *) malloc(sizeof(int) * h2eri->n_node);
+    memset(childlist,0,sizeof(int) * h2eri->n_node);
+    int * pairlist;
+    pairlist=(int *) malloc(sizeof(int) * h2eri->n_node);
+    memset(pairlist,0,sizeof(int) * h2eri->n_node);
+    int childstep[5] = {22, 24, 28, 29, 30};
 
+    int nchild = Split_node(h2eri,27,22,childstep,childlist,pairlist,nodeadmpairs,nodeadmpairidx);
+    printf("The number of children is %d\n",nchild);
+    for(int i=0;i<nchild;i++)
+    {
+        printf("The %dth child is %d\n",i,childlist[i]);
+    }
+    for(int i=0;i<nchild;i++)
+    {
+        printf("The %dth pair is %d\n",i,pairlist[i]);
+    }
 
 
 

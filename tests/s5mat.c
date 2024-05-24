@@ -237,40 +237,67 @@ double Calc2norm(const double *mat, int siz)
 }
 
 void compute_pseudo_inverse1(double* R, int nrow, int ncol, double* R_pinv) {
-    int lda = nrow;
+    int lda = ncol;
     int ldu = nrow;
     int ldvt = ncol;
     int info;
 
     // Allocate memory for the decomposition
     double* S = (double*)malloc(sizeof(double) * ncol);
-    double* U = (double*)malloc(sizeof(double) * nrow * nrow);
+    double* U6 = (double*)malloc(sizeof(double) * nrow * nrow);
     double* VT = (double*)malloc(sizeof(double) * ncol * ncol);
     double* superb = (double*)malloc(sizeof(double) * (ncol - 1));
 
     // Compute the SVD of R
-    info = LAPACKE_dgesvd(LAPACK_ROW_MAJOR, 'A', 'A', nrow, ncol, R, lda, S, U, ldu, VT, ldvt, superb);
-
+    info = LAPACKE_dgesvd(LAPACK_ROW_MAJOR, 'A', 'A', nrow, ncol, R, lda, S, U6, ldu, VT, ldvt, superb);
+    printf("The singular values are:\n");
+    for (int i = 0; i < ncol; ++i) {
+        printf("%lf ", S[i]);
+    }
+    printf("U\n");
+    for (int i = 0; i < nrow; ++i) {
+        for (int j = 0; j < nrow; ++j) {
+            printf("%lf ", U6[i * nrow + j]);
+        }
+        printf("\n");
+    }
+    printf("VT\n");
+    for (int i = 0; i < ncol; ++i) {
+        for (int j = 0; j < ncol; ++j) {
+            printf("%lf ", VT[i * ncol + j]);
+        }
+        printf("\n");
+    }
     if (info > 0) {
         printf("The algorithm computing SVD failed to converge.\n");
         exit(1);
     }
+        int rank = ncol;  // Assuming rank is full unless proven otherwise
+    for (int i = 0; i < rank; ++i) {
+        printf("!%lf\n",S[i]);
+        if (S[i] <= 1e-10) {  // Adjust rank if singular values are too small
+            rank = i;
+            break;
+        }
+    }
 
-    // Compute the pseudo-inverse from SVD results
-    for (int i = 0; i < ncol; ++i) {
-        for (int j = 0; j < nrow; ++j) {
-            R_pinv[i * nrow + j] = 0.0;
-            for (int k = 0; k < ncol; ++k) {
-                if (S[k] > 1e-10) { // Threshold for numerical stability
-                    R_pinv[i * nrow + j] += VT[i * ncol + k] * (1.0 / S[k]) * U[j * nrow + k];
-                }
+    // Initialize R_pinv to zero
+    for (int i = 0; i < ncol * nrow; ++i) {
+        R_pinv[i] = 0;
+    }
+
+    // Compute pseudo-inverse R_pinv = V * Sigma^+ * U^T
+    for (int i = 0; i < ncol; ++i) {      // over columns of V and R_pinv
+        for (int j = 0; j < nrow; ++j) {  // over rows of U and R_pinv
+            for (int k = 0; k < rank; ++k) {  // sum over the singular values
+                R_pinv[j + i * nrow] += VT[i + k * ncol] * (1.0 / S[k]) * U6[k + j * nrow];
             }
         }
     }
 
     // Free allocated memory
     free(S);
-    free(U);
+    free(U6);
     free(VT);
     free(superb);
 }
@@ -494,8 +521,8 @@ int main(int argc, char **argv)
     int nrow = 3;
     int ncol = 2;
     double R[] = {1, 2, 3, 4, 5, 6}; // 3x2 matrix
+    double R1[] = {1, 2, 3, 4, 5, 6};
     double* R_pinv = (double*)malloc(sizeof(double) * ncol * nrow); // 2x3 matrix
-
     compute_pseudo_inverse(R, nrow, ncol, R_pinv);
     
     // Print the pseudo-inverse
@@ -505,8 +532,37 @@ int main(int argc, char **argv)
         }
         printf("\n");
     }
+    double C[2*2] = {0,0,0,0};
+    CBLAS_GEMM(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+                2, 2, 3, 1.0,
+                R_pinv, 3, R1, 2,
+                0.0, C, 2);
     
     free(R_pinv);
+     printf("Resulting Matrix C:\n");
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            printf("%lf ", C[i*2 + j]);
+        }
+        printf("\n");
+    }
+
+    FILE *file1 = fopen("U2.txt", "w");
+    if (file1 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < h2eri->U[2]->nrow; i++) 
+    {
+        for(int j=0; j<h2eri->U[2]->ncol; j++)
+        {
+            fprintf(file1, "%.16g ", h2eri->U[2]->data[i*h2eri->U[2]->ncol+j]);
+            
+        }
+        fprintf(file1, "\n");
+    }
+    fclose(file1);
 
     H2E_dense_mat_p *U  = h2eri->U;
     H2E_dense_mat_p tmpr;
@@ -528,13 +584,14 @@ int main(int argc, char **argv)
             printf("%d\n",i);
             int nrow = U[i]->nrow;
             int ncol = U[i]->ncol;
+            printf("%d, %d\n", nrow, ncol);
             H2E_dense_mat_resize(tmpr, nrow, ncol);
             for(int j=0;j<nrow;j++)
                 for(int k=0;k<ncol;k++)
                     tmpr->data[j*ncol+k]=U[i]->data[j*ncol+k];
             H2E_dense_mat_resize(tmprinv, ncol, nrow);
             memset(tmprinv->data, 0, sizeof(DTYPE) * ncol * nrow);
-            compute_pseudo_inverse1(tmpr->data, nrow, ncol, tmprinv->data);
+            compute_pseudo_inverse(tmpr->data, nrow, ncol, tmprinv->data);
             H2E_dense_mat_init(&Upinv[i], ncol, nrow);
             for(int j=0;j<ncol;j++)
                 for(int k=0;k<nrow;k++)
@@ -545,6 +602,49 @@ int main(int argc, char **argv)
         }
     }
 
+    for(int i=0;i<h2eri->n_node;i++)
+    {
+        printf(".%d\n",i);
+        if(U[i]->nrow==0||h2eri->n_child[i]==0)
+        {
+            continue;
+        }
+        else
+        {
+            printf("%d\n",i);
+            int nrow = U[i]->nrow;
+            int ncol = U[i]->ncol;
+            H2E_dense_mat_resize(tmpr, ncol, ncol);
+            printf("%d, %d\n", nrow, ncol);
+            CBLAS_GEMM(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+                ncol, ncol, nrow, 1.0,
+                Upinv[i]->data, nrow, U[i]->data, ncol,
+                0.0, tmpr->data, ncol);
+            printf("The %dth node is orthogonal\n",i);
+            for(int j=0;j<ncol;j++)
+                for(int k=0;k<ncol;k++)
+                {
+                    if(j==k)
+                    {
+                        if(tmpr->data[j*ncol+k]-1>1e-9)
+                            printf("The %dth node is not orthogonal\n",i);
+                        else
+                            printf("The %dth node is orthogonal\n",i);
+                    }
+                    else
+                    {
+                        if(tmpr->data[j*ncol+k]>1e-9)
+                            printf("The %dth node is not orthogonal\n",i);
+                        //else
+                            //printf("The %dth node is orthogonal\n",i);
+                    
+                    }
+                }
+            memset(tmpr->data, 0, sizeof(DTYPE) * ncol * ncol);
+
+                       
+        }
+    }
 
 
 

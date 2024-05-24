@@ -47,7 +47,7 @@ void H2ERI_build_colbs(H2ERI_p h2eri, H2E_dense_mat_p* Ucbasis,int *admpair1st,i
 // csrd5: large and near elements in density matrix X in csr format
 // csrdc5: large and near elements in density matrix Y in csr format
 void H2ERI_extract_near_large_elements(H2ERI_p h2eri, TinyDFT_p TinyDFT, CSRmat_p csrd5, CSRmat_p csrdc5, double r, double threshold);
-
+void H2ERI_divide_xy(H2ERI_p h2eri, TinyDFT_p TinyDFT, CSRmat_p csrd5, CSRmat_p csrdc5, CSRmat_p csrdrm, CSRmat_p csrdcrm, double r, double threshold);
 
 // Build the pseudo inverse of every nonleaf node
 // Input parameters
@@ -58,7 +58,7 @@ void H2ERI_extract_near_large_elements(H2ERI_p h2eri, TinyDFT_p TinyDFT, CSRmat_
 void compute_pseudo_inverse(double* R, int nrow, int ncol, double* R_pinv);
 void build_pinv_rmat(H2ERI_p h2eri, H2E_dense_mat_p* Upinv);
 
-
+int Split_node(H2ERI_p h2eri, int node0, int leaf,  int *childstep, int *nodesidx, int *basisidx,H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx);
 
 
 int testadmpair(H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, int node0, int node1);
@@ -72,13 +72,15 @@ int testadmpair(H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, int 
 // h2eri: H2ERI data structure
 // S51cbasis; ordered in the same way as the pairs
 // It needs to stress that S51cbasis is column major
-void H2ERI_build_S5(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
-    int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis);
+void H2ERI_build_S(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
+    int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv);
+
 
 void H2ERI_build_S5test(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
-    int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis);
+    int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv);
 
-
+void H2ERI_build_S5_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
+    int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv);
 // Compute S1S51 interaction
 // Input parameters
 // Csrmat_p S1: the S1 matrix
@@ -87,8 +89,12 @@ void H2ERI_build_S5test(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 // S51cbasis: column basis set for every admissible block
 // nodepairs: the node pairs in the H2 partition
 // nodepairidx: the index of the node pairs in the H2 partition, which is the order that S51cbasis is ordered
-double compute_eleval(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis,H2E_dense_mat_p* S51cbasis,H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx, int row, int column);
+// In S1S523, mnkl is column major while in S1S51 it is row major
+double compute_eleval_S51(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis,H2E_dense_mat_p* S51cbasis,H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx, int row, int column);
+double compute_eleval_Wlr(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis,H2E_dense_mat_p* Ucbasis,H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, int row, int column);
 double calc_S1S51(CSRmat_p S1, H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p *S51cbasis, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx);
+double calc_S1S523(CSRmat_p mnke, H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p *Ucbasis, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx);
+
 
 // Compute S51 self interaction
 // Input parameters

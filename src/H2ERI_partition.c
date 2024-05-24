@@ -32,7 +32,7 @@ void H2ERI_partition_sp_centers(H2ERI_p h2eri, int max_leaf_points, double max_l
     double *sp_center = h2eri->sp_center;
     if (max_leaf_points <= 0)   max_leaf_points = 300;
     //changed!
-    if (max_leaf_size   <= 0.0) max_leaf_size   = 30.0;
+    if (max_leaf_size   <= 0.0) max_leaf_size   = 15.0;
     //if (max_leaf_size   <= 0.0) max_leaf_size   = 20.0;
     // Manually set the kernel matrix size for h2eri->tb allocation.
     shell_t *sp_shells = h2eri->sp_shells;

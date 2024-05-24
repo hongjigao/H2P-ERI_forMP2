@@ -195,7 +195,7 @@ void TestCSR(CSRmat_p csrmat)
     printf("The number of elements is %lu\n",lg0tst);
     printf("The norm of the csrmat is %.16g\n", norm);
     printf("The number of nonzero rows is %d, the totol rows is %d, the longest row is %d\n",nn0,csrmat->nrow,nlong);
-    printf("Test the ascending order:\n");
+    //printf("Test the ascending order:\n");
     int tests=0;
     for(int i=0;i<csrmat->nrow;i++)
     {
@@ -468,7 +468,7 @@ int main(int argc, char **argv)
     CSRmat_init(&csrd5, nbf, nbf);
     CSRmat_p csrdc5;
     CSRmat_init(&csrdc5, nbf, nbf);
-    H2ERI_extract_near_large_elements(h2eri, TinyDFT, csrd5, csrdc5, 30, 1e-6);
+    H2ERI_extract_near_large_elements(h2eri, TinyDFT, csrd5, csrdc5, 15, 1e-6);
 
     printf("The number of nonzero elements in the D5 matrix is %ld\n",csrd5->nnz);
     printf("The number of nonzero elements in the DC5 matrix is %ld\n",csrdc5->nnz);
@@ -531,6 +531,36 @@ int main(int argc, char **argv)
         }
     }
     printf("The max distance is %f\n",maxdistance);
+
+        printf("Pairs\n");
+    for(int i=0;i<npairs;i++)
+    {
+        printf("%d %d %d\n",i,pair1st[i],pair2nd[i]);
+    }
+    printf("Pairsidx\n");
+    for(int i=0;i<h2eri->n_node;i++)
+    {
+        for(int j=0;j<nodepairs[i]->length;j++)
+        {
+            printf("%d %d %d\n",i,nodepairs[i]->data[j],nodepairidx[i]->data[j]);
+        }
+    }
+
+
+    printf("Adm pairs\n");
+    for(int i=0;i<2 * h2eri->n_r_adm_pair;i++)
+    {
+        printf("%d %d %d\n",i, admpair1st[i],admpair2nd[i]);
+    }
+    printf("Nodeadmpairs\n");
+    for(int i=0;i<h2eri->n_node;i++)
+    {
+        for(int j=0;j<nodeadmpairs[i]->length;j++)
+        {
+            printf("%d %d %d\n",i,nodeadmpairs[i]->data[j],nodeadmpairidx[i]->data[j]);
+        }
+    }
+
     
     H2E_dense_mat_p *Upinv;
     Upinv = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_node);
@@ -547,7 +577,7 @@ int main(int argc, char **argv)
     // Now we need to build the column basis set for every node pair including the inadmissible and self
     H2E_dense_mat_p *S51cbasis;
     S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-    H2ERI_build_S5(h2eri,Urbasis,Ucbasis,csrd5,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis);
+    H2ERI_build_S5_draft(h2eri,Urbasis,Ucbasis,csrd5,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
     for(int i=0;i<npairs;i++)
     {
         if(S51cbasis[i]!=NULL)
@@ -592,6 +622,144 @@ int main(int argc, char **argv)
 
     fclose(file);
 
+    FILE *file9 = fopen("urbasis10.txt", "w");
+    if (file9 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[9]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[9]->ncol;j++)
+        {
+            fprintf(file9, "%.16g ", Urbasis[9]->data[i*Urbasis[9]->ncol+j]);            
+        }
+        fprintf(file9, "\n");
+    }
+
+    fclose(file9);
+
+    FILE *file10 = fopen("urbasis10.txt", "w");
+    if (file10 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[10]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[10]->ncol;j++)
+        {
+            fprintf(file10, "%.16g ", Urbasis[10]->data[i*Urbasis[10]->ncol+j]);            
+        }
+        fprintf(file10, "\n");
+    }
+
+    fclose(file10);
+
+    FILE *file11 = fopen("urbasis11.txt", "w");
+    if (file11 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[11]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[11]->ncol;j++)
+        {
+            fprintf(file11, "%.16g ",Urbasis[11]->data[i*Urbasis[11]->ncol+j]);            
+        }
+        fprintf(file11, "\n");
+    }
+
+    fclose(file11);
+
+    FILE *file12 = fopen("urbasis12.txt", "w");
+    if (file12 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[12]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[12]->ncol;j++)
+        {
+            fprintf(file12, "%.16g ", Urbasis[12]->data[i*Urbasis[12]->ncol+j]);            
+        }
+        fprintf(file12, "\n");
+    }
+
+    fclose(file12);
+
+    FILE *file1e3 = fopen("urbasis13.txt", "w");
+    if (file1e3 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[13]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[13]->ncol;j++)
+        {
+            fprintf(file1e3, "%.16g ", Urbasis[13]->data[i*Urbasis[13]->ncol+j]);            
+        }
+        fprintf(file1e3, "\n");
+    }
+
+    fclose(file1e3);
+
+
+    FILE *file13 = fopen("upinv12.txt", "w");
+    if (file13 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Upinv[12]->nrow; i++) 
+    {
+        for(int j=0;j<Upinv[12]->ncol;j++)
+        {
+            fprintf(file13, "%.16g ", Upinv[12]->data[i*Upinv[12]->ncol+j]);            
+        }
+        fprintf(file13, "\n");
+    }
+
+    fclose(file13);
+
+    FILE *file14 = fopen("utrans.txt", "w");
+    if (file14 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < h2eri->U[12]->nrow; i++) 
+    {
+        for(int j=0;j<h2eri->U[12]->ncol;j++)
+        {
+            fprintf(file14, "%.16g ", h2eri->U[12]->data[i*h2eri->U[12]->ncol+j]);            
+        }
+        fprintf(file14, "\n");
+    }
+
+    fclose(file14);
+
+    FILE *file15 = fopen("ucbss.txt", "w");
+    if (file15 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Ucbasis[15]->nrow; i++) 
+    {
+        for(int j=0;j<Ucbasis[15]->ncol;j++)
+        {
+            fprintf(file15, "%.16g ",Ucbasis[15]->data[i*Ucbasis[15]->ncol+j]);            
+        }
+        fprintf(file15, "\n");
+    }
+
+    fclose(file15);
+
+
     FILE *file1 = fopen("outputsp.txt", "w");
     if (file1 == NULL) {
         printf("Error opening file!\n");
@@ -635,7 +803,7 @@ int main(int argc, char **argv)
         }
     }
     fclose(file3);
-
+    printf("3\n");
     FILE *file4 = fopen("outputy.txt", "w");
     if (file4 == NULL) {
         printf("Error opening file!\n");
@@ -687,35 +855,7 @@ int main(int argc, char **argv)
 
     fclose(file5);
 
-    printf("Pairs\n");
-    for(int i=0;i<npairs;i++)
-    {
-        printf("%d %d %d\n",i,pair1st[i],pair2nd[i]);
-    }
-    printf("Pairsidx\n");
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        for(int j=0;j<nodepairs[i]->length;j++)
-        {
-            printf("%d %d %d\n",i,nodepairs[i]->data[j],nodepairidx[i]->data[j]);
-        }
-    }
-
-
-    printf("Adm pairs\n");
-    for(int i=0;i<2 * h2eri->n_r_adm_pair;i++)
-    {
-        printf("%d %d %d\n",i, admpair1st[i],admpair2nd[i]);
-    }
-    printf("Nodeadmpairs\n");
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        for(int j=0;j<nodeadmpairs[i]->length;j++)
-        {
-            printf("%d %d %d\n",i,nodeadmpairs[i]->data[j],nodeadmpairidx[i]->data[j]);
-        }
-    }
-
+    printf("4\n");
     COOmat_p cooh2d;
     COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
     H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
@@ -763,7 +903,7 @@ int main(int argc, char **argv)
     CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
         
     st1 = get_wtime_sec();
-    Yindextransform1(h2eri->num_bf,gdle,csrdc5,gdls);
+    Yindextransform2(h2eri->num_bf,gdle,csrdc5,gdls);
     et1 = get_wtime_sec();
         
     printf("The Y Index transformation time is %.3lf (s)\n",et1-st1);
@@ -791,8 +931,8 @@ int main(int argc, char **argv)
     s1s5 = calc_S1S51(gdls,h2eri, Urbasis,S51cbasis, nodepairs, nodepairidx);
     printf("The S1S5 energy is %.16g\n",s1s5);
 
-    printf("%lf\n",compute_eleval(h2eri, Urbasis,S51cbasis,nodepairs, nodepairidx, 51, 252));
-    printf("%lf\n",compute_eleval(h2eri, Urbasis,S51cbasis,nodepairs, nodepairidx, 51, 298));
+    printf("%lf\n",compute_eleval_S51(h2eri, Urbasis,S51cbasis,nodepairs, nodepairidx, 51, 252));
+    printf("%lf\n",compute_eleval_S51(h2eri, Urbasis,S51cbasis,nodepairs, nodepairidx, 51, 298));
 
     printf("%.16g\n",s51sp[13*h2eri->num_sp_bfp+62]);
     double nm=0;
@@ -962,7 +1102,7 @@ int main(int argc, char **argv)
     */
     printf("Finish the test of the D matrix\n");
 
-
+    
 
 
 

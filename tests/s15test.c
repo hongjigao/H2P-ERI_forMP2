@@ -421,7 +421,7 @@ int main(int argc, char **argv)
         H2E_int_vec_push_back(nodepairs[pair1st[i+h2eri->n_leaf_node]],pair2nd[i+h2eri->n_leaf_node]);
         H2E_int_vec_push_back(nodepairs[pair2nd[i+h2eri->n_leaf_node]],pair1st[i+h2eri->n_leaf_node]);
         H2E_int_vec_push_back(nodepairidx[pair1st[i+h2eri->n_leaf_node]],i+h2eri->n_leaf_node);
-        H2E_int_vec_push_back(nodepairidx[pair2nd[i+h2eri->n_leaf_node]],i+h2eri->n_leaf_node);
+        H2E_int_vec_push_back(nodepairidx[pair2nd[i+h2eri->n_leaf_node]],i+h2eri->n_leaf_node+h2eri->n_r_inadm_pair);
     }
 
 
@@ -452,109 +452,23 @@ int main(int argc, char **argv)
     double talpha=0.0;
     double Fermie=0.0;
     TinyDFT_build_energyweightedDDC(TinyDFT, TinyDFT->Cocc_mat,TinyDFT->Cvir_mat,TinyDFT->orbitenergy_array,TinyDFT->D_mat,TinyDFT->DC_mat,Fermie,talpha);
-    double norm=0;
-    for(int i=0;i<nbf*nbf;i++)
-    {
-        norm+=TinyDFT->D_mat[i]*TinyDFT->D_mat[i];
-    }
-    printf("The norm of the D matrix is %f\n",norm);
-    norm=0;
-    for(int i=0;i<nbf*nbf;i++)
-    {
-        norm+=TinyDFT->DC_mat[i]*TinyDFT->DC_mat[i];
-    }
-    printf("The norm of the DC matrix is %f\n",norm);
+    double norm=0;    
     CSRmat_p csrd5;
     CSRmat_init(&csrd5, nbf, nbf);
     CSRmat_p csrdc5;
     CSRmat_init(&csrdc5, nbf, nbf);
-    H2ERI_extract_near_large_elements(h2eri, TinyDFT, csrd5, csrdc5, 30, 1e-6);
+    H2ERI_extract_near_large_elements(h2eri, TinyDFT, csrd5, csrdc5, 15, 1e-6);
 
-    printf("The number of nonzero elements in the D5 matrix is %ld\n",csrd5->nnz);
-    printf("The number of nonzero elements in the DC5 matrix is %ld\n",csrdc5->nnz);
-    norm=0;
-    for(size_t i=0;i<csrd5->nnz;i++)
-    {
-        norm+=csrd5->csrval[i]*csrd5->csrval[i];
-    }
-    printf("The norm of the D5 matrix is %f\n",norm);
-    norm=0;
-    
-    for(size_t i=0;i<csrdc5->nnz;i++)
-    {
-        norm+=csrdc5->csrval[i]*csrdc5->csrval[i];
-    }
-    printf("The norm of the DC5 matrix is %f\n",norm);
-    double *x;
-    x=(double*) malloc(sizeof(double)*nbf);
-    double *y;
-    y=(double*) malloc(sizeof(double)*nbf);
-    double *z;
-    z=(double*) malloc(sizeof(double)*nbf);
-    for(int i=0;i<h2eri->nshell;i++)
-    {
-        for(int j=h2eri->shell_bf_sidx[i];j<h2eri->shell_bf_sidx[i+1];j++)
-        {
-            x[j]=h2eri->shells[i].x;
-            y[j]=h2eri->shells[i].y;
-            z[j]=h2eri->shells[i].z;
-        }
-    }
-    //Here we don't know exactly about the math function so we directly use its square
-    double * distance;
-    distance=(double*) malloc(sizeof(double)*nbf*nbf);
-    for(int i=0;i<nbf;i++)
-        for(int j=0;j<nbf;j++)
-        {
-            distance[i*nbf+j]=(x[i]-x[j])*(x[i]-x[j])+(y[i]-y[j])*(y[i]-y[j])+(z[i]-z[j])*(z[i]-z[j]);
-            //printf("%f ",distance[i*nbf+j]);
-            //printf("%f ",distance[i*nbf+j]);
-        }
-
-    double maxdistance=0;
-    for(int i=0;i<nbf;i++)
-    {
-        for(int j=csrd5->csrrow[i];j<csrd5->csrrow[i+1];j++)
-        {
-            if(distance[i*nbf+csrd5->csrcol[j]]>maxdistance)
-                maxdistance=distance[i*nbf+csrd5->csrcol[j]];
-        }
-    }
-    printf("The max distance is %f\n",maxdistance);
-    maxdistance=0;
-    for(int i=0;i<nbf;i++)
-    {
-        for(int j=0;j<nbf;j++)
-        {
-            if(distance[i*nbf+j]>maxdistance)
-                maxdistance=distance[i*nbf+j];
-        }
-    }
-    printf("The max distance is %f\n",maxdistance);
-    
+       
     H2E_dense_mat_p *Upinv;
     Upinv = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_node);
     printf("Now we are going to build the Upinv\n");
     build_pinv_rmat(h2eri,Upinv);
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        if(Upinv[i]!=NULL)
-        {
-            printf("The %dth Upinv has %d rows and %d columns\n",i,Upinv[i]->nrow,Upinv[i]->ncol);
-        }
-    }
+
     // Now we need to build the column basis set for every node pair including the inadmissible and self
     H2E_dense_mat_p *S51cbasis;
     S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
     H2ERI_build_S5(h2eri,Urbasis,Ucbasis,csrd5,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis);
-    for(int i=0;i<npairs;i++)
-    {
-        if(S51cbasis[i]!=NULL)
-        {
-            printf("The %dth S51cbasis has %d rows and %d columns\n",i,S51cbasis[i]->nrow,S51cbasis[i]->ncol);
-        }
-    }
-
     double s51energy=0;
     s51energy = calc_S51_self_interaction(h2eri, Urbasis, S51cbasis, npairs, pair1st, pair2nd);
     printf("The S51 energy is %.8f\n",s51energy);
@@ -572,19 +486,18 @@ int main(int argc, char **argv)
     CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
 
     Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d1->nnz, cooh2d1,csrh2d);
-    printf("TestCSR\n");
-    TestCSR(csrh2d);
+
     CSRmat_p gdle;
     CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
     double st1,et1;
     st1 = get_wtime_sec();
-    Xindextransform1(h2eri->num_bf,csrh2d,csrd5,gdle);
+    Xindextransform2(h2eri->num_bf,csrh2d,csrd5,gdle);
     et1 = get_wtime_sec();
     CSRmat_p gdls;
     CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
         
     st1 = get_wtime_sec();
-    Yindextransform1(h2eri->num_bf,gdle,csrdc5,gdls);
+    Yindextransform2(h2eri->num_bf,gdle,csrdc5,gdls);
     et1 = get_wtime_sec();
         
     printf("The Y Index transformation time is %.3lf (s)\n",et1-st1);
@@ -611,10 +524,6 @@ int main(int argc, char **argv)
     printf("The S51 self interction energy is %.16g\n",s51energy);
     printf("The total energy is %.16g\n",energy+2*s1s5+s51energy);
     
-
-    printf("%lf\n",compute_eleval(h2eri, Urbasis,S51cbasis,nodepairs, nodepairidx, 51, 252));
-    printf("%lf\n",compute_eleval(h2eri, Urbasis,S51cbasis,nodepairs, nodepairidx, 51, 298));
-
 
 
 
