@@ -295,7 +295,7 @@ int main(int argc, char **argv)
 
     COOmat_p cooh2d;
     COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    H2ERI_build_COO_halfdensetest(h2eri,cooh2d);
+    H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
 //    size_t nnz=cooh2d->nnz;
     printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     printf("Now print COO H2D Matrix info--------\n");

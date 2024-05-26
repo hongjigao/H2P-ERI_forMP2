@@ -466,7 +466,7 @@ void build_pinv_rmat(H2ERI_p h2eri, H2E_dense_mat_p* Upinv)
         }
         else
         {
-            printf("%d\n",i);
+            //printf("%d\n",i);
             int nrow = U[i]->nrow;
             int ncol = U[i]->ncol;
             //printf("Now resize\n");
@@ -1497,11 +1497,7 @@ void H2ERI_build_S5_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat
             childorder[h2eri->children[i]]=i%h2eri->max_child;
         }
     }
-    printf("Now we are in S5 draft\n");
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        printf("%d\n",childorder[i]);
-    }
+    
     for(int i=0;i<npairs;i++)
     {
         int node0 = pair1st[i];
