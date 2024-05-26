@@ -1723,6 +1723,8 @@ void CSR_to_CSC(const int ncol, CSRmat_p csrmat, CSRmat_p cscmat)
             }
         }
     }
+    free(posi);
+    printf("Transform csc success!\n");
 }
 
 

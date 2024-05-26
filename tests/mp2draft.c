@@ -654,17 +654,24 @@ int main(int argc, char **argv)
         CSRmat_p colgdls;
         CSRmat_init(&colgdls,nbf*nbf,nbf*nbf);
         CSR_to_CSC(nbf*nbf, gdls,colgdls);
-        
+        double energy;
+        energy = Calc_S1energy(gdls,colgdls);
+        printf("The S1 energy is %.16g\n",energy);
+        if(h2eri->n_r_adm_pair==0)
+        {
+            printf("The total energy in this quadrature point is %.16g\n",energy);
+            sumenergy += omega_val*energy;
+            continue;
+        }
         // Now we need to build the column basis set for every node pair including the inadmissible and self
         st1 = get_wtime_sec();
+        printf("Now we are going to build the S51cbasis\n");
         H2E_dense_mat_p *S51cbasis;
         S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
         H2ERI_build_S5_draft(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
         et1 = get_wtime_sec();
         printf("Index transformation time is %.16g\n",et1-st1);
-        double energy;
-        energy = Calc_S1energy(gdls,colgdls);
-        printf("The S1 energy is %.16g\n",energy);
+        
 
 
 
