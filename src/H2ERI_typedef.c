@@ -333,6 +333,7 @@ void COOmat_init(COOmat_p *COOmat_, const int nrow, const int ncol)
     COOmat->coocol  =  NULL;
     COOmat->coorow  =  NULL;
     COOmat->cooval  =  NULL;
+    COOmat->maxv = 0.0;
     *COOmat_ = COOmat;
 }
 
@@ -353,6 +354,7 @@ void CSRmat_init(CSRmat_p *CSRmat_, const int nrow, const int ncol)
     CSRmat->csrcol  =  NULL;
     CSRmat->csrrow  =  NULL;
     CSRmat->csrval  =  NULL;
+    CSRmat->maxv = 0.0;
     *CSRmat_ = CSRmat;
 }
 

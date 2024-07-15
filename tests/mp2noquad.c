@@ -133,36 +133,29 @@ void TestCOO(COOmat_p coomat)
     {
         if(fabs(coomat->cooval[i])>maxv*1e-2)
             larger1e2+=1;
-        if(fabs(coomat->cooval[i])>=maxv*1e-5)
+        if(fabs(coomat->cooval[i])>=maxv*1e-3)
             larger1e5+=1;
-        if(fabs(coomat->cooval[i])>maxv*1e-9)
+        if(fabs(coomat->cooval[i])>maxv*1e-4)
             larger1e9+=1;
         if(fabs(coomat->cooval[i])>0)
             lg0tst+=1;
         norm+=coomat->cooval[i]*coomat->cooval[i];
 
     }
-    printf("The number of values larger than 1e-2,1e-5 and 1e-9 are respectively %d,%d,%d\n",larger1e2,larger1e5,larger1e9);
+    printf("The number of values larger than 1e-2,1e-3 and 1e-4 are respectively %d,%d,%d\n",larger1e2,larger1e5,larger1e9);
     printf("The number of elements is %d\n",lg0tst);
     printf("The norm square of the COO matrix is %.16g\n",norm);
 }
 
 void TestCSR(CSRmat_p csrmat)
 {
-    double maxv=0;
+    double maxv= csrmat->maxv;
     double norm=0;
     size_t larger1e5=0;
     size_t larger1e9=0;
     size_t larger1e2=0;
     size_t lg0tst=0;
-//    printf("%d\n",lg0tst);
-    for(size_t i=0;i<csrmat->nnz;i++)
-    {
-        if(fabs(csrmat->csrval[i])>maxv)
-        {
-            maxv=fabs(csrmat->csrval[i]);
-        }
-    }
+
 
     printf("The max value is %e\n",maxv);
  
@@ -170,9 +163,9 @@ void TestCSR(CSRmat_p csrmat)
     {
         if(fabs(csrmat->csrval[i])>maxv*1e-2)
             larger1e2+=1;
-        if(fabs(csrmat->csrval[i])>=maxv*1e-5)
+        if(fabs(csrmat->csrval[i])>=maxv*1e-3)
             larger1e5+=1;
-        if(fabs(csrmat->csrval[i])>maxv*1e-9)
+        if(fabs(csrmat->csrval[i])>maxv*1e-4)
             larger1e9+=1;
         if(fabs(csrmat->csrval[i])>0)
             lg0tst+=1;
@@ -191,7 +184,7 @@ void TestCSR(CSRmat_p csrmat)
                 nlong=csrmat->csrrow[j+1]-csrmat->csrrow[j];
         }
     }
-    //printf("The number of values larger than 1e-2,1e-5 and 1e-9 are respectively %lu,%lu,%lu\n",larger1e2,larger1e5,larger1e9);
+    printf("The number of values larger than 1e-2,1e-3 and 1e-4 are respectively %lu,%lu,%lu\n",larger1e2,larger1e5,larger1e9);
     printf("The number of elements is %lu, ",lg0tst);
     printf("The norm of the csrmat is %.16g\n", norm);
     printf("The number of nonzero rows is %d, the totol rows is %d, the longest row is %d\n",nn0,csrmat->nrow,nlong);
@@ -277,6 +270,7 @@ int main(int argc, char **argv)
     // Print H2P-ERI statistic info
     H2ERI_print_statistic(h2eri);
     double thres=1e-6;
+    double thres1=atof(argv[5]);
     int nbf = h2eri->num_bf;
     int * tmpshellidx;
     tmpshellidx=(int *) malloc(sizeof(int) * (h2eri->nshell+1));
@@ -304,16 +298,19 @@ int main(int argc, char **argv)
     Urbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_node);
     H2ERI_build_rowbs(h2eri,Urbasis);
     printf("2The number of nodes is %d\n",h2eri->n_node);
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        printf("The %dth node has %d rows and %d columns\n",i,h2eri->U[i]->nrow,h2eri->U[i]->ncol);
+    FILE *fileur = fopen("ur.txt", "w");
+    if (fileur == NULL) {
+        printf("Error opening file!\n");
+        return 1;
     }
     for(int i=0;i<h2eri->n_node;i++)
     {
         if(Urbasis[i]!=NULL){
-            printf("The %dth node has %d rows and %d columns\n",i,Urbasis[i]->nrow,Urbasis[i]->ncol);
+            fprintf(fileur,"The %dth node has %d rows and %d columns\n",i,Urbasis[i]->nrow,Urbasis[i]->ncol);
         }
     }
+    fclose(fileur);
+    /*
     for (int i = 0; i < h2eri->n_r_adm_pair; i++)
     {
         int node0  = h2eri->r_adm_pairs[2 * i];
@@ -324,6 +321,7 @@ int main(int argc, char **argv)
         printf("its B matrix has %d rows and %d columns\n",h2eri->c_B_blks[i]->nrow,h2eri->c_B_blks[i]->ncol);
     }
     printf("Now init pairwise information\n");
+    */
     int *admpair1st;
     admpair1st=(int *) malloc(sizeof(int) * 2 * h2eri->n_r_adm_pair);
     int *admpair2nd;
@@ -356,14 +354,20 @@ int main(int argc, char **argv)
     H2E_dense_mat_p *Ucbasis;
     Ucbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_r_adm_pair*2);
     H2ERI_build_colbs(h2eri,Ucbasis,admpair1st,admpair2nd,Urbasis);
+    FILE *fileuc = fopen("ucbasis.txt", "w");
+    if (fileuc == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
     for(int i=0;i<2*h2eri->n_r_adm_pair;i++)
     {
         if(Ucbasis[i]!=NULL)
         {
         //    printf("In the admissible pair %d and %d ",admpair1st[i],admpair2nd[i]);
-            printf("The %dth Ucbasis has %d rows and %d columns\n",i,Ucbasis[i]->nrow,Ucbasis[i]->ncol);
+            fprintf(fileuc,"The %dth Ucbasis has %d rows and %d columns\n",i,Ucbasis[i]->nrow,Ucbasis[i]->ncol);
         }
     }
+    fclose(fileuc);
     h2eri->leafidx= (int *) malloc(sizeof(int) * h2eri->num_bf*h2eri->num_bf);
     memset(h2eri->leafidx, -1, sizeof(int) * h2eri->num_bf*h2eri->num_bf);
     h2eri->bfpidx= (int *) malloc(sizeof(int) * h2eri->num_bf*h2eri->num_bf);
@@ -372,7 +376,7 @@ int main(int argc, char **argv)
     for(int i = 0; i < h2eri->n_leaf_node; i++)
     {
         int node = h2eri->height_nodes[i];
-        printf("%d \n",node);
+        //printf("%d \n",node);
         int startp = h2eri->mat_cluster[2 * node];
         int endp = h2eri->mat_cluster[2 * node + 1];
         for(int j = startp; j <= endp; j++)
@@ -463,27 +467,10 @@ int main(int argc, char **argv)
     }
     printf("The norm of the D matrix is %f\n",norm);
     
-    CSRmat_p csrd5;
-    CSRmat_init(&csrd5, nbf, nbf);
-    CSRmat_p csrdc5;
-    CSRmat_init(&csrdc5, nbf, nbf);
-    CSRmat_p csrd5rm;
-    CSRmat_init(&csrd5rm, nbf, nbf);
-    CSRmat_p csrdc5rm;
-    CSRmat_init(&csrdc5rm, nbf, nbf);
-
-    H2ERI_divide_xy(h2eri, TinyDFT, csrd5, csrdc5,csrd5rm,csrdc5rm, 15, 1e-6);
-    printf("CSRD5\n");
-    TestCSR(csrd5);
-    printf("CSRDC5\n");
-    TestCSR(csrdc5);
-    printf("CSRD5RM\n");
-    TestCSR(csrd5rm);
-    printf("CSRDC5RM\n");
-    TestCSR(csrdc5rm);
+   
     COOmat_p cooden;
     COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
-    size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->D_mat, cooden);
+    size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres1, TinyDFT->D_mat, cooden);
     //printf("Now build csrden\n");
     CSRmat_p csrden;
     CSRmat_init(&csrden,h2eri->num_bf,h2eri->num_bf);
@@ -493,7 +480,7 @@ int main(int argc, char **argv)
     //printf("Now build coodc\n");
     COOmat_p coodc;
     COOmat_init(&coodc,h2eri->num_bf,h2eri->num_bf);
-    size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->DC_mat, coodc);
+    size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres1, TinyDFT->DC_mat, coodc);
     //printf("Now build csrdc\n");
     CSRmat_p csrdc;
     CSRmat_init(&csrdc,h2eri->num_bf,h2eri->num_bf);
@@ -502,34 +489,119 @@ int main(int argc, char **argv)
     TestCSR(csrdc);
 
     
+    FILE *file11 = fopen("outputCOCC.txt", "w");
+    if (file11 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < nbf; i++) {
+        for (int j = 0; j < TinyDFT->n_occ; j++) {
+            fprintf(file11, "%.16g ", TinyDFT->Cocc_mat[i*TinyDFT->n_occ+j]);
+        }
+        fprintf(file11, "\n");
+    }
+
+    fclose(file11);
     
+    FILE *file2 = fopen("outputCVIR.txt", "w");
+    if (file2 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < nbf; i++) {
+        for (int j = 0; j < TinyDFT->n_vir; j++) {
+            fprintf(file2, "%.16g ", TinyDFT->Cvir_mat[i*TinyDFT->n_vir+j]);
+        }
+        fprintf(file2, "\n");
+    }
+
+    
+    
+    fclose(file2);
+
+    FILE *file3 = fopen("outputenergy.txt", "w");
+    if (file3 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < nbf; i++) 
+    {
+        fprintf(file3, "%.16g ", TinyDFT->orbitenergy_array[i]);
+    }
+    printf("The number of nocc is %d\n",TinyDFT->n_occ);
+    printf("The number of nvir is %d\n",TinyDFT->n_vir);
+    fclose(file3);
+
+    FILE *file210 = fopen("outputsameshell.txt", "w");
+    if (file210 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+    for(int i=0;i<h2eri->num_sp_bfp;i++)
+    {
+        fprintf(file210, "%d ", h2eri->sameshell[i]);
+    }
+
+    fclose(file210);
+
+    FILE *file112 = fopen("outputsp.txt", "w");
+    if (file112 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < h2eri->num_sp_bfp; i++) 
+    {
+        fprintf(file112, "%d %d %d ", h2eri->sp_bfp_sidx[i],h2eri->bf1st[i],h2eri->bf2nd[i]);
+        fprintf(file112, "\n");
+    }
+
+    fclose(file112);
 
     
     H2E_dense_mat_p *Upinv;
     Upinv = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_node);
     printf("Now we are going to build the Upinv\n");
+
+
     build_pinv_rmat(h2eri,Upinv);
+    FILE *fileinv = fopen("inv.txt", "w");
+    if (fileinv == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
     for(int i=0;i<h2eri->n_node;i++)
     {
-        if(Upinv[i]->nrow!=0)
+    if(Upinv[i]->nrow!=0)
         {
-            printf("The %dth Upinv has %d rows and %d columns\n",i,Upinv[i]->nrow,Upinv[i]->ncol);
+            fprintf(fileinv,"The %dth Upinv has %d rows and %d columns\n",i,Upinv[i]->nrow,Upinv[i]->ncol);
         }
     }
+    fclose(fileinv);
 
     // Now we need to build the column basis set for every node pair including the inadmissible and self
     H2E_dense_mat_p *S51cbasis;
     S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-    H2ERI_build_S5_draft(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
+    printf("Now we are going to build the S51cbasis\n");
+    H2ERI_build_S5(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
+    FILE *files51bs = fopen("s51bs.txt", "w");
+    if (files51bs == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
     for(int i=0;i<npairs;i++)
     {
         if(S51cbasis[i]!=NULL)
         {
-            printf("The %dth S51cbasis has %d rows and %d columns\n",i,S51cbasis[i]->nrow,S51cbasis[i]->ncol);
+            fprintf(files51bs,"The %dth S51cbasis has %d rows and %d columns\n",i,S51cbasis[i]->nrow,S51cbasis[i]->ncol);
         }
     }
-
-
+    fclose(files51bs);
+    
+    
 
     double tmpval=0;
     // Now write the admissible blocks of ERI tensor into a file
@@ -581,50 +653,9 @@ int main(int argc, char **argv)
     fclose(file1);
 
 
-    // Now print the sameshell information
-    FILE *file2 = fopen("outputsameshell.txt", "w");
-    if (file2 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<h2eri->num_sp_bfp;i++)
-    {
-        fprintf(file2, "%d ", h2eri->sameshell[i]);
-    }
 
-    fclose(file2);
 
-    // Now print X and Y matrix
-    FILE *file3 = fopen("outputx.txt", "w");
-    if (file3 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<nbf;i++)
-    {
-        for(size_t j=csrd5->csrrow[i];j<csrd5->csrrow[i+1];j++)
-        {
-            fprintf(file3, "%d %d %.16g ", i,csrd5->csrcol[j],csrd5->csrval[j]);
-            fprintf(file3, "\n");
-        }
-    }
-    fclose(file3);
     
-    FILE *file4 = fopen("outputy.txt", "w");
-    if (file4 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<nbf;i++)
-    {
-        for(size_t j=csrdc5->csrrow[i];j<csrdc5->csrrow[i+1];j++)
-        {
-            fprintf(file4, "%d %d %.16g ", i,csrdc5->csrcol[j],csrdc5->csrval[j]);
-            fprintf(file4, "\n");
-        }
-    }
-    fclose(file4);
-
     double *s51sp;
     s51sp=(double*) malloc(sizeof(double)*h2eri->num_sp_bfp*h2eri->num_sp_bfp);
     memset(s51sp,0,sizeof(double)*h2eri->num_sp_bfp*h2eri->num_sp_bfp);
@@ -661,108 +692,9 @@ int main(int argc, char **argv)
 
     fclose(file5);
 
-    FILE *file9 = fopen("urbasis9.txt", "w");
-    if (file9 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
 
-    for (int i = 0; i < Urbasis[9]->nrow; i++) 
-    {
-        for(int j=0;j<Urbasis[9]->ncol;j++)
-        {
-            fprintf(file9, "%.16g ", Urbasis[9]->data[i*Urbasis[9]->ncol+j]);            
-        }
-        fprintf(file9, "\n");
-    }
 
-    fclose(file9);
-
-    FILE *file10 = fopen("urbasis10.txt", "w");
-    if (file10 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < Urbasis[10]->nrow; i++) 
-    {
-        for(int j=0;j<Urbasis[10]->ncol;j++)
-        {
-            fprintf(file10, "%.16g ", Urbasis[10]->data[i*Urbasis[10]->ncol+j]);            
-        }
-        fprintf(file10, "\n");
-    }
-
-    fclose(file10);
-
-    FILE *file11 = fopen("urbasis11.txt", "w");
-    if (file11 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < Urbasis[11]->nrow; i++) 
-    {
-        for(int j=0;j<Urbasis[11]->ncol;j++)
-        {
-            fprintf(file11, "%.16g ",Urbasis[11]->data[i*Urbasis[11]->ncol+j]);            
-        }
-        fprintf(file11, "\n");
-    }
-
-    fclose(file11);
-
-    FILE *file12 = fopen("urbasis12.txt", "w");
-    if (file12 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < Urbasis[12]->nrow; i++) 
-    {
-        for(int j=0;j<Urbasis[12]->ncol;j++)
-        {
-            fprintf(file12, "%.16g ", Urbasis[12]->data[i*Urbasis[12]->ncol+j]);            
-        }
-        fprintf(file12, "\n");
-    }
-
-    fclose(file12);
-
-    FILE *file13 = fopen("urbasis13.txt", "w");
-    if (file13 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < Urbasis[13]->nrow; i++) 
-    {
-        for(int j=0;j<Urbasis[13]->ncol;j++)
-        {
-            fprintf(file13, "%.16g ", Urbasis[13]->data[i*Urbasis[13]->ncol+j]);            
-        }
-        fprintf(file13, "\n");
-    }
-
-    fclose(file13);
-
-    FILE *file131 = fopen("u13.txt", "w");
-    if (file131 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < h2eri->U[13]->nrow; i++) 
-    {
-        for(int j=0;j<h2eri->U[13]->ncol;j++)
-        {
-            fprintf(file131, "%.16g ", h2eri->U[13]->data[i*h2eri->U[13]->ncol+j]);            
-        }
-        fprintf(file131, "\n");
-    }
-
-    fclose(file131);
-
+    
 
 
     COOmat_p cooh2d;
@@ -797,43 +729,62 @@ int main(int argc, char **argv)
     fclose(file7);
     //printf("Now build cooden\n");
     
-
-    printf("Pairs\n");
+    
+    FILE *filepairs = fopen("pairs.txt", "w");
+    if (filepairs == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
     for(int i=0;i<npairs;i++)
     {
-        printf("%d %d %d\n",i,pair1st[i],pair2nd[i]);
+        fprintf(filepairs,"%d %d %d\n",i,pair1st[i],pair2nd[i]);
     }
-    printf("Pairsidx\n");
+    fclose(filepairs);
+    FILE *filepairidx = fopen("pairsidx.txt", "w");
+    if (filepairidx == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
     for(int i=0;i<h2eri->n_node;i++)
     {
         for(int j=0;j<nodepairs[i]->length;j++)
         {
-            printf("%d %d %d\n",i,nodepairs[i]->data[j],nodepairidx[i]->data[j]);
+            fprintf(filepairidx,"%d %d %d\n",i,nodepairs[i]->data[j],nodepairidx[i]->data[j]);
         }
     }
+    fclose(filepairidx);
 
-
-    printf("Adm pairs\n");
+    FILE *fileadmp = fopen("admpairs.txt", "w");
+    if (fileadmp == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
     for(int i=0;i<2 * h2eri->n_r_adm_pair;i++)
     {
-        printf("%d %d %d\n",i, admpair1st[i],admpair2nd[i]);
+        fprintf(fileadmp,"%d %d %d \n",i, admpair1st[i],admpair2nd[i]);
     }
-    printf("Nodeadmpairs\n");
+    fclose(fileadmp);
+    
+    FILE *fileadmidx = fopen("admidx.txt", "w");
+    if (fileadmidx == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
     for(int i=0;i<h2eri->n_node;i++)
     {
         for(int j=0;j<nodeadmpairs[i]->length;j++)
         {
-            printf("%d %d %d\n",i,nodeadmpairs[i]->data[j],nodeadmpairidx[i]->data[j]);
+            fprintf(fileadmidx,"%d %d %d\n ",i,nodeadmpairs[i]->data[j],nodeadmpairidx[i]->data[j]);
         }
     }
-
+    fclose(fileadmidx);
     
     printf("Now build gdle\n");
     CSRmat_p gdle;
     CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
     double st1,et1;
     st1 = get_wtime_sec();
-    Xindextransform2(h2eri->num_bf,csrh2d,csrden,gdle);
+    Xindextransform3(h2eri->num_bf,csrh2d,csrden,gdle);
     printf("GDLE\n");
     TestCSR(gdle);
     
@@ -843,7 +794,7 @@ int main(int argc, char **argv)
     CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
         
     st1 = get_wtime_sec();
-    Yindextransform2(h2eri->num_bf,gdle,csrdc,gdls);
+    Yindextransform3(h2eri->num_bf,gdle,csrdc,gdls);
     et1 = get_wtime_sec();
         
     printf("The Y Index transformation time is %.3lf (s)\n",et1-st1);
@@ -881,7 +832,7 @@ int main(int argc, char **argv)
     memset(pairlist,0,sizeof(int) * h2eri->n_node);
     int childstep[5] = {22, 24, 28, 29, 30};
 
-    int nchild = Split_node(h2eri,27,22,childstep,childlist,pairlist,nodeadmpairs,nodeadmpairidx);
+    int nchild = Split_node(h2eri,21,22,childstep,childlist,pairlist,nodeadmpairs,nodeadmpairidx);
     printf("The number of children is %d\n",nchild);
     for(int i=0;i<nchild;i++)
     {
@@ -892,6 +843,235 @@ int main(int argc, char **argv)
         printf("The %dth pair is %d\n",i,pairlist[i]);
     }
 
+    FILE *file17 = fopen("urbasis0.txt", "w");
+    if (file17 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[0]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[0]->ncol;j++)
+        {
+            fprintf(file17, "%.16g ", Urbasis[0]->data[i*Urbasis[0]->ncol+j]);            
+        }
+        fprintf(file17, "\n");
+    }
+
+    fclose(file17);
+
+    FILE *file18 = fopen("urbasis1.txt", "w");
+    if (file18 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[1]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[1]->ncol;j++)
+        {
+            fprintf(file18, "%.16g ", Urbasis[1]->data[i*Urbasis[1]->ncol+j]);            
+        }
+        fprintf(file18, "\n");
+    }
+
+    fclose(file18);
+    
+
+    FILE *file19 = fopen("urbasis2.txt", "w");
+    if (file19 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[2]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[2]->ncol;j++)
+        {
+            fprintf(file19, "%.16g ", Urbasis[2]->data[i*Urbasis[2]->ncol+j]);            
+        }
+        fprintf(file19, "\n");
+    }
+
+    fclose(file19);
+
+    FILE *file20 = fopen("urbasis6.txt", "w");
+    if (file20 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[6]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[6]->ncol;j++)
+        {
+            fprintf(file20, "%.16g ", Urbasis[6]->data[i*Urbasis[6]->ncol+j]);            
+        }
+        fprintf(file20, "\n");
+    }
+
+    fclose(file20);
+
+    FILE *file21 = fopen("urbasis21.txt", "w");
+    if (file21 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Urbasis[21]->nrow; i++) 
+    {
+        for(int j=0;j<Urbasis[21]->ncol;j++)
+        {
+            fprintf(file21, "%.16g ", Urbasis[21]->data[i*Urbasis[21]->ncol+j]);            
+        }
+        fprintf(file21, "\n");
+    }
+
+    fclose(file21);
+
+
+
+    FILE *file15 = fopen("ucbasis6.txt", "w");
+    if (file15 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Ucbasis[6]->nrow; i++) 
+    {
+        for(int j=0;j<Ucbasis[6]->ncol;j++)
+        {
+            fprintf(file15, "%.16g ", Ucbasis[6]->data[i*Ucbasis[6]->ncol+j]);            
+        }
+        fprintf(file15, "\n");
+    }
+
+    fclose(file15);
+
+    FILE *filec0 = fopen("ucbasis0.txt", "w");
+    if (filec0 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Ucbasis[0]->nrow; i++) 
+    {
+        for(int j=0;j<Ucbasis[0]->ncol;j++)
+        {
+            fprintf(filec0, "%.16g ", Ucbasis[0]->data[i*Ucbasis[0]->ncol+j]);            
+        }
+        fprintf(filec0, "\n");
+    }
+
+    fclose(filec0);
+
+    FILE *filec1 = fopen("ucbasis1.txt", "w");
+    if (filec1 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Ucbasis[1]->nrow; i++) 
+    {
+        for(int j=0;j<Ucbasis[1]->ncol;j++)
+        {
+            fprintf(filec1, "%.16g ", Ucbasis[1]->data[i*Ucbasis[1]->ncol+j]);            
+        }
+        fprintf(filec1, "\n");
+    }
+
+    fclose(filec1);
+
+
+
+
+    FILE *file16 = fopen("ucbasis7.txt", "w");
+    if (file16 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Ucbasis[7]->nrow; i++) 
+    {
+        for(int j=0;j<Ucbasis[7]->ncol;j++)
+        {
+            fprintf(file16, "%.16g ", Ucbasis[7]->data[i*Ucbasis[7]->ncol+j]);            
+        }
+        fprintf(file16, "\n");
+    }
+
+    fclose(file16);
+
+    FILE *file244 = fopen("ucbasis24.txt", "w");
+    if (file244 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Ucbasis[24]->nrow; i++) 
+    {
+        for(int j=0;j<Ucbasis[24]->ncol;j++)
+        {
+            fprintf(file244, "%.16g ", Ucbasis[24]->data[i*Ucbasis[24]->ncol+j]);            
+        }
+        fprintf(file244, "\n");
+    }
+
+    fclose(file244);
+
+
+    FILE *file255 = fopen("ucbasis25.txt", "w");
+    if (file16 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < Ucbasis[25]->nrow; i++) 
+    {
+        for(int j=0;j<Ucbasis[25]->ncol;j++)
+        {
+            fprintf(file255, "%.16g ", Ucbasis[25]->data[i*Ucbasis[25]->ncol+j]);            
+        }
+        fprintf(file255, "\n");
+    }
+
+    fclose(file255);
+
+
+
+    FILE *file88 = fopen("u2.txt", "w");
+    if (file88 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < h2eri->U[2]->nrow; i++) 
+    {
+        for(int j=0;j<h2eri->U[2]->ncol;j++)
+        {
+            fprintf(file88, "%.16g ", h2eri->U[2]->data[i*h2eri->U[2]->ncol+j]);            
+        }
+        fprintf(file88, "\n");
+    }
+
+    fclose(file88);
+
+    FILE *file89 = fopen("u6.txt", "w");
+    if (file89 == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < h2eri->U[6]->nrow; i++) 
+    {
+        for(int j=0;j<h2eri->U[6]->ncol;j++)
+        {
+            fprintf(file89, "%.16g ", h2eri->U[6]->data[i*h2eri->U[6]->ncol+j]);            
+        }
+        fprintf(file89, "\n");
+    }
+
+    fclose(file89);
 
 
 

@@ -236,7 +236,44 @@ double Calc2norm(const double *mat, int siz)
   return norms;
 }
 
+char* format_double(double value) {
+    char* result = malloc(10);  // Allocate memory for the result string
+    if (result == NULL) {
+        return NULL;  // Return NULL if memory allocation fails
+    }
 
+    if (value == 0) {
+        sprintf(result, "0E0");
+        return result;
+    }
+
+    int exponent = (int)floor(log10(fabs(value)));  // Find the exponent if value were expressed in scientific notation
+    int most_significant_digit = (int)(value / pow(10, exponent));  // Extract the most significant digit
+
+    sprintf(result, "%dE%d", most_significant_digit, exponent);  // Format the string as required
+
+    return result;  // Return the formatted string
+}
+
+char* concatenate(const char* s1, const char* s2) {
+    // Calculate the total length needed for the concatenated string
+    int length = strlen(s1) + strlen(s2) + 1;  // +1 for the null terminator
+
+    // Allocate memory for the concatenated string
+    char* result = malloc(length);
+    if (result == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return NULL;
+    }
+
+    // Copy the first string
+    strcpy(result, s1);
+
+    // Concatenate the second string
+    strcat(result, s2);
+
+    return result;
+}
 
 
 
@@ -277,7 +314,7 @@ int main(int argc, char **argv)
     // Print H2P-ERI statistic info
     H2ERI_print_statistic(h2eri);
     double thres=1e-6;
-    double thres1=1e-5;
+    double thres1=atof(argv[5]);
  
 
     int nbf = h2eri->num_bf;
@@ -306,26 +343,7 @@ int main(int argc, char **argv)
     H2E_dense_mat_p *Urbasis;
     Urbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_node);
     H2ERI_build_rowbs(h2eri,Urbasis);
-    printf("2The number of nodes is %d\n",h2eri->n_node);
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        printf("The %dth node has %d rows and %d columns\n",i,h2eri->U[i]->nrow,h2eri->U[i]->ncol);
-    }
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        if(Urbasis[i]!=NULL){
-            printf("The %dth node has %d rows and %d columns\n",i,Urbasis[i]->nrow,Urbasis[i]->ncol);
-        }
-    }
-    for (int i = 0; i < h2eri->n_r_adm_pair; i++)
-    {
-        int node0  = h2eri->r_adm_pairs[2 * i];
-        int node1  = h2eri->r_adm_pairs[2 * i + 1];
-        int level0 = h2eri->node_level[node0];
-        int level1 = h2eri->node_level[node1];
-        printf("The %dth adm pair is (%d,%d) with level (%d,%d)\n",i,node0,node1,level0,level1);
-        printf("its B matrix has %d rows and %d columns\n",h2eri->c_B_blks[i]->nrow,h2eri->c_B_blks[i]->ncol);
-    }
+    
     printf("Now init pairwise information\n");
     int *admpair1st;
     admpair1st=(int *) malloc(sizeof(int) * 2 * h2eri->n_r_adm_pair);
@@ -359,14 +377,7 @@ int main(int argc, char **argv)
     H2E_dense_mat_p *Ucbasis;
     Ucbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_r_adm_pair*2);
     H2ERI_build_colbs(h2eri,Ucbasis,admpair1st,admpair2nd,Urbasis);
-    for(int i=0;i<2*h2eri->n_r_adm_pair;i++)
-    {
-        if(Ucbasis[i]!=NULL)
-        {
-        //    printf("In the admissible pair %d and %d ",admpair1st[i],admpair2nd[i]);
-            printf("The %dth Ucbasis has %d rows and %d columns\n",i,Ucbasis[i]->nrow,Ucbasis[i]->ncol);
-        }
-    }
+    
     h2eri->leafidx= (int *) malloc(sizeof(int) * h2eri->num_bf*h2eri->num_bf);
     memset(h2eri->leafidx, -1, sizeof(int) * h2eri->num_bf*h2eri->num_bf);
     h2eri->bfpidx= (int *) malloc(sizeof(int) * h2eri->num_bf*h2eri->num_bf);
@@ -375,7 +386,7 @@ int main(int argc, char **argv)
     for(int i = 0; i < h2eri->n_leaf_node; i++)
     {
         int node = h2eri->height_nodes[i];
-        printf("%d \n",node);
+        //printf("%d \n",node);
         int startp = h2eri->mat_cluster[2 * node];
         int endp = h2eri->mat_cluster[2 * node + 1];
         for(int j = startp; j <= endp; j++)
@@ -443,17 +454,22 @@ int main(int argc, char **argv)
     
     
     
-    int sum=0;
+   
+    
+    
+    FILE *filepairidx = fopen("pairsidx.txt", "w");
+    if (filepairidx == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
     for(int i=0;i<h2eri->n_node;i++)
     {
-        printf("The %dth node has %d pairs\n",i,nodepairs[i]->length);
-        sum+=nodepairs[i]->length;
+        for(int j=0;j<nodepairs[i]->length;j++)
+        {
+            fprintf(filepairidx,"%d %d %d\n",i,nodepairs[i]->data[j],nodepairidx[i]->data[j]);
+        }
     }
-    printf("The total number of pairs is %d\n",sum);
-    
-    
-    
-    
+    fclose(filepairidx);
     
 
     
@@ -489,6 +505,10 @@ int main(int argc, char **argv)
 
     
     double Fermie=0.0;
+    size_t mostx=0;
+    size_t mosty=0;
+    double gap = (TinyDFT->orbitenergy_array[TinyDFT->nbf-1]-TinyDFT->orbitenergy_array[0])/(TinyDFT->orbitenergy_array[TinyDFT->n_occ]-TinyDFT->orbitenergy_array[TinyDFT->n_occ-1]);
+    printf("The gap factor is %.16g\n",gap);
     et = get_wtime_sec();
     printf("The time for construction of ERI is %.3lf (s)\n", et - st);
     
@@ -567,10 +587,25 @@ int main(int argc, char **argv)
 
     // Step 3: Find the quadrature points
     char directorypath[100]= "/gpfs/projects/JiaoGroup/hongjigao/gccmp2test/H2P-ERI_forMP2/tests/1_x/";
-    char *filename="1_xk12_2E1";
-    const int n = 12; // Number of omega and alpha entries
+    //char *filename="1_xk08_3E1";
+    char *format = format_double(gap);
+    int n;
+    char *num;
+    if(gap>=10) 
+    {
+        num = "1_xk08_";
+        n=8;
+    }
+    else
+    {
+        num = "1_xk07_";
+        n=7;
+    }    
+
+    char * quadfile = concatenate(num,format);
+    printf("quad file name: %s\n", quadfile);
     char full_path[150];  
-    snprintf(full_path, sizeof(full_path), "%s%s", directorypath, filename);
+    snprintf(full_path, sizeof(full_path), "%s%s", directorypath, quadfile);
     FILE *file = fopen(full_path, "r");
     if (file == NULL) {
         perror("Failed to open file");
@@ -625,13 +660,14 @@ int main(int argc, char **argv)
         COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
         size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres1, TinyDFT->D_mat, cooden);
         //printf("Now build csrden\n");
+        if(nden>mostx) mostx=nden;
         CSRmat_p csrden;
         CSRmat_init(&csrden,h2eri->num_bf,h2eri->num_bf);
         Double_COO_to_CSR( h2eri->num_bf,  nden, cooden,csrden);
         COOmat_p coodc;
         COOmat_init(&coodc,h2eri->num_bf,h2eri->num_bf);
         size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres1, TinyDFT->DC_mat, coodc);
-        //printf("Now build csrdc\n");
+        if(ndc>mosty) mosty=ndc;
         CSRmat_p csrdc;
         CSRmat_init(&csrdc,h2eri->num_bf,h2eri->num_bf);
         Double_COO_to_CSR( h2eri->num_bf,  ndc, coodc,csrdc);
@@ -640,14 +676,14 @@ int main(int argc, char **argv)
         CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
         double st1,et1;
         st1 = get_wtime_sec();
-        Xindextransform2(h2eri->num_bf,csrh2d,csrden,gdle);
+        Xindextransform3(h2eri->num_bf,csrh2d,csrden,gdle);
 
         
         CSRmat_p gdls;
         CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
             
         
-        Yindextransform2(h2eri->num_bf,gdle,csrdc,gdls);
+        Yindextransform3(h2eri->num_bf,gdle,csrdc,gdls);
         et1 = get_wtime_sec();
             
 
@@ -666,26 +702,30 @@ int main(int argc, char **argv)
         // Now we need to build the column basis set for every node pair including the inadmissible and self
         st1 = get_wtime_sec();
         printf("Now we are going to build the S51cbasis\n");
+        double s51energy=0;
+        double s1s5 = 0;
+        sumenergy += omega_val*energy;
+        
         H2E_dense_mat_p *S51cbasis;
         S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-        H2ERI_build_S5_draft(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
+        H2ERI_build_S5(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
         et1 = get_wtime_sec();
         printf("Index transformation time is %.16g\n",et1-st1);
         
 
 
 
-        double s51energy=0;
+        
         s51energy = calc_S51_self_interaction(h2eri, Urbasis, S51cbasis, npairs, pair1st, pair2nd);
         printf("The S51 energy is %.16g\n",s51energy);
 
 
         
-        double s1s5 = 0;
+        
         s1s5 = calc_S1S51(gdls,h2eri, Urbasis,S51cbasis, nodepairs, nodepairidx);
         printf("The S1S51 energy is %.16g\n",s1s5);
         printf("The total energy in this quadrature point is %.16g\n",energy+2*s1s5+s51energy);
-        sumenergy += omega_val*(energy+2*s1s5+s51energy);
+        sumenergy += omega_val*(2*s1s5+s51energy);
         for(int i=0;i<npairs;i++)
         {
             if(S51cbasis[i]!=NULL)
@@ -731,7 +771,7 @@ int main(int argc, char **argv)
     }
 
     fclose(file1);
-
+/*
     FILE *file7 = fopen("outeri.txt", "w");
     if (file7 == NULL) {
         printf("Error opening file!\n");
@@ -745,8 +785,45 @@ int main(int argc, char **argv)
         }
     }
     fclose(file7);
-    
+    */
 
+    int length = strlen(argv[1]) + 4; // 4 for ".txt" and null terminator
+    char *outname = malloc(length);
+
+    if (outname == NULL) {
+        perror("Failed to allocate memory");
+        return EXIT_FAILURE;
+    }
+
+    // Construct the filename
+    sprintf(outname, "%s.txt", argv[6]);
+
+    // Open the file
+    FILE *fileou = fopen(outname, "w"); // Change "r" to "w" if you want to write to the file
+    if (fileou == NULL) {
+        perror("Failed to open file");
+        free(outname);
+        return EXIT_FAILURE;
+    }
+    fprintf(fileou, "The total energy is %.16g\n",sumenergy);
+    fprintf(fileou, "The number of basis functions is %d\n",nbf);
+    fprintf(fileou, "The number of nodes is %d\n",h2eri->n_node);
+    fprintf(fileou, "The number of pairs is %d\n",npairs);
+    fprintf(fileou, "The number of admissible pairs is %d\n",h2eri->n_r_adm_pair);
+    fprintf(fileou, "The number of inadmissible pairs is %d\n",h2eri->n_r_inadm_pair);
+    fprintf(fileou, "The largest number of X is %ld\n",mostx);
+    fprintf(fileou, "The largest number of Y is %ld\n",mosty);
+    fprintf(fileou, "The gap factor is %.16g\n",gap);
+    fprintf(fileou, "The number of quadrature points is %d\n",n);
+    fprintf(fileou, "The threshold for X and Y is %.16g\n",thres1);
+    // File operations here (e.g., reading or writing)
+    printf("File '%s' opened successfully.\n", outname);
+
+    // Close the file
+    fclose(fileou);
+
+    // Free the allocated memory for the filename
+    free(outname);
 
 
 

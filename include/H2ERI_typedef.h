@@ -109,6 +109,7 @@ struct H2ERI
     int    *D_nrow;                 // Size n_D, numbers of rows of dense blocks in the original matrix
     int    *D_ncol;                 // Size n_D, numbers of columns of dense blocks in the original matrix
 
+    int    maxcol;                   // Maximum number of columns in U matrix
     int    *bf1st;                     // Added: size num_sp_bfp, the first basis function of the corresponding bfp
     int    *bf2nd;                     // Added: size num_sp_bfp, the second basis function of the corresponding bfp
     int    *sameshell;                 // Added: size num_sp_bfp, whether the two basis functions are in the same shell 
@@ -145,6 +146,7 @@ struct COOmat
     int nrow;                           // number of rows of the matrix
     int ncol;                           // number of columns of the matrix
     size_t nnz;                            // number of nonzero elements of the matrix
+    double maxv;                        // maximum value of the matrix, added for further computation
     int             * coorow;           // Array, size nnz, the row information in COOMatrix form.
     int             * coocol;           // Array, size nnz, the column information in COOMatrix form.
     double          * cooval;           // Array, size nnz, the value information in COOMatrix form.
@@ -156,6 +158,7 @@ struct CSRmat
     int nrow;                           // number of rows of the matrix
     int ncol;                           // number of columns of the matrix
     size_t nnz;                            // number of nonzero elements of the matrix
+    double maxv;                        // maximum value of the matrix, added for further computation
     size_t          * csrrow;           // Array, size nrow+1, the row information in CSRMatrix form.
     int             * csrcol;           // Array, size nnz, the column information in CSRMatrix form.
     double          * csrval;           // Array, size nnz, the value information in CSRMatrix form.

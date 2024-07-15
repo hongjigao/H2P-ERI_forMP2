@@ -191,8 +191,8 @@ void TestCSR(CSRmat_p csrmat)
                 nlong=csrmat->csrrow[j+1]-csrmat->csrrow[j];
         }
     }
-    printf("The number of values larger than 1e-2,1e-5 and 1e-9 are respectively %lu,%lu,%lu\n",larger1e2,larger1e5,larger1e9);
-    printf("The number of elements is %lu\n",lg0tst);
+    //printf("The number of values larger than 1e-2,1e-5 and 1e-9 are respectively %lu,%lu,%lu\n",larger1e2,larger1e5,larger1e9);
+    printf("The number of elements is %lu, ",lg0tst);
     printf("The norm of the csrmat is %.16g\n", norm);
     printf("The number of nonzero rows is %d, the totol rows is %d, the longest row is %d\n",nn0,csrmat->nrow,nlong);
     //printf("Test the ascending order:\n");
@@ -224,19 +224,57 @@ void TestCSR(CSRmat_p csrmat)
 }
 
 
-double Calc2norm(const double *mat, int siz) 
+double Calcmaxv(const double *mat, int siz) 
 {
-  double norms = 0;
+  double maxv = 0;
   for (int i = 0; i < siz; i++)
     for (int j = 0; j < siz; j++) 
     {
-      norms = norms + mat[i * siz + j] * mat[i * siz + j];
+      if(fabs(mat[i * siz + j]) > maxv)
+        maxv = fabs(mat[i * siz + j]);
     }
 
-  return norms;
+  return maxv;
 }
 
+char* format_double(double value) {
+    char* result = malloc(10);  // Allocate memory for the result string
+    if (result == NULL) {
+        return NULL;  // Return NULL if memory allocation fails
+    }
 
+    if (value == 0) {
+        sprintf(result, "0E0");
+        return result;
+    }
+
+    int exponent = (int)floor(log10(fabs(value)));  // Find the exponent if value were expressed in scientific notation
+    int most_significant_digit = (int)(value / pow(10, exponent));  // Extract the most significant digit
+
+    sprintf(result, "%dE%d", most_significant_digit, exponent);  // Format the string as required
+
+    return result;  // Return the formatted string
+}
+
+char* concatenate(const char* s1, const char* s2) {
+    // Calculate the total length needed for the concatenated string
+    int length = strlen(s1) + strlen(s2) + 1;  // +1 for the null terminator
+
+    // Allocate memory for the concatenated string
+    char* result = malloc(length);
+    if (result == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return NULL;
+    }
+
+    // Copy the first string
+    strcpy(result, s1);
+
+    // Concatenate the second string
+    strcat(result, s2);
+
+    return result;
+}
 
 
 
@@ -264,8 +302,8 @@ int main(int argc, char **argv)
     H2ERI_partition(h2eri);
     //printf("H2ERI partition done\n");
     H2ERI_build_H2(h2eri, 0);
-    double et = get_wtime_sec();
-    printf("H2ERI build H2 for J matrix done, used %.3lf (s)\n", et - st);
+    
+    
     
     // Compute constant matrices and get initial guess for D
     TinyDFT_build_Hcore_S_X_mat(TinyDFT, TinyDFT->Hcore_mat, TinyDFT->S_mat, TinyDFT->X_mat);
@@ -276,6 +314,12 @@ int main(int argc, char **argv)
     
     // Print H2P-ERI statistic info
     H2ERI_print_statistic(h2eri);
+    double thres=1e-6;
+    double thres1=atof(argv[5]);
+    double et = get_wtime_sec();
+    printf("The time for SCF is %.3lf (s)\n", et - st);
+    double scftime = et - st;
+
     int nbf = h2eri->num_bf;
     int * tmpshellidx;
     tmpshellidx=(int *) malloc(sizeof(int) * (h2eri->nshell+1));
@@ -295,30 +339,14 @@ int main(int argc, char **argv)
 
     printf("The number of basis functions is %d\n",nbf);
     printf("1The number of nodes is %d\n",h2eri->n_node);
-    // Now we need to build the row basis set for every node
+    
+    st = get_wtime_sec();
+    //Step 1: Build the low rank ERI part
+    st = get_wtime_sec();
     H2E_dense_mat_p *Urbasis;
     Urbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_node);
     H2ERI_build_rowbs(h2eri,Urbasis);
-    printf("2The number of nodes is %d\n",h2eri->n_node);
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        printf("The %dth node has %d rows and %d columns\n",i,h2eri->U[i]->nrow,h2eri->U[i]->ncol);
-    }
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        if(Urbasis[i]!=NULL){
-            printf("The %dth node has %d rows and %d columns\n",i,Urbasis[i]->nrow,Urbasis[i]->ncol);
-        }
-    }
-    for (int i = 0; i < h2eri->n_r_adm_pair; i++)
-    {
-        int node0  = h2eri->r_adm_pairs[2 * i];
-        int node1  = h2eri->r_adm_pairs[2 * i + 1];
-        int level0 = h2eri->node_level[node0];
-        int level1 = h2eri->node_level[node1];
-        printf("The %dth adm pair is (%d,%d) with level (%d,%d)\n",i,node0,node1,level0,level1);
-        printf("its B matrix has %d rows and %d columns\n",h2eri->c_B_blks[i]->nrow,h2eri->c_B_blks[i]->ncol);
-    }
+    
     printf("Now init pairwise information\n");
     int *admpair1st;
     admpair1st=(int *) malloc(sizeof(int) * 2 * h2eri->n_r_adm_pair);
@@ -352,14 +380,7 @@ int main(int argc, char **argv)
     H2E_dense_mat_p *Ucbasis;
     Ucbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_r_adm_pair*2);
     H2ERI_build_colbs(h2eri,Ucbasis,admpair1st,admpair2nd,Urbasis);
-    for(int i=0;i<2*h2eri->n_r_adm_pair;i++)
-    {
-        if(Ucbasis[i]!=NULL)
-        {
-        //    printf("In the admissible pair %d and %d ",admpair1st[i],admpair2nd[i]);
-         //   printf("The %dth Ucbasis has %d rows and %d columns\n",i,Ucbasis[i]->nrow,Ucbasis[i]->ncol);
-        }
-    }
+    
     h2eri->leafidx= (int *) malloc(sizeof(int) * h2eri->num_bf*h2eri->num_bf);
     memset(h2eri->leafidx, -1, sizeof(int) * h2eri->num_bf*h2eri->num_bf);
     h2eri->bfpidx= (int *) malloc(sizeof(int) * h2eri->num_bf*h2eri->num_bf);
@@ -368,7 +389,7 @@ int main(int argc, char **argv)
     for(int i = 0; i < h2eri->n_leaf_node; i++)
     {
         int node = h2eri->height_nodes[i];
-        printf("%d \n",node);
+        //printf("%d \n",node);
         int startp = h2eri->mat_cluster[2 * node];
         int endp = h2eri->mat_cluster[2 * node + 1];
         for(int j = startp; j <= endp; j++)
@@ -432,149 +453,313 @@ int main(int argc, char **argv)
         H2E_int_vec_push_back(nodepairs[pair1st[i+h2eri->n_leaf_node+2*h2eri->n_r_inadm_pair]],pair2nd[i+h2eri->n_leaf_node+2*h2eri->n_r_inadm_pair]);
         H2E_int_vec_push_back(nodepairidx[pair1st[i+h2eri->n_leaf_node+2*h2eri->n_r_inadm_pair]],i+h2eri->n_leaf_node+2*h2eri->n_r_inadm_pair);
     }
+
+    et = get_wtime_sec();
+    printf("The time for building the nodepairs, Ur and Uc is %.3lf (s)\n", et - st);
+    
+    double buildnodepairs = et - st;
+   
+    
+    
+    
+    st = get_wtime_sec();
+    
+    H2E_dense_mat_p *Upinv;
+    Upinv = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_node);
+    printf("Now we are going to build the Upinv\n");
+    build_pinv_rmat(h2eri,Upinv);
+    et = get_wtime_sec();
+    printf("The time for building the Upinv is %.3lf (s)\n", et - st);
+    double buildpinv = et - st;
+
+    // Step2: Build the dense ERI part
     
     COOmat_p cooh2d;
     COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
     H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
     size_t nnz=cooh2d->nnz;
     
-    double thres1=1e-7;
+    
     COOmat_p cooh2d1;
     COOmat_init(&cooh2d1,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    compresscoo(cooh2d, cooh2d1, thres1);
+    compresscoo(cooh2d, cooh2d1, thres);
     CSRmat_p csrh2d;
     CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
 
     Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d1->nnz, cooh2d1,csrh2d);
-    printf("TestCSR\n");
-    TestCSR(csrh2d);
-    H2E_dense_mat_p *Upinv;
-    Upinv = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_node);
-    printf("Now we are going to build the Upinv\n");
-    build_pinv_rmat(h2eri,Upinv);
-    for(int i=0;i<h2eri->n_node;i++)
+    //printf("TestCSRh2d\n");
+    //TestCSR(csrh2d);
+    et = get_wtime_sec();
+    printf("The time for construction of ERI is %.3lf (s)\n", et - st);
+    
+    TinyDFT_build_MP2info_eig(TinyDFT, TinyDFT->F_mat,
+                               TinyDFT->X_mat, TinyDFT->D_mat,
+                               TinyDFT->Cocc_mat, TinyDFT->DC_mat,
+                               TinyDFT->Cvir_mat, TinyDFT->orbitenergy_array);
+
+    
+    double Fermie=0.0;
+    size_t mostx=0;
+    size_t mosty=0;
+
+    double maxx = Calcmaxv(TinyDFT->D_mat, nbf);
+    double maxy = Calcmaxv(TinyDFT->DC_mat, nbf);
+
+
+    double gap = (TinyDFT->orbitenergy_array[TinyDFT->nbf-1]-TinyDFT->orbitenergy_array[0])/(TinyDFT->orbitenergy_array[TinyDFT->n_occ]-TinyDFT->orbitenergy_array[TinyDFT->n_occ-1]);
+    printf("The gap factor is %.16g\n",gap);
+    
+    
+
+
+    // Step 3: Find the quadrature points
+    char directorypath[100]= "/gpfs/projects/JiaoGroup/hongjigao/gccmp2test/H2P-ERI_forMP2/tests/1_x/";
+    //char *filename="1_xk08_3E1";
+    char *format = format_double(gap);
+    int n;
+    char *num;
+    if(gap>=10) 
     {
-        if(Upinv[i]!=NULL)
-        {
-            printf("The %dth Upinv has %d rows and %d columns\n",i,Upinv[i]->nrow,Upinv[i]->ncol);
+        num = "1_xk08_";
+        n=8;
+    }
+    else
+    {
+        num = "1_xk07_";
+        n=7;
+    }    
+
+    char * quadfile = concatenate(num,format);
+    printf("quad file name: %s\n", quadfile);
+    char full_path[150];  
+    snprintf(full_path, sizeof(full_path), "%s%s", directorypath, quadfile);
+    FILE *file = fopen(full_path, "r");
+    if (file == NULL) {
+        perror("Failed to open file");
+        return 1;
+    }
+
+    
+    double omega[n], alpha[n];
+    int omega_count = 0, alpha_count = 0;
+    char line[128];
+
+    while (fgets(line, sizeof(line), file)) {
+        double value;
+        char label[50];
+
+        if (sscanf(line, "%lf {%[^}]}", &value, label) > 0) {
+            if (strstr(label, "omega") && omega_count < n) {
+                omega[omega_count++] = value;
+            } else if (strstr(label, "alpha") && alpha_count < n) {
+                alpha[alpha_count++] = value;
+            }
+
+            // Stop reading if we have enough entries
+            if (omega_count == n && alpha_count == n) {
+                break;
+            }
         }
     }
-    #define TAU 4
-    double weight[TAU] = {0.84946693, 3.24655345, 4.22223779, 2.13056112};
-    double point[TAU] = {0.32764865, 4.58169128, 7.90399776, 1.79774143};
-    double totalenergy = 0;
-    double totals1 = 0;
-    double totals51 = 0;
-    double totals1s5 = 0;
-    for(int i=0;i<TAU;i++)
+
+    fclose(file);
+    // Output arrays to verify correctness
+    printf("Omega Array:\n");
+    for (int i = 0; i < omega_count; i++) {
+        printf("%.15lf\n", omega[i]);
+    }
+
+    printf("Alpha Array:\n");
+    for (int i = 0; i < alpha_count; i++) {
+        printf("%.15lf\n", alpha[i]);
+    }
+    double st1,et1;
+    double buildxy=0;
+    double denseindtrans=0;
+    double calcs1=0;
+    double builds5=0;
+    double calcs51=0;
+    size_t mostdense=0;
+    size_t mosts5=0;
+    size_t nflop = 0;
+    double thresprod = atof(argv[7]);
+    // Step 4: Do the MP2 calculation in the for loop
+    double sumenergy = 0;
+    double largerate = 0;
+    for(int quad = 0;quad<n;quad++)
     {
-        double energy = 0;   
-        printf("Test energy of point %f\n",point[i]);
-
-        TinyDFT_build_MP2info_eig(TinyDFT, TinyDFT->F_mat,
-                                TinyDFT->X_mat, TinyDFT->D_mat,
-                                TinyDFT->Cocc_mat, TinyDFT->DC_mat,
-                                TinyDFT->Cvir_mat, TinyDFT->orbitenergy_array);
-        double talpha=point[i];
-        double Fermie=0;
-        TinyDFT_build_energyweightedDDC(TinyDFT, TinyDFT->Cocc_mat,TinyDFT->Cvir_mat,TinyDFT->orbitenergy_array,TinyDFT->D_mat,TinyDFT->DC_mat,Fermie,talpha);
-        double norm=0;
-        
-        CSRmat_p csrd5;
-        CSRmat_init(&csrd5, nbf, nbf);
-        CSRmat_p csrdc5;
-        CSRmat_init(&csrdc5, nbf, nbf);
-        H2ERI_extract_near_large_elements(h2eri, TinyDFT, csrd5, csrdc5, 15, 1e-7);
-
-        printf("The number of nonzero elements in the D5 matrix is %ld\n",csrd5->nnz);
-        printf("The number of nonzero elements in the DC5 matrix is %ld\n",csrdc5->nnz);
+        double omega_val = omega[quad];
+        double alpha_val = alpha[quad];
+        printf("The %dth omega is %f, the %dth alpha is %f\n",quad,omega_val,quad,alpha_val);
+        st1 = get_wtime_sec();
+        TinyDFT_build_energyweightedDDC(TinyDFT, TinyDFT->Cocc_mat,TinyDFT->Cvir_mat,TinyDFT->orbitenergy_array,TinyDFT->D_mat,TinyDFT->DC_mat,Fermie,alpha_val);
         COOmat_p cooden;
         COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
-        double thres = 1e-7;
-        int nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->D_mat, cooden);
+        cooden->maxv = maxx;
+        size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres1, TinyDFT->D_mat, cooden);
+        if(nden>mostx) mostx=nden;
         CSRmat_p csrden;
         CSRmat_init(&csrden,h2eri->num_bf,h2eri->num_bf);
         Double_COO_to_CSR( h2eri->num_bf,  nden, cooden,csrden);
         COOmat_p coodc;
         COOmat_init(&coodc,h2eri->num_bf,h2eri->num_bf);
-        int ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->DC_mat, coodc);
-
+        coodc->maxv = maxy;
+        size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres1, TinyDFT->DC_mat, coodc);
+        if(ndc>mosty) mosty=ndc;
         CSRmat_p csrdc;
         CSRmat_init(&csrdc,h2eri->num_bf,h2eri->num_bf);
         Double_COO_to_CSR( h2eri->num_bf,  ndc, coodc,csrdc);
+        printf("The useful csrden and csrdc are %ld and %ld\n",csrden->nnz,csrdc->nnz);
+        et1 = get_wtime_sec();
+        //printf("The time for building the density matrices is %.3lf (s)\n", et1 - st1);
+        printf("The largest value in X is %.16g,Y is %.16g\n",csrden->maxv,csrdc->maxv);        
+
+
         
-
-        // Now we need to build the column basis set for every node pair including the inadmissible and self
-        H2E_dense_mat_p *S51cbasis;
-        S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-        H2ERI_build_S5(h2eri,Urbasis,Ucbasis,csrd5,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
-        double tmpval=0;
-
+        buildxy += et1-st1;
+        size_t nlz=0;
+        for(size_t i=0;i<csrden->nnz;i++)
+            for(size_t j=0;j<csrdc->nnz;j++)
+            {
+                if(fabs(csrden->csrval[i]*csrdc->csrval[j])>csrden->maxv*csrdc->maxv*thresprod)
+                    nlz+=1;
+            }
+        double lgrate = nlz*1.0/(csrden->nnz*csrdc->nnz);
+        printf("The number of large values is %ld, rate %.16g\n",nlz,nlz*1.0/(csrden->nnz*csrdc->nnz));
+        if(lgrate>largerate) largerate=lgrate;
         CSRmat_p gdle;
         CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-        double st1,et1;
-        st1 = get_wtime_sec();
-        printf("csrden\n");
-        TestCSR(csrden);
-        printf("csrd5\n");
-        TestCSR(csrd5);
-        Xindextransform2(h2eri->num_bf,csrh2d,csrden,gdle);
         
-        et1 = get_wtime_sec();
+        st1 = get_wtime_sec();
+        Xindextransform3(h2eri->num_bf,csrh2d,csrden,gdle);
+
+        
         CSRmat_p gdls;
         CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
             
-        st1 = get_wtime_sec();
-        Yindextransform2(h2eri->num_bf,gdle,csrdc,gdls);
+        
+        Yindextransform3(h2eri->num_bf,gdle,csrdc,gdls);
         et1 = get_wtime_sec();
-            
-        printf("The Y Index transformation time is %.3lf (s)\n",et1-st1);
-        printf("Now do energy calculation \n");
+        //printf("Dense Index transformation time is %.16g\n",et1-st1);    
+        if(gdls->nnz>mostdense) mostdense=gdls->nnz;
+        denseindtrans += et1-st1;
         st1 = get_wtime_sec();
-        //    double energy;
-        //    energy = Calc_S1energy(gdls);
-        //    printf("The energy is %f\n",energy);
         CSRmat_p colgdls;
         CSRmat_init(&colgdls,nbf*nbf,nbf*nbf);
         CSR_to_CSC(nbf*nbf, gdls,colgdls);
-        TestCSR(colgdls);
-        double s1;
-        s1 = Calc_S1energy(gdls,colgdls);
-        printf("The S1 energy is %.16g\n",s1);
+        double energy;
+        energy = Calc_S1energy(gdls,colgdls);
+        printf("The S1 energy is %.16g\n",energy);
+        et1 = get_wtime_sec();
+        //printf("The time for calculating the S1 energy is %.3lf (s)\n", et1 - st1);
+        calcs1 += et1-st1;
+        if(h2eri->n_r_adm_pair==0)
+        {
+            printf("The total energy in this quadrature point is %.16g\n",energy);
+            sumenergy += omega_val*energy;
+            continue;
+        }
+        // Now we need to build the column basis set for every node pair including the inadmissible and self
+        st1 = get_wtime_sec();
+        printf("Now we are going to build the S51cbasis\n");
         double s51energy=0;
+        double s1s5 = 0;
+        sumenergy += omega_val*energy;
+        
+        H2E_dense_mat_p *S51cbasis;
+        S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
+        size_t nfq = H2ERI_build_S5_draft(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv,thresprod);
+        et1 = get_wtime_sec();
+        printf("build S5 time is %.16g\n",et1-st1);
+        builds5 += et1-st1;
+        st1 = get_wtime_sec();
+        nflop += nfq;
+
+
+        
         s51energy = calc_S51_self_interaction(h2eri, Urbasis, S51cbasis, npairs, pair1st, pair2nd);
         printf("The S51 energy is %.16g\n",s51energy);
-        
-        double s1s5 = 0;
-        s1s5 = calc_S1S51(gdls,h2eri, Urbasis,S51cbasis, nodepairs, nodepairidx);
-        printf("The S1S5 energy is %.16g\n",s1s5);
-        energy = (s1 + s51energy + 2*s1s5)*weight[i];
-        printf("The energy is %.16g\n",energy);
-        totalenergy += energy;
-        totals1 += s1*weight[i];
-        totals51 += s51energy*weight[i];
-        totals1s5 += s1s5*weight[i];
 
+
+        
+        
+        s1s5 = calc_S1S51(gdls,h2eri, Urbasis,S51cbasis, nodepairs, nodepairidx);
+        printf("The S1S51 energy is %.16g\n",s1s5);
+        printf("The total energy in this quadrature point is %.16g\n",energy+2*s1s5+s51energy);
+        sumenergy += omega_val*(2*s1s5+s51energy);
+        et1 = get_wtime_sec();
+        printf("The time for calculating the S1S51 energy is %.3lf (s)\n", et1 - st1);
+        calcs51 += et1-st1;
+        size_t mosts5tmp=0;
         for(int i=0;i<npairs;i++)
         {
             if(S51cbasis[i]!=NULL)
             {
+                mosts5tmp += S51cbasis[i]->ncol*S51cbasis[i]->nrow;
                 H2E_dense_mat_destroy(&S51cbasis[i]);
             }
         }
+        if(mosts5tmp>mosts5) mosts5=mosts5tmp;
+    
     }
-
-
-
+    
+    
+    printf("The total energy is %.16g\n",sumenergy);
+    double tmpval=0;
+    // Now write the admissible blocks of ERI tensor into a file
+    
     
 
+    int length = strlen(argv[1]) + 4; // 4 for ".txt" and null terminator
+    char *outname = malloc(length);
 
-    printf("Finish the test of the D matrix\n");
-    printf("The total energy is %.16g\n",totalenergy);
-    printf("The total S1 energy is %.16g\n",totals1);
-    printf("The total S51 energy is %.16g\n",totals51);
-    printf("The total S1S5 energy is %.16g\n",totals1s5);
+    if (outname == NULL) {
+        perror("Failed to allocate memory");
+        return EXIT_FAILURE;
+    }
 
+    // Construct the filename
+    sprintf(outname, "%s.txt", argv[6]);
+
+    // Open the file
+    FILE *fileou = fopen(outname, "w"); // Change "r" to "w" if you want to write to the file
+    if (fileou == NULL) {
+        perror("Failed to open file");
+        free(outname);
+        return EXIT_FAILURE;
+    }
+    fprintf(fileou, "The total energy is %.16g\n",sumenergy);
+    fprintf(fileou, "The number of basis functions is %d\n",nbf);
+    fprintf(fileou, "The number of nodes is %d\n",h2eri->n_node);
+    fprintf(fileou, "The scf time is %.16g\n",scftime);
+    fprintf(fileou, "The number of pairs is %d\n",npairs);
+    fprintf(fileou, "The number of admissible pairs is %d\n",h2eri->n_r_adm_pair);
+    fprintf(fileou, "The number of inadmissible pairs is %d\n",h2eri->n_r_inadm_pair);
+    fprintf(fileou, "The largest number of X is %ld\n",mostx);
+    fprintf(fileou, "The largest number of Y is %ld\n",mosty);
+    fprintf(fileou, "The gap factor is %.16g\n",gap);
+    fprintf(fileou, "The number of quadrature points is %d\n",n);
+    fprintf(fileou, "The threshold for X and Y is %.16g\n",thres1);
+    fprintf(fileou, "The threshold for the product of X and Y is %.16g\n",thresprod);
+    fprintf(fileou, "The largest rate of large values is %.16g\n",largerate);
+    fprintf(fileou, "Running time for building nodepairs, Ur and Uc is %.16g\n",buildnodepairs);
+    fprintf(fileou, "Running time for building Upinv is %.16g\n",buildpinv);
+    fprintf(fileou, "Running time for building xy is %.16g\n",buildxy);
+    fprintf(fileou, "Running time for dense index transformation is %.16g\n",denseindtrans);
+    fprintf(fileou, "Running time for calculating S1 is %.16g\n",calcs1);
+    fprintf(fileou, "Running time for building S5 is %.16g\n",builds5);
+    fprintf(fileou, "Running time for calculating S1S51 is %.16g\n",calcs51);
+    fprintf(fileou, "memory cost for dense ERI is %ld\n",mostdense);
+    fprintf(fileou, "memory cost for S5 is %ld\n",mosts5);
+    fprintf(fileou, "The number of flops for S5 is %ld\n",nflop);
+    // File operations here (e.g., reading or writing)
+    printf("File '%s' opened successfully.\n", outname);
+
+    // Close the file
+    fclose(fileou);
+
+    // Free the allocated memory for the filename
+    free(outname);
 
 
 

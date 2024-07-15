@@ -1,0 +1,72 @@
+INFO: use H2ERI J (relerr 1.00e-09), HF exchange K
+CMS_import_basis() line 455 Warning: no valid basis type in gbs file... assuming Simint
+normalization() line 68 Warning: NOT performing normalization for CARTESIAN
+CMS_import_guess() line 682 Found SAD file for H
+CMS_import_guess() line 712 Using SAD file for H
+CMS_import_guess() line 682 Found SAD file for C
+CMS_import_guess() line 712 Using SAD file for C
+CMS_import_guess() line 682 Found SAD file for N
+CMS_import_guess() line 712 Using SAD file for N
+CMS_import_guess() line 682 Found SAD file for O
+CMS_import_guess() line 712 Using SAD file for O
+CMS_import_guess() line 682 Found SAD file for P
+CMS_import_guess() line 712 Using SAD file for P
+CMS_import_guess() line 682 Found SAD file for S
+CMS_import_guess() line 712 Using SAD file for S
+CMS basis set memory usage = 0.34 MB
+Job information:
+    basis set       = cc-pVDZ
+    molecule        = alkane_5.xyz
+    atoms           = 5
+    shells          = 18
+    basis functions = 35
+    occupied orbits = 5
+    virtual orbits  = 30
+    charge          = 0
+    electrons       = 10
+Simint screen method    = SIMINT_SCREEN_SCHWARZ 
+Simint prim screen tol  = 1.00e-14
+TinyDFT memory allocation and initialization over, elapsed time = 0.214 (s)
+CMS Simint memory usage = 172.77 MB 
+TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 0.024 (s)
+Screened unique shell pairs: 171 out of 324 (density = 52.78%)
+Eliminating linear dependency in overlap matrix S: 0 eigenvalues < 1.00e-05 are removed
+HFSCF iteration started...
+Nuclear repulsion energy = 13.4477464760
+--------------- Iteration 0 ---------------
+* Iteration runtime     = 0.039 (s)
+* Energy = -40.4163427898
+--------------- Iteration 1 ---------------
+* Iteration runtime     = 0.034 (s)
+* Energy = -40.1644262971, delta = 2.519165e-01
+The Eoe, Ete and Eex are respectively -80.381061, 33.387655 and -6.618767
+--------------- Iteration 2 ---------------
+* Iteration runtime     = 0.035 (s)
+* Energy = -40.1945443985, delta = -3.011810e-02
+The Eoe, Ete and Eex are respectively -79.418699, 32.317109 and -6.540700
+--------------- Iteration 3 ---------------
+* Iteration runtime     = 0.041 (s)
+* Energy = -40.1981780117, delta = -3.633613e-03
+The Eoe, Ete and Eex are respectively -79.838166, 32.792091 and -6.599849
+--------------- Iteration 4 ---------------
+* Iteration runtime     = 0.041 (s)
+* Energy = -40.1987406355, delta = -5.626237e-04
+The Eoe, Ete and Eex are respectively -79.714048, 32.655721 and -6.588161
+--------------- Iteration 5 ---------------
+* Iteration runtime     = 0.035 (s)
+* Energy = -40.1987717528, delta = -3.111727e-05
+The Eoe, Ete and Eex are respectively -79.719429, 32.663946 and -6.591036
+--------------- Iteration 6 ---------------
+* Iteration runtime     = 0.050 (s)
+* Energy = -40.1987719553, delta = -2.025128e-07
+The Eoe, Ete and Eex are respectively -79.719789, 32.664435 and -6.591164
+--------------- Iteration 7 ---------------
+* Iteration runtime     = 0.048 (s)
+* Energy = -40.1987719565, delta = -1.196163e-09
+The Eoe, Ete and Eex are respectively -79.719745, 32.664391 and -6.591164
+--------------- Iteration 8 ---------------
+* Iteration runtime     = 0.041 (s)
+* Energy = -40.1987719565, delta = -9.613643e-12
+The Eoe, Ete and Eex are respectively -79.719754, 32.664401 and -6.591165
+free(): invalid next size (fast)
+/cm/local/apps/slurm/var/spool/job613781/slurm_script: line 10: 1696500 Aborted                 (core dumped) ./mp2test.exe cc-pVDZ/cc-pVDZ.gbs alkane/alkane_5.xyz 50 1e-9 1e-4 alkane5_1e4_1e8 1e-8

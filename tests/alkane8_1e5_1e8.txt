@@ -1,0 +1,24 @@
+The total energy is 0.1350801083768634
+The number of basis functions is 35
+The number of nodes is 27
+The scf time is 22.07675909996033
+The number of pairs is 361
+The number of admissible pairs is 92
+The number of inadmissible pairs is 79
+The largest number of X is 913
+The largest number of Y is 913
+The gap factor is 19.93014739474326
+The number of quadrature points is 8
+The threshold for X and Y is 1e-05
+The threshold for the product of X and Y is 1e-08
+The largest rate of large values is 0.9998550897899888
+Running time for building nodepairs, Ur and Uc is 0.3147659301757812
+Running time for building Upinv is 0.0002350807189941406
+Running time for building xy is 0.5768389701843262
+Running time for dense index transformation is 1.744708061218262
+Running time for calculating S1 is 0.1714920997619629
+Running time for building S5 is 2.638467311859131
+Running time for calculating S1S51 is 1.483123779296875
+memory cost for dense ERI is 1500625
+memory cost for S5 is 383877
+The number of flops for S5 is 1538506066

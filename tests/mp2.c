@@ -111,9 +111,44 @@ void H2ERI_HFSCF(TinyDFT_p TinyDFT, H2ERI_p h2eri, const int max_iter)
 }
 
 
+char* format_double(double value) {
+    char* result = malloc(10);  // Allocate memory for the result string
+    if (result == NULL) {
+        return NULL;  // Return NULL if memory allocation fails
+    }
 
+    if (value == 0) {
+        sprintf(result, "0E0");
+        return result;
+    }
 
+    int exponent = (int)floor(log10(fabs(value)));  // Find the exponent if value were expressed in scientific notation
+    int most_significant_digit = (int)(value / pow(10, exponent));  // Extract the most significant digit
 
+    sprintf(result, "%dE%d", most_significant_digit, exponent);  // Format the string as required
+
+    return result;  // Return the formatted string
+}
+
+char* concatenate(const char* s1, const char* s2) {
+    // Calculate the total length needed for the concatenated string
+    int length = strlen(s1) + strlen(s2) + 1;  // +1 for the null terminator
+
+    // Allocate memory for the concatenated string
+    char* result = malloc(length);
+    if (result == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return NULL;
+    }
+
+    // Copy the first string
+    strcpy(result, s1);
+
+    // Concatenate the second string
+    strcat(result, s2);
+
+    return result;
+}
 
 int main(int argc, char **argv)
 {
@@ -166,50 +201,22 @@ int main(int argc, char **argv)
     double gap = (TinyDFT->orbitenergy_array[TinyDFT->nbf-1]-TinyDFT->orbitenergy_array[0])/(TinyDFT->orbitenergy_array[TinyDFT->n_occ]-TinyDFT->orbitenergy_array[TinyDFT->n_occ-1]);
     printf("The gap factor is %.16g\n",gap);
     char directorypath[100]= "/gpfs/projects/JiaoGroup/hongjigao/gccmp2test/H2P-ERI_forMP2/tests/1_x/";
-    char *filename="1_xk09_3E3";
-    char full_path[150];  
-    snprintf(full_path, sizeof(full_path), "%s%s", directorypath, filename);
-    FILE *file = fopen(full_path, "r");
-    if (file == NULL) {
-        perror("Failed to open file");
-        return 1;
+    char *format = format_double(gap);
+    char *num;
+    if(gap>=10) 
+    {
+        num = "1_xk08_";
+        
     }
+    else
+    {
+        num = "1_xk07_";
+        
+    }    
 
-    const int n = 9; // Number of omega and alpha entries
-    double omega[n], alpha[n];
-    int omega_count = 0, alpha_count = 0;
-    char line[128];
-
-    while (fgets(line, sizeof(line), file)) {
-        double value;
-        char label[50];
-
-        if (sscanf(line, "%lf {%[^}]}", &value, label) > 0) {
-            if (strstr(label, "omega") && omega_count < n) {
-                omega[omega_count++] = value;
-            } else if (strstr(label, "alpha") && alpha_count < n) {
-                alpha[alpha_count++] = value;
-            }
-
-            // Stop reading if we have enough entries
-            if (omega_count == n && alpha_count == n) {
-                break;
-            }
-        }
-    }
-
-    fclose(file);
-    // Output arrays to verify correctness
-    printf("Omega Array:\n");
-    for (int i = 0; i < omega_count; i++) {
-        printf("%.15lf\n", omega[i]);
-    }
-
-    printf("Alpha Array:\n");
-    for (int i = 0; i < alpha_count; i++) {
-        printf("%.15lf\n", alpha[i]);
-    }
-
+    char * quadfile = concatenate(num,format);
+    printf("Concatenated String: %s\n", quadfile);
+    
     
 
     // Free TinyDFT and H2P-ERI
