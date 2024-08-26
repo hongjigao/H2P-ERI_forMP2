@@ -5,6 +5,8 @@
         "array": "c",
         "string": "c",
         "string_view": "c",
-        "h2eri.h": "c"
+        "h2eri.h": "c",
+        "h2eri_utils.h": "c",
+        "utils.h": "c"
     }
 }

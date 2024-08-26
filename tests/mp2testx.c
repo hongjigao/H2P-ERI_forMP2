@@ -224,16 +224,17 @@ void TestCSR(CSRmat_p csrmat)
 }
 
 
-double Calc2norm(const double *mat, int siz) 
+double Calcmaxv(const double *mat, int siz) 
 {
-  double norms = 0;
+  double maxv = 0;
   for (int i = 0; i < siz; i++)
     for (int j = 0; j < siz; j++) 
     {
-      norms = norms + mat[i * siz + j] * mat[i * siz + j];
+      if(fabs(mat[i * siz + j]) > maxv)
+        maxv = fabs(mat[i * siz + j]);
     }
 
-  return norms;
+  return maxv;
 }
 
 char* format_double(double value) {
@@ -301,8 +302,8 @@ int main(int argc, char **argv)
     H2ERI_partition(h2eri);
     //printf("H2ERI partition done\n");
     H2ERI_build_H2(h2eri, 0);
-    double et = get_wtime_sec();
-    printf("H2ERI build H2 for J matrix done, used %.3lf (s)\n", et - st);
+    
+    
     
     // Compute constant matrices and get initial guess for D
     TinyDFT_build_Hcore_S_X_mat(TinyDFT, TinyDFT->Hcore_mat, TinyDFT->S_mat, TinyDFT->X_mat);
@@ -315,7 +316,9 @@ int main(int argc, char **argv)
     H2ERI_print_statistic(h2eri);
     double thres=1e-6;
     double thres1=atof(argv[5]);
- 
+    double et = get_wtime_sec();
+    printf("The time for SCF is %.3lf (s)\n", et - st);
+    double scftime = et - st;
 
     int nbf = h2eri->num_bf;
     int * tmpshellidx;
@@ -337,7 +340,7 @@ int main(int argc, char **argv)
     printf("The number of basis functions is %d\n",nbf);
     printf("1The number of nodes is %d\n",h2eri->n_node);
     
-
+    st = get_wtime_sec();
     //Step 1: Build the low rank ERI part
     st = get_wtime_sec();
     H2E_dense_mat_p *Urbasis;
@@ -451,33 +454,23 @@ int main(int argc, char **argv)
         H2E_int_vec_push_back(nodepairidx[pair1st[i+h2eri->n_leaf_node+2*h2eri->n_r_inadm_pair]],i+h2eri->n_leaf_node+2*h2eri->n_r_inadm_pair);
     }
 
+    et = get_wtime_sec();
+    printf("The time for building the nodepairs, Ur and Uc is %.3lf (s)\n", et - st);
     
-    
-    
+    double buildnodepairs = et - st;
    
     
     
-    FILE *filepairidx = fopen("pairsidx.txt", "w");
-    if (filepairidx == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<h2eri->n_node;i++)
-    {
-        for(int j=0;j<nodepairs[i]->length;j++)
-        {
-            fprintf(filepairidx,"%d %d %d\n",i,nodepairs[i]->data[j],nodepairidx[i]->data[j]);
-        }
-    }
-    fclose(filepairidx);
     
-
+    st = get_wtime_sec();
     
     H2E_dense_mat_p *Upinv;
     Upinv = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * h2eri->n_node);
     printf("Now we are going to build the Upinv\n");
     build_pinv_rmat(h2eri,Upinv);
-    
+    et = get_wtime_sec();
+    printf("The time for building the Upinv is %.3lf (s)\n", et - st);
+    double buildpinv = et - st;
 
     // Step2: Build the dense ERI part
     
@@ -494,9 +487,10 @@ int main(int argc, char **argv)
     CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
 
     Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d1->nnz, cooh2d1,csrh2d);
-    printf("TestCSRh2d\n");
-    TestCSR(csrh2d);
-
+    //printf("TestCSRh2d\n");
+    //TestCSR(csrh2d);
+    et = get_wtime_sec();
+    printf("The time for construction of ERI is %.3lf (s)\n", et - st);
     
     TinyDFT_build_MP2info_eig(TinyDFT, TinyDFT->F_mat,
                                TinyDFT->X_mat, TinyDFT->D_mat,
@@ -507,82 +501,15 @@ int main(int argc, char **argv)
     double Fermie=0.0;
     size_t mostx=0;
     size_t mosty=0;
+
+    double maxx = Calcmaxv(TinyDFT->D_mat, nbf);
+    double maxy = Calcmaxv(TinyDFT->DC_mat, nbf);
+
+
     double gap = (TinyDFT->orbitenergy_array[TinyDFT->nbf-1]-TinyDFT->orbitenergy_array[0])/(TinyDFT->orbitenergy_array[TinyDFT->n_occ]-TinyDFT->orbitenergy_array[TinyDFT->n_occ-1]);
     printf("The gap factor is %.16g\n",gap);
-    et = get_wtime_sec();
-    printf("The time for construction of ERI is %.3lf (s)\n", et - st);
-    
-    FILE *file11 = fopen("outputCOCC.txt", "w");
-    if (file11 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < nbf; i++) {
-        for (int j = 0; j < TinyDFT->n_occ; j++) {
-            fprintf(file11, "%.16g ", TinyDFT->Cocc_mat[i*TinyDFT->n_occ+j]);
-        }
-        fprintf(file11, "\n");
-    }
-
-    fclose(file11);
-    
-    FILE *file2 = fopen("outputCVIR.txt", "w");
-    if (file2 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < nbf; i++) {
-        for (int j = 0; j < TinyDFT->n_vir; j++) {
-            fprintf(file2, "%.16g ", TinyDFT->Cvir_mat[i*TinyDFT->n_vir+j]);
-        }
-        fprintf(file2, "\n");
-    }
-
     
     
-    fclose(file2);
-
-    FILE *file3 = fopen("outputenergy.txt", "w");
-    if (file3 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < nbf; i++) 
-    {
-        fprintf(file3, "%.16g ", TinyDFT->orbitenergy_array[i]);
-    }
-    printf("The number of nocc is %d\n",TinyDFT->n_occ);
-    printf("The number of nvir is %d\n",TinyDFT->n_vir);
-    fclose(file3);
-
-    FILE *file20 = fopen("outputsameshell.txt", "w");
-    if (file20 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<h2eri->num_sp_bfp;i++)
-    {
-        fprintf(file20, "%d ", h2eri->sameshell[i]);
-    }
-
-    fclose(file20);
-
-    FILE *file12 = fopen("outputsp.txt", "w");
-    if (file12 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < h2eri->num_sp_bfp; i++) 
-    {
-        fprintf(file12, "%d %d %d ", h2eri->sp_bfp_sidx[i],h2eri->bf1st[i],h2eri->bf2nd[i]);
-        fprintf(file12, "\n");
-    }
-
-    fclose(file12);
 
 
     // Step 3: Find the quadrature points
@@ -646,73 +573,146 @@ int main(int argc, char **argv)
     for (int i = 0; i < alpha_count; i++) {
         printf("%.15lf\n", alpha[i]);
     }
-
-
+    
+    double buildxy=0;
+    double denseindtrans=0;
+    double calcs1=0;
+    double builds5=0;
+    double calcs51=0;
+    size_t mostdense=0;
+    size_t mosts5=0;
+    size_t nflop = 0;
+    double *Cocc_mat = TinyDFT->Cocc_mat;
+    double *Cvir_mat = TinyDFT->Cvir_mat;
+    double *orbitenergy_array = TinyDFT->orbitenergy_array;
+    double thresprod = atof(argv[7]);
     // Step 4: Do the MP2 calculation in the for loop
     double sumenergy = 0;
+    double largerate = 0;
+    #pragma omp parallel for
     for(int quad = 0;quad<n;quad++)
     {
+        printf("Thread %d processing index %d\n", omp_get_thread_num(), quad);
         double omega_val = omega[quad];
         double alpha_val = alpha[quad];
+        double st1,et1;
         printf("The %dth omega is %f, the %dth alpha is %f\n",quad,omega_val,quad,alpha_val);
-        TinyDFT_build_energyweightedDDC(TinyDFT, TinyDFT->Cocc_mat,TinyDFT->Cvir_mat,TinyDFT->orbitenergy_array,TinyDFT->D_mat,TinyDFT->DC_mat,Fermie,alpha_val);
+        st1 = get_wtime_sec();
+        double *tmpD;
+        tmpD = (double *) malloc(sizeof(double) * nbf * nbf);
+        memset(tmpD, 0, sizeof(double) * nbf * nbf);
+        double* tmpDC;
+        tmpDC = (double *) malloc(sizeof(double) * nbf * nbf);
+        memset(tmpDC, 0, sizeof(double) * nbf * nbf);
+        int n_occ=TinyDFT->n_occ;
+        int n_vir=TinyDFT->n_vir;
+        //energy difference
+        double edif;
+        double tmp_factor;
+        double talpha = alpha_val;
+        for(int i=0;i<n_occ;i++)
+        {
+            edif=orbitenergy_array[i]-Fermie;
+            tmp_factor= exp(edif*talpha);
+            for(int mu=0;mu<nbf;mu++)
+                for(int nu=0;nu<nbf;nu++)
+                {
+                    tmpD[mu*nbf+nu] += Cocc_mat[mu*n_occ+i]*Cocc_mat[nu*n_occ+i]*tmp_factor;
+                }
+        }
+        //Calculate Y
+        for(int a=n_occ;a<nbf;a++)
+        {
+            edif=Fermie - orbitenergy_array[a];
+            tmp_factor= exp(edif*talpha);
+            for(int mu=0;mu<nbf;mu++)
+                for(int nu=0;nu<nbf;nu++)
+                {
+                    tmpDC[mu*nbf+nu] += Cvir_mat[mu*n_vir+a-n_occ]*Cvir_mat[nu*n_vir+a-n_occ]*tmp_factor;
+                }
+        }
         COOmat_p cooden;
         COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
-        size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres1, TinyDFT->D_mat, cooden);
-        //printf("Now build csrden\n");
+        cooden->maxv = maxx;
+        size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres1, tmpD, cooden);
         if(nden>mostx) mostx=nden;
         CSRmat_p csrden;
         CSRmat_init(&csrden,h2eri->num_bf,h2eri->num_bf);
         Double_COO_to_CSR( h2eri->num_bf,  nden, cooden,csrden);
         COOmat_p coodc;
         COOmat_init(&coodc,h2eri->num_bf,h2eri->num_bf);
-        size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres1, TinyDFT->DC_mat, coodc);
+        coodc->maxv = maxy;
+        size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres1, tmpDC, coodc);
         if(ndc>mosty) mosty=ndc;
         CSRmat_p csrdc;
         CSRmat_init(&csrdc,h2eri->num_bf,h2eri->num_bf);
         Double_COO_to_CSR( h2eri->num_bf,  ndc, coodc,csrdc);
-        printf("The useful csrden and csrdc are %ld and %ld\n",csrden->nnz,csrdc->nnz);
+        //printf("The useful csrden and csrdc are %ld and %ld\n",csrden->nnz,csrdc->nnz);
+        et1 = get_wtime_sec();
+        //printf("The time for building the density matrices is %.3lf (s)\n", et1 - st1);
+        //printf("The largest value in X is %.16g,Y is %.16g\n",csrden->maxv,csrdc->maxv);        
+
+
+        
+        buildxy += et1-st1;
+        size_t nlz=0;
+        for(size_t i=0;i<csrden->nnz;i++)
+            for(size_t j=0;j<csrdc->nnz;j++)
+            {
+                if(fabs(csrden->csrval[i]*csrdc->csrval[j])>csrden->maxv*csrdc->maxv*thresprod)
+                    nlz+=1;
+            }
+        double lgrate = nlz*1.0/(csrden->nnz*csrdc->nnz);
+        printf("The number of large values in quad %d is %ld, rate %.16g\n",quad, nlz,nlz*1.0/(csrden->nnz*csrdc->nnz));
+        if(lgrate>largerate) largerate=lgrate;
         CSRmat_p gdle;
         CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-        double st1,et1;
+        //printf("now do x index transformation\n");
         st1 = get_wtime_sec();
         Xindextransform3(h2eri->num_bf,csrh2d,csrden,gdle);
-
+        //printf("Finished X index transformation\n");
         
         CSRmat_p gdls;
         CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
             
-        
+        //printf("now do y index transformation\n");
         Yindextransform3(h2eri->num_bf,gdle,csrdc,gdls);
         et1 = get_wtime_sec();
-            
-
+        //printf("Dense Index transformation time is %.16g\n",et1-st1);    
+        if(gdls->nnz>mostdense) mostdense=gdls->nnz;
+        denseindtrans += et1-st1;
+        st1 = get_wtime_sec();
         CSRmat_p colgdls;
         CSRmat_init(&colgdls,nbf*nbf,nbf*nbf);
         CSR_to_CSC(nbf*nbf, gdls,colgdls);
         double energy;
         energy = Calc_S1energy(gdls,colgdls);
         printf("The S1 energy is %.16g\n",energy);
+        et1 = get_wtime_sec();
+        //printf("The time for calculating the S1 energy is %.3lf (s)\n", et1 - st1);
+        calcs1 += et1-st1;
         if(h2eri->n_r_adm_pair==0)
         {
-            printf("The total energy in this quadrature point is %.16g\n",energy);
+            printf("The total energy in quadrature %d is %.16g\n",quad,energy);
             sumenergy += omega_val*energy;
             continue;
         }
         // Now we need to build the column basis set for every node pair including the inadmissible and self
         st1 = get_wtime_sec();
-        printf("Now we are going to build the S51cbasis\n");
+        //printf("Now we are going to build the S51cbasis\n");
         double s51energy=0;
         double s1s5 = 0;
         sumenergy += omega_val*energy;
         
         H2E_dense_mat_p *S51cbasis;
-        S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-        H2ERI_build_S5test(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
+        S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) *2* npairs);
+        size_t nfq = 0;
+        H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
         et1 = get_wtime_sec();
-        printf("Index transformation time is %.16g\n",et1-st1);
-        
-
+        printf("build S5 time in quad %d is %.16g\n",quad, et1-st1);
+        builds5 += et1-st1;
+        st1 = get_wtime_sec();
+        nflop += nfq;
 
 
         
@@ -726,13 +726,21 @@ int main(int argc, char **argv)
         printf("The S1S51 energy is %.16g\n",s1s5);
         printf("The total energy in this quadrature point is %.16g\n",energy+2*s1s5+s51energy);
         sumenergy += omega_val*(2*s1s5+s51energy);
+        et1 = get_wtime_sec();
+        printf("The time for calculating the S1S51 energy is %.3lf (s)\n", et1 - st1);
+        calcs51 += et1-st1;
+        size_t mosts5tmp=0;
         for(int i=0;i<npairs;i++)
         {
             if(S51cbasis[i]!=NULL)
             {
+                mosts5tmp += S51cbasis[i]->ncol*S51cbasis[i]->nrow;
                 H2E_dense_mat_destroy(&S51cbasis[i]);
             }
         }
+        if(mosts5tmp>mosts5) mosts5=mosts5tmp;
+        free(tmpD);
+        free(tmpDC);
     
     }
     
@@ -740,52 +748,8 @@ int main(int argc, char **argv)
     printf("The total energy is %.16g\n",sumenergy);
     double tmpval=0;
     // Now write the admissible blocks of ERI tensor into a file
-    FILE *file1 = fopen("outadmeri.txt", "w");
-    if (file1 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-    for(int i=0;i<2*h2eri->n_r_adm_pair;i++)
-    {
-        int node0 = admpair1st[i];
-        int node1 = admpair2nd[i];
-        int size0 = Ucbasis[i]->nrow;
-        int ncol = Ucbasis[i]->ncol;
-        int nrow = Urbasis[node0]->nrow;
-        int startrow = h2eri->mat_cluster[2 * node0];
-        int startcol = h2eri->mat_cluster[2 * node1];
-        for(int j=0;j<nrow;j++)
-        {
-            int rowidx = startrow+j;
-            for(int k=0;k<ncol;k++)
-            {
-                int colidx = startcol+k;
-                tmpval = 0;
-                for(int l=0;l<size0;l++)
-                {
-                    tmpval += Ucbasis[i]->data[l*ncol+k]*Urbasis[node0]->data[j*size0+l];
-                }
-                fprintf(file1, "%d %d %.16g \n", rowidx, colidx, tmpval);
-            }
-        }
-    }
-
-    fclose(file1);
-/*
-    FILE *file7 = fopen("outeri.txt", "w");
-    if (file7 == NULL) {
-        printf("Error opening file!\n");
-        return 1;
-    }
-
-    for (int i = 0; i < csrh2d->nrow; i++) {
-        for (size_t j = csrh2d->csrrow[i]; j < csrh2d->csrrow[i+1]; j++) {
-            fprintf(file7, "%d %d %d %d %.16g ", i%nbf,i/nbf,csrh2d->csrcol[j]%nbf,csrh2d->csrcol[j]/nbf,csrh2d->csrval[j]);
-            fprintf(file7, "\n");
-        }
-    }
-    fclose(file7);
-    */
+    
+    
 
     int length = strlen(argv[1]) + 4; // 4 for ".txt" and null terminator
     char *outname = malloc(length);
@@ -805,9 +769,11 @@ int main(int argc, char **argv)
         free(outname);
         return EXIT_FAILURE;
     }
+    fprintf(fileou, "nbf is %d\n",nbf);
     fprintf(fileou, "The total energy is %.16g\n",sumenergy);
     fprintf(fileou, "The number of basis functions is %d\n",nbf);
     fprintf(fileou, "The number of nodes is %d\n",h2eri->n_node);
+    fprintf(fileou, "The scf time is %.16g\n",scftime);
     fprintf(fileou, "The number of pairs is %d\n",npairs);
     fprintf(fileou, "The number of admissible pairs is %d\n",h2eri->n_r_adm_pair);
     fprintf(fileou, "The number of inadmissible pairs is %d\n",h2eri->n_r_inadm_pair);
@@ -816,6 +782,19 @@ int main(int argc, char **argv)
     fprintf(fileou, "The gap factor is %.16g\n",gap);
     fprintf(fileou, "The number of quadrature points is %d\n",n);
     fprintf(fileou, "The threshold for X and Y is %.16g\n",thres1);
+    fprintf(fileou, "The threshold for the product of X and Y is %.16g\n",thresprod);
+    fprintf(fileou, "The largest rate of large values is %.16g\n",largerate);
+    fprintf(fileou,"Running time for scf is %.16g\n",scftime);
+    fprintf(fileou, "Running time for building nodepairs, Ur and Uc is %.16g\n",buildnodepairs);
+    fprintf(fileou, "Running time for building Upinv is %.16g\n",buildpinv);
+    fprintf(fileou, "Running time for building xy is %.16g\n",buildxy);
+    fprintf(fileou, "Running time for dense index transformation is %.16g\n",denseindtrans);
+    fprintf(fileou, "Running time for calculating S1 is %.16g\n",calcs1);
+    fprintf(fileou, "Running time for building S5 is %.16g\n",builds5);
+    fprintf(fileou, "Running time for calculating S1S51 is %.16g\n",calcs51);
+    fprintf(fileou, "memory cost for dense ERI is %ld\n",mostdense);
+    fprintf(fileou, "memory cost for S5 is %ld\n",mosts5);
+    fprintf(fileou, "The number of flops for S5 is %ld\n",nflop);
     // File operations here (e.g., reading or writing)
     printf("File '%s' opened successfully.\n", outname);
 

@@ -151,9 +151,10 @@ double TestCSR(CSRmat_p csrmat)
 {
     double maxv=0;
     double norm=0;
-    size_t larger1e5=0;
-    size_t larger1e9=0;
+    size_t larger1e3=0;
+    size_t larger1e4=0;
     size_t larger1e2=0;
+    size_t larger1e5=0;
     size_t lg0tst=0;
     for(size_t i=0;i<csrmat->nnz;i++)
     {
@@ -170,9 +171,11 @@ double TestCSR(CSRmat_p csrmat)
         if(fabs(csrmat->csrval[i])>maxv*1e-2)
             larger1e2+=1;
         if(fabs(csrmat->csrval[i])>=maxv*1e-3)
-            larger1e5+=1;
+            larger1e3+=1;
         if(fabs(csrmat->csrval[i])>maxv*1e-4)
-            larger1e9+=1;
+            larger1e4+=1;
+        if(fabs(csrmat->csrval[i])>=maxv*1e-5)
+            larger1e5+=1;
         if(fabs(csrmat->csrval[i])>0)
             lg0tst+=1;
         norm += csrmat->csrval[i]*csrmat->csrval[i];
@@ -190,7 +193,7 @@ double TestCSR(CSRmat_p csrmat)
                 nlong=csrmat->csrrow[j+1]-csrmat->csrrow[j];
         }
     }
-    printf("The number of values larger than 1e-2,1e-3 and 1e-4 are respectively %lu,%lu,%lu\n",larger1e2,larger1e5,larger1e9);
+    printf("The number of values larger than 1e-2,1e-3 1e-4 and 1e-5 are respectively %lu,%lu,%lu, %lu\n",larger1e2,larger1e3,larger1e4,larger1e5);
     printf("The number of elements is %lu, ",lg0tst);
     printf("The norm of the csrmat is %.16g\n", norm);
     printf("The number of nonzero rows is %d, the totol rows is %d, the longest row is %d\n",nn0,csrmat->nrow,nlong);
@@ -307,17 +310,23 @@ int main(int argc, char **argv)
     size_t nprs = nden*ndc;
     double larval = maxx*maxy;
     size_t nprs1 = csrden->nnz*csrdc->nnz;
-    size_t nlz = 0;
+    size_t nlz7 = 0;
+    size_t nlz6 = 0;
+    size_t nlz5 = 0;
     printf("The number of nonzero elements in pairs is %lu, should equar %lu\n",nprs,nprs1);
     for(size_t i=0;i<csrden->nnz;i++)
         for(size_t j=0;j<csrdc->nnz;j++)
         {
             if(fabs(csrden->csrval[i]*csrdc->csrval[j])>larval*1e-7)
-                nlz+=1;
+                nlz7+=1;
+            if(fabs(csrden->csrval[i]*csrdc->csrval[j])>larval*1e-6)
+                nlz6+=1;
+            if(fabs(csrden->csrval[i]*csrdc->csrval[j])>larval*1e-5)
+                nlz5+=1;
         }
     
-    printf("nlz 1e-7 %lu\n",nlz);
-    printf("rate is %f\n",nlz*1.0/nprs1);
+    printf("nlz 1e-7 %lu, 1e-6 %lu, 1e-5 %lu\n",nlz7,nlz6,nlz5);
+    printf("rate is %f, %f, %f\n",nlz7*1.0/nprs1,nlz6*1.0/nprs1,nlz5*1.0/nprs1);
 
 
     

@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+#SBATCH --job-name=test3
+#SBATCH --output=rest3.txt
+#SBATCH --ntasks-per-node=40
+#SBATCH --nodes=2
+#SBATCH --time=12:00:00
+#SBATCH -p medium-40core
+#SBATCH date
+
+./mp2test.exe sto-3g/sto-3g.gbs alkane/alkane_182.xyz 50 1e-9 1e-5 testalk182 1e-6

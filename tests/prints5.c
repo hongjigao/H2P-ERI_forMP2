@@ -577,7 +577,7 @@ int main(int argc, char **argv)
     // Now we need to build the column basis set for every node pair including the inadmissible and self
     H2E_dense_mat_p *S51cbasis;
     S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-    H2ERI_build_S5(h2eri,Urbasis,Ucbasis,csrd5,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
+    H2ERI_build_S5test(h2eri,Urbasis,Ucbasis,csrd5,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
     for(int i=0;i<npairs;i++)
     {
         if(S51cbasis[i]!=NULL)

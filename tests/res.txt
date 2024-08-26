@@ -13,60 +13,59 @@ CMS_import_guess() line 682 Found SAD file for P
 CMS_import_guess() line 712 Using SAD file for P
 CMS_import_guess() line 682 Found SAD file for S
 CMS_import_guess() line 712 Using SAD file for S
-CMS basis set memory usage = 0.34 MB
+CMS basis set memory usage = 0.09 MB
 Job information:
-    basis set       = cc-pVDZ
-    molecule        = alkane_5.xyz
-    atoms           = 5
-    shells          = 18
-    basis functions = 35
-    occupied orbits = 5
-    virtual orbits  = 30
+    basis set       = sto-3g
+    molecule        = alkane_92.xyz
+    atoms           = 92
+    shells          = 152
+    basis functions = 212
+    occupied orbits = 121
+    virtual orbits  = 91
     charge          = 0
-    electrons       = 10
+    electrons       = 242
 Simint screen method    = SIMINT_SCREEN_SCHWARZ 
 Simint prim screen tol  = 1.00e-14
-TinyDFT memory allocation and initialization over, elapsed time = 0.214 (s)
-CMS Simint memory usage = 172.77 MB 
-TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 0.024 (s)
-Screened unique shell pairs: 171 out of 324 (density = 52.78%)
+TinyDFT memory allocation and initialization over, elapsed time = 0.044 (s)
+CMS Simint memory usage = 22.55 MB 
+TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 0.034 (s)
+Screened unique shell pairs: 3157 out of 23104 (density = 13.66%)
 Eliminating linear dependency in overlap matrix S: 0 eigenvalues < 1.00e-05 are removed
 HFSCF iteration started...
-Nuclear repulsion energy = 13.4477464760
+Nuclear repulsion energy = 2362.8622243047
 --------------- Iteration 0 ---------------
-* Iteration runtime     = 0.039 (s)
-* Energy = -40.4163427898
+* Iteration runtime     = 0.286 (s)
+* Energy = -1152.0495058482
 --------------- Iteration 1 ---------------
-* Iteration runtime     = 0.034 (s)
-* Energy = -40.1644262971, delta = 2.519165e-01
-The Eoe, Ete and Eex are respectively -80.381061, 33.387655 and -6.618767
+* Iteration runtime     = 0.318 (s)
+* Energy = -1158.3298020703, delta = -6.280296e+00
+The Eoe, Ete and Eex are respectively -6265.634886, 2922.673585 and -178.230725
 --------------- Iteration 2 ---------------
-* Iteration runtime     = 0.035 (s)
-* Energy = -40.1945443985, delta = -3.011810e-02
-The Eoe, Ete and Eex are respectively -79.418699, 32.317109 and -6.540700
+* Iteration runtime     = 0.291 (s)
+* Energy = -1158.5096422559, delta = -1.798402e-01
+The Eoe, Ete and Eex are respectively -6269.792477, 2926.672781 and -178.252170
 --------------- Iteration 3 ---------------
-* Iteration runtime     = 0.041 (s)
-* Energy = -40.1981780117, delta = -3.633613e-03
-The Eoe, Ete and Eex are respectively -79.838166, 32.792091 and -6.599849
+* Iteration runtime     = 0.295 (s)
+* Energy = -1158.5205938572, delta = -1.095160e-02
+The Eoe, Ete and Eex are respectively -6269.275262, 2926.088188 and -178.195744
 --------------- Iteration 4 ---------------
-* Iteration runtime     = 0.041 (s)
-* Energy = -40.1987406355, delta = -5.626237e-04
-The Eoe, Ete and Eex are respectively -79.714048, 32.655721 and -6.588161
+* Iteration runtime     = 0.298 (s)
+* Energy = -1158.5213358440, delta = -7.419868e-04
+The Eoe, Ete and Eex are respectively -6269.391530, 2926.194758 and -178.186788
 --------------- Iteration 5 ---------------
-* Iteration runtime     = 0.035 (s)
-* Energy = -40.1987717528, delta = -3.111727e-05
-The Eoe, Ete and Eex are respectively -79.719429, 32.663946 and -6.591036
+* Iteration runtime     = 0.335 (s)
+* Energy = -1158.5213380618, delta = -2.217855e-06
+The Eoe, Ete and Eex are respectively -6269.357232, 2926.158620 and -178.184951
 --------------- Iteration 6 ---------------
-* Iteration runtime     = 0.050 (s)
-* Energy = -40.1987719553, delta = -2.025128e-07
-The Eoe, Ete and Eex are respectively -79.719789, 32.664435 and -6.591164
+* Iteration runtime     = 0.298 (s)
+* Energy = -1158.5213380843, delta = -2.240768e-08
+The Eoe, Ete and Eex are respectively -6269.357443, 2926.158784 and -178.184904
 --------------- Iteration 7 ---------------
-* Iteration runtime     = 0.048 (s)
-* Energy = -40.1987719565, delta = -1.196163e-09
-The Eoe, Ete and Eex are respectively -79.719745, 32.664391 and -6.591164
+* Iteration runtime     = 0.303 (s)
+* Energy = -1158.5213380845, delta = -2.371507e-10
+The Eoe, Ete and Eex are respectively -6269.357465, 2926.158806 and -178.184904
 --------------- Iteration 8 ---------------
-* Iteration runtime     = 0.041 (s)
-* Energy = -40.1987719565, delta = -9.613643e-12
-The Eoe, Ete and Eex are respectively -79.719754, 32.664401 and -6.591165
-free(): invalid next size (fast)
-/cm/local/apps/slurm/var/spool/job613781/slurm_script: line 10: 1696500 Aborted                 (core dumped) ./mp2test.exe cc-pVDZ/cc-pVDZ.gbs alkane/alkane_5.xyz 50 1e-9 1e-4 alkane5_1e4_1e8 1e-8
+* Iteration runtime     = 0.273 (s)
+* Energy = -1158.5213380845, delta = -1.591616e-11
+The Eoe, Ete and Eex are respectively -6269.357453, 2926.158794 and -178.184904
+/cm/local/apps/slurm/var/spool/job618911/slurm_script: line 10: 2094041 Segmentation fault      (core dumped) ./mp2test.exe sto-3g/sto-3g.gbs alkane/alkane_92.xyz 50 1e-9 1e-5alk92_1e5_1e6 1e-6

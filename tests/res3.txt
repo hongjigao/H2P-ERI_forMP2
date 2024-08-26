@@ -1,0 +1,71 @@
+INFO: use H2ERI J (relerr 1.00e-09), HF exchange K
+CMS_import_basis() line 455 Warning: no valid basis type in gbs file... assuming Simint
+normalization() line 68 Warning: NOT performing normalization for CARTESIAN
+CMS_import_guess() line 682 Found SAD file for H
+CMS_import_guess() line 712 Using SAD file for H
+CMS_import_guess() line 682 Found SAD file for C
+CMS_import_guess() line 712 Using SAD file for C
+CMS_import_guess() line 682 Found SAD file for N
+CMS_import_guess() line 712 Using SAD file for N
+CMS_import_guess() line 682 Found SAD file for O
+CMS_import_guess() line 712 Using SAD file for O
+CMS_import_guess() line 682 Found SAD file for P
+CMS_import_guess() line 712 Using SAD file for P
+CMS_import_guess() line 682 Found SAD file for S
+CMS_import_guess() line 712 Using SAD file for S
+CMS basis set memory usage = 0.11 MB
+Job information:
+    basis set       = sto-3g
+    molecule        = alkane_182.xyz
+    atoms           = 182
+    shells          = 302
+    basis functions = 422
+    occupied orbits = 241
+    virtual orbits  = 181
+    charge          = 0
+    electrons       = 482
+Simint screen method    = SIMINT_SCREEN_SCHWARZ 
+Simint prim screen tol  = 1.00e-14
+TinyDFT memory allocation and initialization over, elapsed time = 0.028 (s)
+CMS Simint memory usage = 41.55 MB 
+TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 0.053 (s)
+Screened unique shell pairs: 6517 out of 91204 (density = 7.15%)
+Eliminating linear dependency in overlap matrix S: 0 eigenvalues < 1.00e-05 are removed
+HFSCF iteration started...
+Nuclear repulsion energy = 5795.9397119093
+--------------- Iteration 0 ---------------
+* Iteration runtime     = 1.021 (s)
+* Energy = -2303.3537870164
+--------------- Iteration 1 ---------------
+* Iteration runtime     = 0.954 (s)
+* Energy = -2315.5122596592, delta = -1.215847e+01
+The Eoe, Ete and Eex are respectively -14670.778605, 6915.103300 and -355.776667
+--------------- Iteration 2 ---------------
+* Iteration runtime     = 1.120 (s)
+* Energy = -2315.8727069401, delta = -3.604473e-01
+The Eoe, Ete and Eex are respectively -14679.045186, 6923.050479 and -355.817712
+--------------- Iteration 3 ---------------
+* Iteration runtime     = 1.095 (s)
+* Energy = -2315.8946614360, delta = -2.195450e-02
+The Eoe, Ete and Eex are respectively -14678.037251, 6921.909323 and -355.706446
+--------------- Iteration 4 ---------------
+* Iteration runtime     = 1.016 (s)
+* Energy = -2315.8961504067, delta = -1.488971e-03
+The Eoe, Ete and Eex are respectively -14678.263540, 6922.115940 and -355.688262
+--------------- Iteration 5 ---------------
+* Iteration runtime     = 1.055 (s)
+* Energy = -2315.8961544832, delta = -4.076473e-06
+The Eoe, Ete and Eex are respectively -14678.197431, 6922.046296 and -355.684732
+--------------- Iteration 6 ---------------
+* Iteration runtime     = 1.039 (s)
+* Energy = -2315.8961545274, delta = -4.420826e-08
+The Eoe, Ete and Eex are respectively -14678.198016, 6922.046789 and -355.684639
+--------------- Iteration 7 ---------------
+* Iteration runtime     = 1.055 (s)
+* Energy = -2315.8961545277, delta = -3.228706e-10
+The Eoe, Ete and Eex are respectively -14678.198048, 6922.046821 and -355.684639
+--------------- Iteration 8 ---------------
+* Iteration runtime     = 1.026 (s)
+* Energy = -2315.8961545277, delta = -3.365130e-11
+The Eoe, Ete and Eex are respectively -14678.198034, 6922.046807 and -355.684639
+/cm/local/apps/slurm/var/spool/job616267/slurm_script: line 10: 1988496 Killed                  ./mp2test.exe sto-3g/sto-3g.gbs alkane/alkane_182.xyz 50 1e-9 1e-5 alk182_1e5_1e6 1e-6

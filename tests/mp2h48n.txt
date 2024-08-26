@@ -1,0 +1,19 @@
+nbf is 48
+The total energy is 0.9721342779652802
+The total energy with xy is 6.297839345601912e+141
+The number of basis functions is 48
+The number of nodes is 127
+The number of pairs is 532
+The number of admissible pairs is 171
+The number of inadmissible pairs is 63
+The threshold for X and Y is 1e-05
+The number of elements in ERI is 11490
+memory cost for dense ERI is 1147392
+memory cost for S5 is 29757
+memory cost for S5x and S5y is 89271
+The number of flops for S5 is 27207256
+The number of flops for S5x is 588020
+The number of flops for S5y is 667674
+The sumx is 132.8829990449193
+The sumy is 2.00143254760284e+143
+The sum51 is 0.112376158043721

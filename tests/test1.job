@@ -1,10 +1,10 @@
 #!/bin/bash
 #
 #SBATCH --job-name=test1
-#SBATCH --output=res1.txt
+#SBATCH --output=rest1.txt
 #SBATCH --ntasks-per-node=40
 #SBATCH --nodes=2
-#SBATCH --time=1:00:00
+#SBATCH --time=4:00:00
 #SBATCH -p short-40core
 
-./mp2test.exe cc-pVDZ/cc-pVDZ.gbs alkane/alkane_5.xyz 50 1e-9 1e-5 alkane5_1e5_1e8 1e-8
+./mp2tspexy.exe sto-3g/sto-3g.gbs alkane/alkane_122.xyz 50 1e-9 1e-5 test1221 1e-6

@@ -254,7 +254,6 @@ void H2ERI_build_COO_fulldensetest(H2ERI_p h2eri , COOmat_p coomat)
                 }
             }
         }
-        printf("!!");
         if(dspot != Di->size) printf("%d node Wrong\n",i);
         numdata += pointspot;
         dspot = 0;
@@ -634,12 +633,62 @@ void Qsort_double_long1(int *key, double *val, size_t l, size_t r)
 }
 
 
+void swap_int(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
 
+void swap_double(double *a, double *b) {
+    double temp = *a;
+    *a = *b;
+    *b = temp;
+}
 
+size_t partition(int *key, double *val, size_t low, size_t high) {
+    int pivot = key[high];
+    size_t i = low - 1;
+    for (size_t j = low; j <= high - 1; j++) {
+        if (key[j] < pivot) {
+            i++;
+            swap_int(&key[i], &key[j]);
+            swap_double(&val[i], &val[j]);
+        }
+    }
+    swap_int(&key[i + 1], &key[high]);
+    swap_double(&val[i + 1], &val[high]);
+    return (i + 1);
+}
 
+void Qsort_double_long2(int *key, double *val, size_t low, size_t high) {
+    if (low < high) {
+        size_t pi = partition(key, val, low, high);
 
+        Qsort_double_long(key, val, low, pi - 1);
+        Qsort_double_long(key, val, pi + 1, high);
+    }
+}
 
-
+void insertionSort(int *key, double *val, size_t l, size_t r) {
+    size_t i, j;
+    int keyToInsert;
+    double valToInsert;
+    for (i = l + 1; i < r; i++) {
+        keyToInsert = key[i];
+        valToInsert = val[i];
+        j = i;
+        // Move elements of key[l..i-1] and val[l..i-1], that are
+        // greater than keyToInsert, to one position ahead
+        // of their current position
+        while (j > l && key[j - 1] > keyToInsert) {
+            key[j] = key[j - 1];
+            val[j] = val[j - 1];
+            j--;
+        }
+        key[j] = keyToInsert;
+        val[j] = valToInsert;
+    }
+}
 
 
 void compresscoo(COOmat_p cooini, COOmat_p coofinal, double thres)
@@ -695,10 +744,14 @@ void Double_COO_to_CSR(
     size_t * csrrow=csrmat->csrrow;
     int * csrcol=csrmat->csrcol;
     double * csrval=csrmat->csrval;
-    //printf("Alloc success\n");
     csrmat->nnz=nnz;
     memset(csrrow, 0, sizeof(size_t) * (nrow + 1));
-    for (size_t i = 0; i < nnz; i++) csrrow[coorow[i] + 1]++;
+    for (size_t i = 0; i < nnz; i++) 
+    {
+        //printf("coorow[i] %d\n",coorow[i]);
+        csrrow[coorow[i] + 1]++;
+    }
+    
     // Calculate the displacement of 1st non-zero in each row
     for (int j = 2; j <= nrow; j++) csrrow[j] += csrrow[j - 1];
     // Use csrrow to bucket sort col[] and val[]
@@ -720,7 +773,6 @@ void Double_COO_to_CSR(
         if(csrrow[i]<csrrow[i+1])
             Qsort_double_long1(csrcol, csrval, csrrow[i], csrrow[i + 1] - 1);
     }
-    //printf("Finished csr\n");
     //*/
     csrmat->maxv=coomat->maxv;
 }
@@ -857,11 +909,7 @@ size_t Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, do
         }
         
     }
-    if(coomat->maxv/10>maxval)
-    {
-        maxval=coomat->maxv/10;
-    }
-    
+    if(maxval<coomat->maxv*0.05) maxval = coomat->maxv*0.05;
     //printf("find maxv success, which is %f\n", maxval);
     // Then compute the number of elements that is no less than maxval*thres
     size_t nlarge=0;
@@ -903,7 +951,7 @@ size_t Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, do
         return nlarge;
     else
         {
-            printf("Something wrong! nlarge is %ld while ptidx is %ld\n");
+            printf("Something wrong! nlarge is %ld while ptidx is %ld\n",nlarge,pt_idx);
             printf("nrow is %d, ncol is %d, maxv is %.16g\n",nrow,ncol,maxval);
             return 0;
         }
@@ -1370,8 +1418,11 @@ void Xindextransform3(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
     H2E_dense_mat_p *eleval;
     eleidx = (H2E_int_vec_p*) malloc(sizeof(H2E_int_vec_p) * (nbf*nbf));
     eleval = (H2E_dense_mat_p*) malloc(sizeof(H2E_dense_mat_p) * (nbf*nbf));
+    ASSERT_PRINTF(eleidx != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(eleval != NULL, "Failed to allocate arrays for D matrices indexing\n");
     int * nval;
     nval = (int*) malloc(sizeof(int) * (nbf*nbf));
+    ASSERT_PRINTF(nval != NULL, "Failed to allocate arrays for D matrices indexing\n");
     memset(nval, 0, sizeof(int) * (nbf*nbf));
     H2E_int_vec_p tmpidx;
     H2E_dense_mat_p tmpval;
@@ -1382,6 +1433,7 @@ void Xindextransform3(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
     
     int * idxarray;
     idxarray = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxarray != NULL, "Failed to allocate arrays for D matrices indexing\n");
     memset(idxarray, 0, sizeof(int) * nbf*nbf);
     
     for(int i=0;i<nbf*nbf;i++)
@@ -1440,7 +1492,7 @@ void Xindextransform3(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
     H2E_dense_mat_destroy(&tmpval);
     //printf("Now allocate\n");
     size_t ntotal=0;
-    for(int i=0; i<nbf*nbf;i++)
+    for(int i=0; i<nbf*nbf;i++) 
     {
         if(nval[i]!=0)
         {

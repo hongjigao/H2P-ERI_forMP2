@@ -1,0 +1,249 @@
+INFO: use H2ERI J (relerr 1.00e-09), HF exchange K
+CMS_import_basis() line 455 Warning: no valid basis type in gbs file... assuming Simint
+normalization() line 68 Warning: NOT performing normalization for CARTESIAN
+CMS_import_guess() line 682 Found SAD file for H
+CMS_import_guess() line 712 Using SAD file for H
+CMS_import_guess() line 682 Found SAD file for C
+CMS_import_guess() line 712 Using SAD file for C
+CMS_import_guess() line 682 Found SAD file for N
+CMS_import_guess() line 712 Using SAD file for N
+CMS_import_guess() line 682 Found SAD file for O
+CMS_import_guess() line 712 Using SAD file for O
+CMS_import_guess() line 682 Found SAD file for P
+CMS_import_guess() line 712 Using SAD file for P
+CMS_import_guess() line 682 Found SAD file for S
+CMS_import_guess() line 712 Using SAD file for S
+CMS basis set memory usage = 0.10 MB
+Job information:
+    basis set       = sto-3g
+    molecule        = alkane_122.xyz
+    atoms           = 122
+    shells          = 202
+    basis functions = 282
+    occupied orbits = 161
+    virtual orbits  = 121
+    charge          = 0
+    electrons       = 322
+Simint screen method    = SIMINT_SCREEN_SCHWARZ 
+Simint prim screen tol  = 1.00e-14
+TinyDFT memory allocation and initialization over, elapsed time = 0.031 (s)
+CMS Simint memory usage = 27.65 MB 
+TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 0.035 (s)
+Screened unique shell pairs: 4277 out of 40804 (density = 10.48%)
+Eliminating linear dependency in overlap matrix S: 0 eigenvalues < 1.00e-05 are removed
+HFSCF iteration started...
+Nuclear repulsion energy = 3444.1706949885
+--------------- Iteration 0 ---------------
+* Iteration runtime     = 0.465 (s)
+* Energy = -1535.8175995675
+--------------- Iteration 1 ---------------
+* Iteration runtime     = 0.493 (s)
+* Energy = -1544.0572879458, delta = -8.239688e+00
+The Eoe, Ete and Eex are respectively -8941.247443, 4190.432165 and -237.412705
+--------------- Iteration 2 ---------------
+* Iteration runtime     = 0.483 (s)
+* Energy = -1544.2973304958, delta = -2.400426e-01
+The Eoe, Ete and Eex are respectively -8946.774757, 4195.747416 and -237.440684
+--------------- Iteration 3 ---------------
+* Iteration runtime     = 0.467 (s)
+* Energy = -1544.3119497290, delta = -1.461923e-02
+The Eoe, Ete and Eex are respectively -8946.093935, 4194.977268 and -237.365978
+--------------- Iteration 4 ---------------
+* Iteration runtime     = 0.459 (s)
+* Energy = -1544.3129407106, delta = -9.909816e-04
+The Eoe, Ete and Eex are respectively -8946.246868, 4195.117179 and -237.353946
+--------------- Iteration 5 ---------------
+* Iteration runtime     = 0.466 (s)
+* Energy = -1544.3129435480, delta = -2.837383e-06
+The Eoe, Ete and Eex are respectively -8946.201962, 4195.069868 and -237.351545
+--------------- Iteration 6 ---------------
+* Iteration runtime     = 0.483 (s)
+* Energy = -1544.3129435777, delta = -2.969864e-08
+The Eoe, Ete and Eex are respectively -8946.202295, 4195.070138 and -237.351482
+--------------- Iteration 7 ---------------
+* Iteration runtime     = 0.469 (s)
+* Energy = -1544.3129435780, delta = -2.653451e-10
+The Eoe, Ete and Eex are respectively -8946.202320, 4195.070164 and -237.351482
+--------------- Iteration 8 ---------------
+* Iteration runtime     = 0.509 (s)
+* Energy = -1544.3129435780, delta = -2.683009e-11
+The Eoe, Ete and Eex are respectively -8946.202307, 4195.070151 and -237.351483
+--------------- SCF iterations finished ---------------
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 122, 202, 282
+  * Number of symm-unique screened shell pairs : 5403
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 5403
+  * Kernel matrix size             : 11047
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 3.750000e+00
+  * Number of levels (root at 0)   : 6
+  * Number of nodes                : 249
+  * Number of nodes on each level  : 1, 8, 16, 32, 64, 128
+  * Number of nodes on each height : 128, 64, 32, 16, 8, 1
+  * Minimum admissible pair level  : 2
+  * Number of reduced adm. pairs   : 1248
+  * Number of reduced inadm. pairs : 688
+==================== H2ERI storage info ====================
+  * Just-In-Time B & D build      : No
+  * H2 representation U, B, D     : 13.53, 32.94, 50.67 (MB) 
+  * Matvec auxiliary arrays       : 54.12 (MB) 
+  * Max / Avg compressed rank     : 124, 58 
+==================== H2ERI timing info =====================
+  * H2 construction time (sec)   = 1.184 
+      |----> Point partition     = 0.001 
+      |----> U construction      = 1.025 
+      |----> B construction      = 0.060 
+      |----> D construction      = 0.098 
+  * H2 matvec average time (sec) = 0.041, 2.77 GB/s
+      |----> Forward transformation      = 0.011, 1.27 GB/s
+      |----> Intermediate multiplication = 0.011, 3.16 GB/s
+      |----> Backward transformation     = 0.016, 0.84 GB/s
+      |----> Dense multiplication        = 0.002, 23.74 GB/s
+      |----> OpenMP vector operations    = 0.001, 1.56 GB/s
+=============================================================
+The time for SCF is 5.811 (s)
+The number of basis functions is 282
+1The number of nodes is 249
+Empty node 0, 30
+Empty node 1, 61
+Empty node 2, 92
+Empty node 3, 123
+Empty node 4, 154
+Empty node 5, 185
+Empty node 6, 216
+Empty node 7, 247
+Empty node 0, 248
+Now init pairwise information
+Now we are going to build the Ucbasis
+Now we are going to build the leafidx
+The number of pairs is 4000
+The time for building the nodepairs, Ur and Uc is 0.088 (s)
+Now we are going to build the Upinv
+The time for building the Upinv is 1.982 (s)
+The total number of full elements in D0 is 5343698
+The total number of elements in D0 is 1407683
+The total number of full elements in D1 is 40020090
+The total number of elements in D1 is 5233759
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!The time for construction of ERI is 2.501 (s)
+The gap factor is 13.50859070758139
+quad file name: 1_xk08_1E1
+Omega Array:
+0.106026469105674
+0.258529056696872
+0.443589105007672
+0.692975414901011
+1.060451255854994
+1.640626361795938
+2.636487509406833
+4.787520763764322
+Alpha Array:
+0.041096167724934
+0.221592100393992
+0.568864352007369
+1.129976476587695
+1.993765534287909
+3.320810520171679
+5.409823121081442
+8.948554779106718
+Thread 2 processing index 2
+Thread 1 processing index 1
+Thread 4 processing index 4
+The 1th omega is 0.258529, the 1th alpha is 0.221592
+Thread 3 processing index 3
+Thread 0 processing index 0
+The 3th omega is 0.692975, the 3th alpha is 1.129976
+The 4th omega is 1.060451, the 4th alpha is 1.993766
+Thread 7 processing index 7
+The 7th omega is 4.787521, the 7th alpha is 8.948555
+The 0th omega is 0.106026, the 0th alpha is 0.041096
+Thread 6 processing index 6
+The 6th omega is 2.636488, the 6th alpha is 5.409823
+The 2th omega is 0.443589, the 2th alpha is 0.568864
+Thread 5 processing index 5
+The 5th omega is 1.640626, the 5th alpha is 3.320811
+The number of large values in quad 0 is 329119280, rate 0.4200521962452622
+The number of large values in quad 2 is 429376332, rate 0.4631937561060479
+The number of large values in quad 1 is 389285324, rate 0.4512879903984739
+The number of large values in quad 4 is 551647328, rate 0.4998704362899362
+The number of large values in quad 3 is 480851964, rate 0.4731293089619513
+The number of large values in quad 5 is 654546352, rate 0.5332892640281002
+The number of large values in quad 6 is 813256340, rate 0.5657151051752073
+The number of large values in quad 7 is 1085843232, rate 0.6143121088535549
+Allocate csc matrix success!
+Allocate csc matrix success!
+Allocate csc matrix success!
+Allocate csc matrix success!
+Transform csc success!
+The S1 energy is 5.777389642322704
+maxprod of current pair in S5draft is 1.605500
+Transform csc success!
+The S1 energy is 3.509780613448695
+maxprod of current pair in S5draft is 0.742106
+Allocate csc matrix success!
+Transform csc success!
+The S1 energy is 1.410319709983134
+maxprod of current pair in S5draft is 0.427788
+Allocate csc matrix success!
+Transform csc success!
+The S1 energy is 0.3328500645473439
+maxprod of current pair in S5draft is 0.206132
+Transform csc success!
+The S1 energy is 0.03812218329864397
+maxprod of current pair in S5draft is 0.074121
+Allocate csc matrix success!
+Transform csc success!
+The S1 energy is 0.001522083622614919
+maxprod of current pair in S5draft is 0.015703
+Allocate csc matrix success!
+Transform csc success!
+The S1 energy is 1.165479645759703e-05
+maxprod of current pair in S5draft is 0.001418
+Transform csc success!
+The S1 energy is 4.401637773245185e-09
+maxprod of current pair in S5draft is 0.000026
+build S5 time is 3128.331189870834
+The S51 energy is 1.756792066751685
+The S1S51 energy is -1.560378462766837
+The total energy in this quadrature point is 4.413424783540715
+The time for calculating the S1S51 energy is 24.145 (s)
+build S5 time is 3740.153182029724
+The S51 energy is 1.075343479423155
+The S1S51 energy is -0.9531977011878641
+The total energy in this quadrature point is 2.678728690496122
+The time for calculating the S1S51 energy is 24.328 (s)
+build S5 time is 4118.38347697258
+The S51 energy is 0.4253559618542451
+The S1S51 energy is -0.3755730712401584
+The total energy in this quadrature point is 1.084529529357062
+The time for calculating the S1S51 energy is 26.586 (s)
+build S5 time is 4638.532361984253
+The S51 energy is 0.09832194411674372
+The S1S51 energy is -0.08613138141659014
+The total energy in this quadrature point is 0.2589092458309074
+The time for calculating the S1S51 energy is 26.451 (s)
+build S5 time is 5333.424870014191
+The S51 energy is 0.01109877788845371
+The S1S51 energy is -0.009568747281862165
+The total energy in this quadrature point is 0.03008346662337336
+The time for calculating the S1S51 energy is 26.558 (s)
+build S5 time is 6275.299538850784
+The S51 energy is 0.000449721480923947
+The S1S51 energy is -0.0003753070706725074
+The total energy in this quadrature point is 0.001221190962193851
+The time for calculating the S1S51 energy is 27.698 (s)
+build S5 time is 7533.461193084717
+The S51 energy is 3.740777203925657e-06
+The S1S51 energy is -2.91911700110586e-06
+The total energy in this quadrature point is 9.55733965931097e-06
+The time for calculating the S1S51 energy is 30.360 (s)
+build S5 time is 9534.949770927429
+The S51 energy is 1.705086357564264e-09
+The S1S51 energy is -1.157809596044617e-09
+The total energy in this quadrature point is 3.791104938720215e-09
+The time for calculating the S1S51 energy is 32.016 (s)
+The total energy is 1.854903057299594
+File 'alk122_1e5_1e6.txt' opened successfully.
+TinyDFT total memory usage = 23.03 MB
+Timer: Simint setup, Simint ERI actual, Fock mat accum. = 0.246097, 1.454298, 0.339495 sec
+Simint statistic: avg. ket-side nprim, prim unscreened ratio, SIMD unscreened ratio = 140.1, -483.4 %, -52.6 %

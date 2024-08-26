@@ -1,0 +1,48 @@
+nbf is 44
+The total energy is 0.2847293876398397
+The total energy with xy is 0.2847025515309126
+The number of basis functions is 44
+The number of nodes is 75
+The scf time is 6.331748962402344
+The number of pairs is 1858
+The number of admissible pairs is 612
+The number of inadmissible pairs is 292
+The largest number of X is 1624
+The largest number of Y is 1624
+The gap factor is 12.33060868163777
+The number of quadrature points is 8
+The threshold for X and Y is 1e-05
+The threshold for the product of X and Y is 1e-06
+The largest rate of large values is 0.9803307093351588
+Running time for scf is 6.331748962402344
+Running time for building nodepairs, Ur and Uc is 0.03555083274841309
+Running time for building Upinv is 0.1185948848724365
+Running time for building xy is 0.007138252258300781
+Running time for dense index transformation is 2.863474607467651
+Running time for calculating S1 is 0.4318819046020508
+Running time for building S5 is 76.30144214630127
+Running time for calculating S1S51 is 2.565290689468384
+The total running time is 511.9092049598694
+memory cost for dense ERI is 2836864
+Equals 21.6435546875 
+memory cost for S5 is 0
+Equals 0 
+The number of flops for S5 is 10826797993
+The number of flops for S5x is 308759684
+The number of flops for S5y is 524859571
+The 0th sumx is 186.6099607584337
+The 0th sumy is -2.717032291180979
+The 1th sumx is 128.3182491348411
+The 1th sumy is -1.887575419795068
+The 2th sumx is 91.97254983634919
+The 2th sumy is -0.8578424472100084
+The 3th sumx is 58.74211102556773
+The 3th sumy is -0.1418556009049232
+The 4th sumx is 30.68572062469081
+The 4th sumy is 0.1009326754955775
+The 5th sumx is 12.38336092998139
+The 5th sumy is 0.06345510426405586
+The 6th sumx is 3.577023455916939
+The 6th sumy is 0.01062481629545166
+The 7th sumx is 0.5955500479728973
+The 7th sumy is 0.0003124397141399513

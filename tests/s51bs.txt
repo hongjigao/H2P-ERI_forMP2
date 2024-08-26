@@ -1,0 +1,16 @@
+The 0th S51cbasis has 30 rows and 11 columns
+The 1th S51cbasis has 36 rows and 12 columns
+The 2th S51cbasis has 33 rows and 12 columns
+The 3th S51cbasis has 30 rows and 11 columns
+The 4th S51cbasis has 36 rows and 11 columns
+The 5th S51cbasis has 30 rows and 12 columns
+The 6th S51cbasis has 33 rows and 12 columns
+The 7th S51cbasis has 30 rows and 12 columns
+The 8th S51cbasis has 33 rows and 11 columns
+The 9th S51cbasis has 36 rows and 12 columns
+The 10th S51cbasis has 33 rows and 11 columns
+The 11th S51cbasis has 30 rows and 11 columns
+The 12th S51cbasis has 30 rows and 12 columns
+The 13th S51cbasis has 30 rows and 12 columns
+The 14th S51cbasis has 30 rows and 11 columns
+The 15th S51cbasis has 36 rows and 11 columns

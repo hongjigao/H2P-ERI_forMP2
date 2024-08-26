@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <lapacke.h>
+#include <omp.h>
 
 #include "H2ERI_typedef.h"
 #include "H2ERI_config.h"
@@ -59,9 +60,13 @@ void compute_pseudo_inverse(double* R, int nrow, int ncol, double* R_pinv);
 void build_pinv_rmat(H2ERI_p h2eri, H2E_dense_mat_p* Upinv);
 
 int Split_node(H2ERI_p h2eri, int node0, int leaf,  int *childstep, int *nodesidx, int *basisidx,H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx);
-
+int Split_node_pairs(H2ERI_p h2eri, int node0, int leaf,  int *childstep, int *nodesidx, int *basisidx,H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx);
 
 int testadmpair(H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, int node0, int node1);
+int testpair(H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx, int node0, int node1);
+
+
+
 // Build the S5 matrix
 // Input parameters
 // h2eri: H2ERI data structure
@@ -73,7 +78,7 @@ int testadmpair(H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, int 
 // S51cbasis; ordered in the same way as the pairs
 // It needs to stress that S51cbasis is column major
 void H2ERI_build_S5(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
-    int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv);
+    int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv, double thr);
 
 
 void H2ERI_build_S5test(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
@@ -81,6 +86,16 @@ void H2ERI_build_S5test(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 
 size_t H2ERI_build_S5_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
     int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv, double thr);
+
+size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
+    int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv);
+
+size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* S51cbasisx, CSRmat_p csrdc5, int npairs, int *pair1st,
+    int *pair2nd, H2E_int_vec_p *nodepairs,H2E_int_vec_p *nodepairidx, H2E_dense_mat_p* S51cbasisy,H2E_dense_mat_p* Upinv);
+size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* S51cbasisx, CSRmat_p csrdc5, int npairs, int *pair1st,
+    int *pair2nd, H2E_int_vec_p *nodepairs,H2E_int_vec_p *nodepairidx, H2E_dense_mat_p* S51cbasisy,H2E_dense_mat_p* Upinv);
+size_t H2ERI_build_S5_Y_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* S51cbasisx, CSRmat_p csrdc5, int npairs, int *pair1st,
+    int *pair2nd, H2E_int_vec_p *nodepairs,H2E_int_vec_p *nodepairidx, H2E_dense_mat_p* S51cbasisy,H2E_dense_mat_p* Upinv, int testcase);
 // Compute S1S51 interaction
 // Input parameters
 // Csrmat_p S1: the S1 matrix

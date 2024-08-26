@@ -444,6 +444,7 @@ void H2ERI_build_UJ_proxy(H2ERI_p h2eri)
         memset(U_timers, 0, U_timers_msize);
         
         // A. Compress at the i-th level
+        
         #pragma omp parallel num_threads(n_thread_i)
         {
             int tid = omp_get_thread_num();
@@ -1394,13 +1395,13 @@ void H2ERI_build_H2(H2ERI_p h2eri, const int BD_JIT)
 
     if (BD_JIT == 1) h2eri->BD_JIT = 1;
     else h2eri->BD_JIT = 0;
-
+    printf("111\n");
     // 1. Build projection matrices and skeleton row sets
     st = get_wtime_sec();
     H2ERI_build_UJ_proxy(h2eri);
     et = get_wtime_sec();
     h2eri->timers[U_BUILD_TIMER_IDX] = et - st;
-
+    printf("222\n");
     // 2. Build generator matrices
     st = get_wtime_sec();
     H2ERI_build_B(h2eri);

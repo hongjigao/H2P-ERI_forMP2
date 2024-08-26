@@ -2,7 +2,7 @@
 //#define __H2ERI_BUILD_H2_H__
 
 #include "H2ERI_typedef.h"
-
+#include <omp.h>
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <math.h>
 #include <omp.h>
-
+#include <errno.h>
 #include "TinyDFT.h"
 #include "H2ERI.h"
 
@@ -289,6 +289,33 @@ int main(int argc, char **argv)
 
     printf("The number of basis functions is %d\n",nbf);
     printf("1The number of nodes is %d\n",h2eri->n_node);
+
+    int length = strlen(argv[6]) + 4; // 4 for ".txt" and null terminator
+    char *outname = malloc(length);
+
+    if (outname == NULL) {
+        perror("Failed to allocate memory");
+        return EXIT_FAILURE;
+    }
+
+    // Construct the filename
+    sprintf(outname, "%s.txt", argv[6]);
+
+    // Step 0: Create the directory
+    char dir_path[512];
+    snprintf(dir_path, sizeof(dir_path), "/gpfs/scratch/hogao/%s/", argv[6]);
+
+    // Create the directory with permissions (read, write, execute for everyone)
+    if (mkdir(dir_path, 0777) != 0) {
+        if (errno == EEXIST) {
+            printf("Directory already exists.\n");
+        } else {
+            perror("Error creating directory");
+            return 1;
+        }
+    } else {
+        printf("Directory created: %s\n", dir_path);
+    }
 
 
     //Step1: build low rank ERI matrix
@@ -791,12 +818,29 @@ int main(int argc, char **argv)
 
     fclose(file1);
 
+    char s51path[512];
+    char s51xpath[512];
+    char s51ypath[512];
+    char xbasispath[512];
+    char ybasispath[512];
+    const char *directory = "/gpfs/hogao/scratch/my_directory/";
+    const char *s51name = "outputs51.txt";
+    const char *s51xname = "outputs51x.txt";
+    const char *s51yname = "outputs51y.txt";
+    const char *xbasisname = "outputxbasis.txt";
+    const char *ybasisname = "outputybasis.txt";
 
+    // Concatenate directory path and filename
+    snprintf(s51path, sizeof(s51path), "%s%s", dir_path, s51name);
+    snprintf(s51xpath, sizeof(s51xpath), "%s%s", dir_path, s51xname);
+    snprintf(s51ypath, sizeof(s51ypath), "%s%s", dir_path, s51yname);
+    snprintf(xbasispath, sizeof(xbasispath), "%s%s", dir_path, xbasisname);
+    snprintf(ybasispath, sizeof(ybasispath), "%s%s", dir_path, ybasisname);
 
 
     // Now the S51x information has nodeidx for rows and expanded bfp index for columns 
     
-    FILE *file5 = fopen("outputs51.txt", "w");
+    FILE *file5 = fopen(s51path, "w");
     if (file5 == NULL) {
         printf("Error opening file!\n");
         return 1;
@@ -832,7 +876,7 @@ int main(int argc, char **argv)
 
     // Now the S51x information has nodeidx for rows and expanded bfp index for columns 
     
-    FILE *file5x = fopen("outputs51x.txt", "w");
+    FILE *file5x = fopen(s51xpath, "w");
     if (file5x == NULL) {
         printf("Error opening file!\n");
         return 1;
@@ -902,7 +946,7 @@ int main(int argc, char **argv)
     
 
 
-    FILE *file51y = fopen("outputs51y.txt", "w");
+    FILE *file51y = fopen(s51ypath, "w");
     if (file51y == NULL) {
         printf("Error opening file!\n");
         return 1;
@@ -935,7 +979,7 @@ int main(int argc, char **argv)
 
     fclose(file51y);
 
-    FILE *filebasisy = fopen("outputbasisy.txt", "w");
+    FILE *filebasisy = fopen(ybasispath, "w");
     if (filebasisy == NULL) {
         printf("Error opening file!\n");
         return 1;
@@ -953,7 +997,7 @@ int main(int argc, char **argv)
     fclose(filebasisy);
 
 
-    FILE *filebasisx = fopen("outputbasisx.txt", "w");
+    FILE *filebasisx = fopen(xbasispath, "w");
     if (filebasisx == NULL) {
         printf("Error opening file!\n");
         return 1;
@@ -1034,16 +1078,7 @@ int main(int argc, char **argv)
            
         }
     }
-    int length = strlen(argv[6]) + 4; // 4 for ".txt" and null terminator
-    char *outname = malloc(length);
-
-    if (outname == NULL) {
-        perror("Failed to allocate memory");
-        return EXIT_FAILURE;
-    }
-
-    // Construct the filename
-    sprintf(outname, "%s.txt", argv[6]);
+    
     FILE *fileou = fopen(outname, "w"); // Change "r" to "w" if you want to write to the file
     if (fileou == NULL) {
         perror("Failed to open file");
