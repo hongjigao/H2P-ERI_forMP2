@@ -1,0 +1,47 @@
+nbf is 1625
+The total energy with xy is 10.42746317674242
+The number of basis functions is 1625
+The number of nodes is 313
+The scf time is 3011.271807909012
+The number of pairs is 26721
+The number of admissible pairs is 10911
+The number of inadmissible pairs is 2325
+The largest number of X is 884113
+The largest number of Y is 1175305
+The gap factor is 58.61731638754016
+The number of quadrature points is 8
+The threshold for X and Y is 3e-05
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 3011.271807909012
+Running time for building nodepairs, Ur and Uc is 4.813409090042114
+Running time for building Upinv is 4.840277910232544
+Running time for building xy is 30.43659591674805
+Running time for dense index transformation is 85788.30895423889
+Running time for calculating S1 is 268.5217750072479
+Running time for building S5x is 447296.9204838276
+Running time for building S5xy is 926014.661536932
+Running time for calculating S1S51 is 36152.14370179176
+The total running time is 167149.573677063
+memory cost for dense ERI is 5950175135
+Equals 45396.23363494873 
+memory cost for half ERI is 3188498618
+Equals 24326.31391906738 
+memory cost for ERI is 822105515
+memory cost for S5xy is 22612347702
+The number of flops for S5x is 13738876935937
+The number of flops for S5y is 20728871646224
+The sums1 energy is 25.41905803967977
+The sums5 energy is 14.98874862234455
+The sums1s5 energy is -14.99017174264095
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 195, 780, 1625
+  * Number of symm-unique screened shell pairs : 90314
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 90314
+  * Kernel matrix size             : 305161
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 8.000000e+00
+  * Number of levels (root at 0)   : 4
+  * Number of nodes                : 313
+  * Number of nodes on each level  : 1, 8, 55, 249

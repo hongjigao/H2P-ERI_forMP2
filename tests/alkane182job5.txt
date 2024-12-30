@@ -1,0 +1,36 @@
+nbf is 1510
+The total energy with xy is 6.886841237179892
+The number of basis functions is 1510
+The number of nodes is 249
+The scf time is 644.7483830451965
+The number of pairs is 4000
+The number of admissible pairs is 1248
+The number of inadmissible pairs is 688
+The largest number of X is 583118
+The largest number of Y is 518348
+The gap factor is 28.67932712800885
+The number of quadrature points is 8
+The threshold for X and Y is 1e-05
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 644.7483830451965
+Running time for building nodepairs, Ur and Uc is 2.347866773605347
+Running time for building Upinv is 2.051521062850952
+Running time for building xy is 16.68476176261902
+Running time for dense index transformation is 30463.37808728218
+Running time for calculating S1 is 184.1556236743927
+Running time for building S5x is 45280.63990688324
+Running time for building S5xy is 69293.99115204811
+Running time for calculating S1S51 is 12769.24288678169
+The total running time is 17860.87422990799
+memory cost for dense ERI is 3502040479
+Equals 26718.44847869873 
+memory cost for half ERI is 2843460926
+Equals 21693.88523864746 
+memory cost for ERI is 1286860470
+memory cost for S5xy is 4582767735
+The number of flops for S5x is 2328550336747
+The number of flops for S5y is 2467980842046
+The sums1 energy is 893.6098832243634
+The sums5 energy is 886.7811424825132
+The sums1s5 energy is -886.7520922348484

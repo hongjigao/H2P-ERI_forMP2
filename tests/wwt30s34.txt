@@ -1,0 +1,47 @@
+nbf is 750
+The total energy with xy is 4.805681599985437
+The number of basis functions is 750
+The number of nodes is 65
+The scf time is 1333.919226169586
+The number of pairs is 3136
+The number of admissible pairs is 1131
+The number of inadmissible pairs is 409
+The largest number of X is 122172
+The largest number of Y is 159714
+The gap factor is 58.29634619448164
+The number of quadrature points is 8
+The threshold for X and Y is 0.0003
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 1333.919226169586
+Running time for building nodepairs, Ur and Uc is 0.5036749839782715
+Running time for building Upinv is 0.0001330375671386719
+Running time for building xy is 2.481310367584229
+Running time for dense index transformation is 12606.25773906708
+Running time for calculating S1 is 89.28228521347046
+Running time for building S5x is 2156.746201038361
+Running time for building S5xy is 4211.954238414764
+Running time for calculating S1S51 is 7298.121817111969
+The total running time is 5662.712555885315
+memory cost for dense ERI is 1873186384
+Equals 14291.27795410156 
+memory cost for half ERI is 1443685334
+Equals 11014.44499206543 
+memory cost for ERI is 525642203
+memory cost for S5xy is 2667379008
+The number of flops for S5x is 823980934198
+The number of flops for S5y is 1853936752274
+The sums1 energy is 7.105828745782657
+The sums5 energy is 2.299870735838329
+The sums1s5 energy is -2.300008940817774
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 90, 360, 750
+  * Number of symm-unique screened shell pairs : 31680
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 31680
+  * Kernel matrix size             : 112448
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 7.500000e+00
+  * Number of levels (root at 0)   : 3
+  * Number of nodes                : 65
+  * Number of nodes on each level  : 1, 8, 56

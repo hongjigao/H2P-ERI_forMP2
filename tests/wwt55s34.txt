@@ -1,0 +1,47 @@
+nbf is 1375
+The total energy with xy is 8.8255748775785
+The number of basis functions is 1375
+The number of nodes is 66
+The scf time is 4547.87135887146
+The number of pairs is 3249
+The number of admissible pairs is 1177
+The number of inadmissible pairs is 419
+The largest number of X is 271001
+The largest number of Y is 363923
+The gap factor is 56.67608774430394
+The number of quadrature points is 8
+The threshold for X and Y is 0.0003
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 4547.87135887146
+Running time for building nodepairs, Ur and Uc is 1.333477973937988
+Running time for building Upinv is 0.0001740455627441406
+Running time for building xy is 27.66378116607666
+Running time for dense index transformation is 98139.642339468
+Running time for calculating S1 is 855.1132118701935
+Running time for building S5x is 7086.377575159073
+Running time for building S5xy is 13066.61610817909
+Running time for calculating S1S51 is 30750.36917185783
+The total running time is 31522.19614601135
+memory cost for dense ERI is 7616452861
+Equals 58108.92380523682 
+memory cost for half ERI is 5873581271
+Equals 44811.86882781982 
+memory cost for ERI is 2010879221
+memory cost for S5xy is 5734116360
+The number of flops for S5x is 1946805264971
+The number of flops for S5y is 4590760489560
+The sums1 energy is 11.2060410988639
+The sums5 energy is 2.381832025538099
+The sums1s5 energy is -2.381149123411749
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 165, 660, 1375
+  * Number of symm-unique screened shell pairs : 73928
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 73928
+  * Kernel matrix size             : 252827
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 7.500000e+00
+  * Number of levels (root at 0)   : 3
+  * Number of nodes                : 66
+  * Number of nodes on each level  : 1, 8, 57

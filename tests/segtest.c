@@ -316,7 +316,7 @@ int main(int argc, char **argv)
     H2ERI_print_statistic(h2eri);
     double thres=1e-5;
     double thres1=atof(argv[5]);
-    double thres2=10*thres1;
+    double thres2=100*thres1;
     double et = get_wtime_sec();
     printf("The time for SCF is %.3lf (s)\n", et - st);
     double scftime = et - st;
@@ -422,8 +422,8 @@ int main(int argc, char **argv)
     nodepairidx = (H2E_int_vec_p *) malloc(sizeof(H2E_int_vec_p) * h2eri->n_node);
     for(int i=0;i<h2eri->n_node;i++)
     {
-        H2E_int_vec_init(&nodepairs[i],10);
-        H2E_int_vec_init(&nodepairidx[i],10);
+        H2E_int_vec_init(&nodepairs[i],160);
+        H2E_int_vec_init(&nodepairidx[i],160);
     }
 
     for(int i=0;i<h2eri->n_leaf_node;i++)
@@ -585,10 +585,10 @@ int main(int argc, char **argv)
     size_t nflop = 0;
     size_t nflopx = 0;
     size_t nflopy = 0;
+    int testcase = atoi(argv[6]);
     double *Cocc_mat = TinyDFT->Cocc_mat;
     double *Cvir_mat = TinyDFT->Cvir_mat;
     double *orbitenergy_array = TinyDFT->orbitenergy_array;
-    double thresprod = atof(argv[7]);
     // Step 4: Do the MP2 calculation in the for loop
     double sumenergy = 0;
     double sumenergyxy = 0;
@@ -597,6 +597,7 @@ int main(int argc, char **argv)
     memset(sumx, 0, sizeof(double) * n);
     double sumy[n];
     memset(sumy, 0, sizeof(double) * n);
+    #pragma omp parallel for
     for(int quad = 0;quad<n;quad++)
     {
         double omega_val = omega[quad];
@@ -685,24 +686,12 @@ int main(int argc, char **argv)
         H2E_dense_mat_p *S51cbasisx;
         S51cbasisx = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs*2);
         
-        size_t nfqx = H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasisx,Upinv);
+        size_t nfqx = H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrd5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasisx,Upinv);
         printf("Finish x build y in quad %d\n",quad);
         H2E_dense_mat_p *S51cbasisy1;
         S51cbasisy1 = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-        size_t nfqy1 = H2ERI_build_S5_Y_draft(h2eri,Urbasis,S51cbasisx,csrdc,npairs,pair1st,pair2nd,nodepairs,nodepairidx,S51cbasisy1,Upinv,1);
-        printf("1finish");
-        H2E_dense_mat_p *S51cbasisy2;
-        S51cbasisy2 = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-        size_t nfqy2 = H2ERI_build_S5_Y_draft(h2eri,Urbasis,S51cbasisx,csrdc,npairs,pair1st,pair2nd,nodepairs,nodepairidx,S51cbasisy2,Upinv,2);
-        printf("2finish");
-        H2E_dense_mat_p *S51cbasisy4;
-        S51cbasisy4 = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-        size_t nfqy4 = H2ERI_build_S5_Y_draft(h2eri,Urbasis,S51cbasisx,csrdc,npairs,pair1st,pair2nd,nodepairs,nodepairidx,S51cbasisy4,Upinv,4);
-        printf("4finish");
-        H2E_dense_mat_p *S51cbasisy3;
-        S51cbasisy3 = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-        size_t nfqy3 = H2ERI_build_S5_Y_draft(h2eri,Urbasis,S51cbasisx,csrdc,npairs,pair1st,pair2nd,nodepairs,nodepairidx,S51cbasisy3,Upinv,3);
-        printf("3finish");
+        size_t nfqy1 = H2ERI_build_S5_Y_draft(h2eri,Urbasis,S51cbasisx,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodepairidx,S51cbasisy1,Upinv,testcase);
+        printf("finish y1 in quad %d\n",quad);
         
         for(int i=0;i<2*npairs;i++)
         {
@@ -716,27 +705,6 @@ int main(int argc, char **argv)
             if(S51cbasisy1[i]!=NULL)
             {
                 H2E_dense_mat_destroy(&S51cbasisy1[i]);
-            }
-        }
-        for(int i=0;i<npairs;i++)
-        {    
-            if(S51cbasisy2[i]!=NULL)
-            {
-                H2E_dense_mat_destroy(&S51cbasisy2[i]);
-            }
-        }
-        for(int i=0;i<npairs;i++)
-        {    
-            if(S51cbasisy3[i]!=NULL)
-            {
-                H2E_dense_mat_destroy(&S51cbasisy3[i]);
-            }
-        }
-        for(int i=0;i<npairs;i++)
-        {    
-            if(S51cbasisy4[i]!=NULL)
-            {
-                H2E_dense_mat_destroy(&S51cbasisy4[i]);
             }
         }
         printf("Finish1 quad %d\n",quad);

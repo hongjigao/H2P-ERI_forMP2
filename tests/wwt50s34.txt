@@ -1,0 +1,47 @@
+nbf is 1250
+The total energy with xy is 8.028562572621905
+The number of basis functions is 1250
+The number of nodes is 59
+The scf time is 5498.381166934967
+The number of pairs is 2500
+The number of admissible pairs is 871
+The number of inadmissible pairs is 354
+The largest number of X is 242416
+The largest number of Y is 324042
+The gap factor is 56.83731294987086
+The number of quadrature points is 8
+The threshold for X and Y is 0.0003
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 5498.381166934967
+Running time for building nodepairs, Ur and Uc is 0.8350951671600342
+Running time for building Upinv is 0.004125118255615234
+Running time for building xy is 15.15692806243896
+Running time for dense index transformation is 55443.03998088837
+Running time for calculating S1 is 663.4296634197235
+Running time for building S5x is 4585.120436906815
+Running time for building S5xy is 8995.229859352112
+Running time for calculating S1S51 is 22720.34824705124
+The total running time is 21524.59893894196
+memory cost for dense ERI is 6422664053
+Equals 49001.03800201416 
+memory cost for half ERI is 5028521080
+Equals 38364.57122802734 
+memory cost for ERI is 1760525797
+memory cost for S5xy is 4762557189
+The number of flops for S5x is 1534507716392
+The number of flops for S5y is 3767076892071
+The sums1 energy is 10.47149807329849
+The sums5 energy is 2.444043065981807
+The sums1s5 energy is -2.443489283329196
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 150, 600, 1250
+  * Number of symm-unique screened shell pairs : 65627
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 65627
+  * Kernel matrix size             : 226239
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 7.500000e+00
+  * Number of levels (root at 0)   : 3
+  * Number of nodes                : 59
+  * Number of nodes on each level  : 1, 8, 50

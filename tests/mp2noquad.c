@@ -730,7 +730,7 @@ int main(int argc, char **argv)
     H2E_dense_mat_p *S51cbasisx;
     S51cbasisx = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs*2);
     printf("Now we are going to build the S51cbasis\n");
-    size_t nfqx = H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasisx,Upinv);
+    size_t nfqx = H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrden,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasisx,Upinv);
     printf("Now finish X build Y\n");
 
     H2E_dense_mat_p *S51cbasisy;

@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+#SBATCH --job-name=test4
+#SBATCH --output=rest4.txt
+#SBATCH --nodes=1
+#SBATCH --time=48:00:00
+#SBATCH -p hbm-1tb-long-96core
+
+export OMP_NUM_THREADS=8
+echo "Job started at `date`"
+./mp2testxyboth.exe cc-pVDZ/cc-pVDZ.gbs alkane/alkane_302.xyz 50 1e-9 1e-5 alkane302job5 1e-6 1e-6
+echo "Job completed successfully at `date`"

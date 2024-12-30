@@ -1,0 +1,47 @@
+nbf is 1500
+The total energy with xy is 9.623910118254528
+The number of basis functions is 1500
+The number of nodes is 68
+The scf time is 9606.863610029221
+The number of pairs is 3481
+The number of admissible pairs is 1278
+The number of inadmissible pairs is 433
+The largest number of X is 295903
+The largest number of Y is 399582
+The gap factor is 57.51685133426811
+The number of quadrature points is 8
+The threshold for X and Y is 0.0003
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 9606.863610029221
+Running time for building nodepairs, Ur and Uc is 1.175509929656982
+Running time for building Upinv is 0.0001518726348876953
+Running time for building xy is 24.75340890884399
+Running time for dense index transformation is 71652.5834569931
+Running time for calculating S1 is 434.4101910591125
+Running time for building S5x is 8146.348893880844
+Running time for building S5xy is 15166.38500571251
+Running time for calculating S1S51 is 32382.38226723671
+The total running time is 31469.11835289001
+memory cost for dense ERI is 8599272411
+Equals 65607.2419052124 
+memory cost for half ERI is 6384300733
+Equals 48708.34909820557 
+memory cost for ERI is 2131784626
+memory cost for S5xy is 7510793073
+The number of flops for S5x is 2763505427242
+The number of flops for S5y is 6045508627379
+The sums1 energy is 12.92288619124253
+The sums5 energy is 3.299559247059225
+The sums1s5 energy is -3.29926766002361
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 180, 720, 1500
+  * Number of symm-unique screened shell pairs : 82193
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 82193
+  * Kernel matrix size             : 279139
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 7.500000e+00
+  * Number of levels (root at 0)   : 3
+  * Number of nodes                : 68
+  * Number of nodes on each level  : 1, 8, 59

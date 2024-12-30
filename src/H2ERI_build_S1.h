@@ -17,7 +17,7 @@ extern "C" {
 
 
 void H2ERI_build_COO_fulldensetest(H2ERI_p h2eri , COOmat_p coomat);
-
+void H2ERI_build_COO_noderow(H2ERI_p h2eri , COOmat_p coomat);
 
 
 
@@ -47,7 +47,7 @@ void insertionSort(int *key, double *val, size_t l, size_t r);
 // Compress the COO matrices
 // Input cooini and output coofinal. coofinal contains all the values whose absolute value is larger than thres*maximum
 void compresscoo(COOmat_p cooini, COOmat_p coofinal, double thres);
-
+void compresscsr(CSRmat_p cooini, CSRmat_p coofinal, double thres);
 
 
 // Convert a double COO matrix to a CSR matrix 
@@ -99,7 +99,8 @@ void Xindextransform(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtran
 void Xindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtrans);
 void Xindextransform2(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtrans);
 void Xindextransform3(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtrans);
-
+void Xindextransform4(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtrans, double thres);
+void Xindextransform5(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtrans, double thres);
 
 // Do the Y index transformation
 // Input parameters:
@@ -113,6 +114,12 @@ void Xindextransform3(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
 void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans);
 void Yindextransform2(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans);
 void Yindextransform3(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans);
+void Yindextransform4(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans,double thres);
+void Yindextransform5(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans,double thres);
+void Yindextransform6(int nbf, H2ERI_p h2eri, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans,double thres);
+
+void H2Pmp2_build_S1(int nbf,H2ERI_p h2eri, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrdc, CSRmat_p csrtrans, double thres);
+void H2Pmp2_build_S11(int nbf,H2ERI_p h2eri, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrdc, CSRmat_p csrtrans, double thres);
 
 // Provided the row oriented CSR matrix, compute the column oriented CSC matrix.
 // Attension: The new CSC matrix is still applying the previous CSRmat data type.
@@ -134,8 +141,8 @@ void CSR_to_CSC(const int ncol, CSRmat_p csrmat, CSRmat_p cscmat);
 // Output
 // return: S1 energy
 double Calc_S1energy(CSRmat_p csrs1, CSRmat_p cscs1);
-
-
+double Calcs1self(H2ERI_p h2eri, CSRmat_p nodes1);
+double Calcs1selfnode(H2ERI_p h2eri, CSRmat_p csrnode);
 
 
 

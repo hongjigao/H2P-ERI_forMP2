@@ -727,7 +727,7 @@ int main(int argc, char **argv)
         
         H2E_dense_mat_p *S51cbasis;
         S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs*2);
-        size_t nfq = H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrd5,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
+        size_t nfq = H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrd5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
         et1 = get_wtime_sec();
         printf("build S5 time in quad %d is %.16g\n",quad, et1-st1);
         builds5 += et1-st1;

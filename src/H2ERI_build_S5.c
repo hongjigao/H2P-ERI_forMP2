@@ -2934,7 +2934,7 @@ size_t H2ERI_build_S5_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
 
 
 
-size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
+size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, int npairs, int *pair1st,
     int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv)
 {
     H2E_dense_mat_p   *U = h2eri->U;
@@ -2942,7 +2942,6 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
     int max_child      = h2eri->max_child;
     int *node_level    = h2eri->node_level;
     int *node_height   = h2eri->node_height;
-    double maxprod = csrd5->maxv*csrdc5->maxv;
     size_t nflop=0;
     //printf("maxprod of current pair in S5draft is %f\n",maxprod);
 
@@ -3023,33 +3022,23 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                 if(sameshell==1)
                 {
                     for(size_t k=csrd5->csrrow[bf1st];k<csrd5->csrrow[bf1st+1];k++)
-                        //for(size_t l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
                             {
                                 int gamma = csrd5->csrcol[k];
                                 int delta = bf2nd;
                                 double value = csrd5->csrval[k];
                                 int tsfmnode = h2eri->leafidx[gamma*h2eri->num_bf+delta];
-                                int bol = 0;
                                 if(tsfmnode==-1)
                                     continue;
                                 if(testadmpair(nodeadmpairs,nodeadmpairidx,node0,tsfmnode)!=-1)
                                 {
-                                    bol=1;
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,node0,tsfmnode);
                                     int colbfp = h2eri->bfpidx[gamma*h2eri->num_bf+delta];
-                                    if(colbfp!=-1)
-                                    {
-                                        int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
-                                        for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
+                                    int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
+                                    for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
                                         {
                                             S51cbasis[i]->data[j*Urbasis[node0]->ncol+m]+=value*Ucbasis[tsfmidx]->data[m*Ucbasis[tsfmidx]->ncol+ptr];
                                             nflop+=1;
                                         }
-                                    }
-                                    else
-                                    {
-                                        printf("colbfp-1!%d, %d, %d\n",node0,tsfmnode,testadmpair(nodeadmpairs,nodeadmpairidx,node0,tsfmnode));
-                                    }
                                 }
                                 
                                 //*
@@ -3057,24 +3046,12 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 {
                                     double tmpv = 0;
                                     int n0idx = 0;
-                                    int rown0idx = 0;
-                                    int tmprow = 0;
+                                    int rown0idx = childstart[node0];
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
                                     int colbfp = h2eri->bfpidx[gamma*h2eri->num_bf+delta];
                                     int ptr = colbfp - h2eri->mat_cluster[2*h2eri->parent[tsfmnode]];
                                     int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
-                                    // Firstly, compute the index of the node0 in its parent
-                                    for (int k = 0; k < h2eri->n_child[h2eri->parent[node0]]; k++)
-                                        {
-                                            if(parent_children[k]==node0)
-                                            {
-                                                n0idx = k;
-                                                rown0idx = tmprow;
-                                                break;
-                                            }
-                                            tmprow += Urbasis[parent_children[k]]->ncol;
-                                        }
                                     //printf("elseif node0 is %d, tsfmnode is %d, tsfmidx is %d, parent of node0 is %d, index is %d, rowindex is %d\n",node0,tsfmnode,tsfmidx,h2eri->parent[node0],n0idx,rown0idx); 
                                     //printf("j is %d ptr is %d colbfp is %d mu is %d nu is %d\n",j,ptr,colbfp,gamma,delta);                               
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
@@ -3177,14 +3154,8 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                         bf1st=bf2;
                         bf2nd=bf1;
                     }
-                    else if (bf1==bf2)
-                    {
-                        printf("WTF!%d, %d\n",bf1,bf2);
-                    }
                     
-                    //printf("OHH!\n");
                     for(int k=csrd5->csrrow[bf1st];k<csrd5->csrrow[bf1st+1];k++)
-                        //for(int l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
                             {
                                 int gamma = csrd5->csrcol[k];
                                 int delta = bf2nd;
@@ -3197,15 +3168,13 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 {
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,node0,tsfmnode);
                                     int colbfp = h2eri->bfpidx[gamma*h2eri->num_bf+delta];
-                                    if(colbfp!=-1)
-                                    {
-                                        int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
-                                        for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
+                                    int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
+                                    for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
                                         {
                                             S51cbasis[i]->data[j*Urbasis[node0]->ncol+m]+=value*Ucbasis[tsfmidx]->data[m*Ucbasis[tsfmidx]->ncol+ptr];
                                             nflop+=1;
                                         }
-                                    }
+                                    
                                 }
                                 
                                 else if (testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
@@ -3213,7 +3182,7 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     
                                     double tmpv = 0;
                                     int n0idx = 0;
-                                    int rown0idx = 0;
+                                    int rown0idx = childstart[node0];
                                     int tmprow = 0;
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
                                     int colbfp = h2eri->bfpidx[gamma*h2eri->num_bf+delta];
@@ -3221,16 +3190,7 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
                                         // Firstly, compute the index of the node0 in its parent
-                                        for (int k = 0; k < h2eri->n_child[h2eri->parent[node0]]; k++)
-                                        {
-                                            if(parent_children[k]==node0)
-                                            {
-                                                n0idx = k;
-                                                rown0idx = tmprow;
-                                                break;
-                                            }
-                                            tmprow += Urbasis[parent_children[k]]->ncol;
-                                        }
+                                       
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         
@@ -3317,7 +3277,6 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                             }
                     //Here bf1st is actually bf2nd, and vice versa. Need to clarify
                     for(int k=csrd5->csrrow[bf2nd];k<csrd5->csrrow[bf2nd+1];k++)
-                        //for(int l=csrdc5->csrrow[bf1st];l<csrdc5->csrrow[bf1st+1];l++)
                             {
                                 int gamma = csrd5->csrcol[k];
                                 int delta = bf1st;
@@ -3330,15 +3289,13 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 {
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,node0,tsfmnode);
                                     int colbfp = h2eri->bfpidx[gamma*h2eri->num_bf+delta];
-                                    if(colbfp!=-1)
-                                    {
-                                        int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
-                                        for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
+                                    int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
+                                    for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
                                         {
                                             S51cbasis[i+npairs]->data[j*Urbasis[node0]->ncol+m]+=value*Ucbasis[tsfmidx]->data[m*Ucbasis[tsfmidx]->ncol+ptr];
                                             nflop+=1;
                                         }
-                                    }
+                                    
                                 }
                                 
                                 else if (testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
@@ -3346,7 +3303,7 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     //printf("OHH!\n");
                                     double tmpv = 0;
                                     int n0idx = 0;
-                                    int rown0idx = 0;
+                                    int rown0idx = childstart[node0];
                                     int tmprow = 0;
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
                                     int colbfp = h2eri->bfpidx[gamma*h2eri->num_bf+delta];
@@ -3354,20 +3311,6 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
                                     // Firstly, compute the index of the node0 in its parent
-                                    for (int k = 0; k < h2eri->n_child[h2eri->parent[node0]]; k++)
-                                        {
-                                            if(parent_children[k]==node0)
-                                            {
-                                                n0idx = k;
-                                                rown0idx = tmprow;
-                                                break;
-                                            }
-                                            tmprow += Urbasis[parent_children[k]]->ncol;
-                                        }
-                                    if(rown0idx!=childstart[node0])
-                                    {
-                                        printf("Error!%d, %d, %d\n",node0,rown0idx,childstart[node0]);
-                                    }
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         
@@ -3472,7 +3415,6 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                 if(sameshell==1)
                 {
                     for(size_t k=csrd5->csrrow[bf1st];k<csrd5->csrrow[bf1st+1];k++)
-                        //for(size_t l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
                             {
                                 int gamma = csrd5->csrcol[k];
                                 int delta = bf2nd;
@@ -3492,20 +3434,12 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 {
                                     bol=1;
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,node0,tsfmnode);
-                                    
-                                    if(colbfp!=-1)
-                                    {
-                                        int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
-                                        for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
+                                    int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
+                                    for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
                                         {
                                             S51cbasis[i]->data[j*Urbasis[node0]->ncol+m]+=value*Ucbasis[tsfmidx]->data[m*Ucbasis[tsfmidx]->ncol+ptr];
                                             nflop+=1;
                                         }
-                                    }
-                                    else
-                                    {
-                                        printf("colbfp-1!%d, %d, %d\n",node0,tsfmnode,testadmpair(nodeadmpairs,nodeadmpairidx,node0,tsfmnode));
-                                    }
                                 }
                                 
                                 else if (testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
@@ -3513,7 +3447,7 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     bol=1;
                                     double tmpv = 0;
                                     int n0idx = 0;
-                                    int rown0idx = 0;
+                                    int rown0idx = childstart[node0];
                                     int tmprow = 0;
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
                                     
@@ -3521,20 +3455,7 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
                                     // Firstly, compute the index of the node0 in its parent
-                                    for (int k = 0; k < h2eri->n_child[h2eri->parent[node0]]; k++)
-                                        {
-                                            if(parent_children[k]==node0)
-                                            {
-                                                n0idx = k;
-                                                rown0idx = tmprow;
-                                                break;
-                                            }
-                                            tmprow += Urbasis[parent_children[k]]->ncol;
-                                        }
-                                    if(rown0idx!=childstart[node0])
-                                    {
-                                        printf("Error!%d, %d, %d\n",node0,rown0idx,childstart[node0]);
-                                    }
+                                    
                                     //printf("Now node0 is %d, tsfmnode is %d, tsfmidx is %d, parent of node0 is %d, index is %d, rowindex is %d\n",node0,tsfmnode,tsfmidx,h2eri->parent[node0],n0idx,rown0idx);                                    
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     { 
@@ -3700,13 +3621,8 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                         bf1st=bf2;
                         bf2nd=bf1;
                     }
-                    else if (bf1==bf2)
-                    {
-                        printf("WTF!%d, %d\n",bf1,bf2);
-                    }
                     //printf("OHH!\n");
                     for(int k=csrd5->csrrow[bf1st];k<csrd5->csrrow[bf1st+1];k++)
-                        //for(int l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
                             {
                                 int gamma = csrd5->csrcol[k];
                                 int delta = bf2nd;
@@ -3714,7 +3630,6 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 double value = csrd5->csrval[k];
                                 
                                 int tsfmleaf = h2eri->leafidx[gamma*h2eri->num_bf+delta];
-                                int bol = 0;
                                 if(tsfmleaf==-1)
                                     continue;
                                 int tsfmnode = tsfmleaf;
@@ -3726,15 +3641,13 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 {
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,node0,tsfmnode);
                                     
-                                    if(colbfp!=-1)
-                                    {
-                                        int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
-                                        for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
+                                    int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
+                                    for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
                                         {
                                             S51cbasis[i]->data[j*Urbasis[node0]->ncol+m]+=value*Ucbasis[tsfmidx]->data[m*Ucbasis[tsfmidx]->ncol+ptr];
                                             nflop+=1;
                                         }
-                                    }
+                                    
                                 }
                                 
                                 else if (testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
@@ -3742,23 +3655,13 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     
                                     double tmpv = 0;
                                     int n0idx = 0;
-                                    int rown0idx = 0;
+                                    int rown0idx = childstart[node0];
                                     int tmprow = 0;
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
                                     int ptr = colbfp - h2eri->mat_cluster[2*h2eri->parent[tsfmnode]];
                                     int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
                                         // Firstly, compute the index of the node0 in its parent
-                                        for (int k = 0; k < h2eri->n_child[h2eri->parent[node0]]; k++)
-                                        {
-                                            if(parent_children[k]==node0)
-                                            {
-                                                n0idx = k;
-                                                rown0idx = tmprow;
-                                                break;
-                                            }
-                                            tmprow += Urbasis[parent_children[k]]->ncol;
-                                        }
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         
@@ -3859,12 +3762,6 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 
                                             int heightd = node_height[nodesidx[dec]];
                                             int leveld = node_level[nodesidx[dec]];
-                                            /*if(leveld-level0>0) continue;
-                                            printf("Error!%d, %d, ndesc%d \n",leveld,level0,ndesc);
-                                            printf("Error.%d, %d\n",nodesidx[dec],node0);
-                                            printf("basisidx is %d\n",basisidx[dec]);
-                                            printf("Here node0 is %d, tsfmnode is %d, tsfmleaf is %d, heightd is %d, leveld is %d\n",node0,tsfmnode,tsfmleaf,heightd,leveld);
-                                            */
                                             int nodecol = childstep[heightd];
                                             int noderow = nodesidx[dec];
                                             // nodesidx[dec] is the row node, nodecol is the column node
@@ -3910,7 +3807,6 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                             }
                     //Here bf1st is actually bf2nd, and vice versa. Need to clarify
                     for(int k=csrd5->csrrow[bf2nd];k<csrd5->csrrow[bf2nd+1];k++)
-                        //for(int l=csrdc5->csrrow[bf1st];l<csrdc5->csrrow[bf1st+1];l++)
                             {
                                 int gamma = csrd5->csrcol[k];
                                 int delta = bf1st;
@@ -3929,16 +3825,14 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 if(testadmpair(nodeadmpairs,nodeadmpairidx,node0,tsfmnode)!=-1)
                                 {
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,node0,tsfmnode);
-                                    
-                                    if(colbfp!=-1)
-                                    {
-                                        int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
-                                        for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
+
+                                    int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
+                                    for(int m=0;m<Ucbasis[tsfmidx]->nrow;m++)
                                         {
                                             S51cbasis[i+npairs]->data[j*Urbasis[node0]->ncol+m]+=value*Ucbasis[tsfmidx]->data[m*Ucbasis[tsfmidx]->ncol+ptr];
                                             nflop+=1;
                                         }
-                                    }
+                                    
                                 }
                                 
                                 else if (testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
@@ -3946,23 +3840,12 @@ size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     //printf("OHH!\n");
                                     double tmpv = 0;
                                     int n0idx = 0;
-                                    int rown0idx = 0;
-                                    int tmprow = 0;
+                                    int rown0idx = childstart[node0];
                                     int tsfmidx = testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
                                     int ptr = colbfp - h2eri->mat_cluster[2*h2eri->parent[tsfmnode]];
                                     int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
                                     // Firstly, compute the index of the node0 in its parent
-                                    for (int k = 0; k < h2eri->n_child[h2eri->parent[node0]]; k++)
-                                        {
-                                            if(parent_children[k]==node0)
-                                            {
-                                                n0idx = k;
-                                                rown0idx = tmprow;
-                                                break;
-                                            }
-                                            tmprow += Urbasis[parent_children[k]]->ncol;
-                                        }
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         
@@ -4199,11 +4082,11 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
     {
         int node0 = pair1st[i];
         int node1 = pair2nd[i];
-        printf("pairidx %d, node0 %d, node1 %d\n",i,node0,node1);
+        //printf("pairidx %d, node0 %d, node1 %d\n",i,node0,node1);
         int startpoint=h2eri->mat_cluster[2*node1];
         H2E_dense_mat_init(&S51cbasisy[i], Urbasis[node1]->nrow,Urbasis[node0]->ncol);
         memset(S51cbasisy[i]->data, 0, sizeof(DTYPE) * Urbasis[node1]->nrow * Urbasis[node0]->ncol);
-        printf("S51cbasisy[%d] is initialized with size %d, %d\n",i,Urbasis[node1]->nrow,Urbasis[node0]->ncol);
+        //printf("S51cbasisy[%d] is initialized with size %d, %d\n",i,Urbasis[node1]->nrow,Urbasis[node0]->ncol);
         if(h2eri->n_child[node0]==0)
         {
             for(int j=0;j<Urbasis[node1]->nrow;j++)
@@ -4213,11 +4096,8 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                 int sameshell=h2eri->sameshell[idx];
                 int bf1st = h2eri->bf1st[idx];
                 int bf2nd = h2eri->bf2nd[idx];
-                //printf("row j. %d, sameshell = %d\n",j,sameshell);
-                printf("j. %d,%d\n",j,sameshell);
                 if(sameshell==1)
                 {
-                    //for(size_t k=csrd5->csrrow[bf1st];k<csrd5->csrrow[bf1st+1];k++)
                         for(size_t l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
                             {
                                 int gamma = bf1st;
@@ -4230,51 +4110,32 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 }
                                 
                                 double value = csrdc5->csrval[l];
-                                
                                 int tsfmnode = h2eri->leafidx[gamma*h2eri->num_bf+delta];
-                                int bol = 0;
                                 if(tsfmnode==-1)
                                     continue;
                                 if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
                                 {
-                                    bol=1;
-                                    int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
-                                    
-                                    
+                                    int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);                                                                        
                                     int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
-                                    printf("01if4245!%d, %d\n",node0,colbfp);
                                     for(int m=0;m<S51cbasisy[i]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[ptr*S51cbasisx[tsfmidx+if2l1*npairs]->ncol+m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+4)
-                                        {
-                                            printf("Error01if!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            exit(0);
-                                        }
                                         nflop+=1;
-                                    }
-                                    printf("01if4245finish!%d,%d\n",node0,colbfp);
-
-                                    
+                                    }                                    
                                 }
                                 
-                                //*
                                 else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
                                 {
-                                    printf("01elseif4264!%d, %d\n",node0,colbfp);
                                     double tmpv = 0;
-                                    int n0idx = 0;
-                                    int rown0idx = 0;
+                                    
                                     int tmprow = 0;
                                     int tsfmidx = testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
                                     int ptr = colbfp - h2eri->mat_cluster[2*h2eri->parent[tsfmnode]];
-                                    int *parent_children = children + h2eri->parent[node0] * max_child;
+                                    //int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
                                     // Firstly, compute the index of the node0 in its parent
-                                    rown0idx = childstart[node0];
+                                    int rown0idx = childstart[node0];
                                     if(U[h2eri->parent[node0]]->nrow==0) continue;
-                                    //printf("elseif node0 is %d, tsfmnode is %d, tsfmidx is %d, parent of node0 is %d, index is %d, rowindex is %d\n",node0,tsfmnode,tsfmidx,h2eri->parent[node0],n0idx,rown0idx); 
-                                    //printf("j is %d ptr is %d colbfp is %d mu is %d nu is %d\n",j,ptr,colbfp,gamma,delta);                               
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     { 
                                         // Secondly, compute the value of the current element
@@ -4283,23 +4144,14 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                         {
                                             tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+k] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
                                         }
-                                        //printf("tmpv!%f\n",tmpv);
-                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+4)
-                                        {
-                                            printf("Error01elseif!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            exit(0);
-                                        }
+                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;                                        
                                         nflop+=1;
                                     }
-                                    printf("01elseif4264finish!%d, %d\n",node0,colbfp);
-
                                 }
                                 //*/
                                 
                                 else
                                 {
-                                    printf("01else4302!%d, %d\n",node0,colbfp);
                                     //Firstly, find which ancient constructs the node
                                     int level0 = h2eri->node_level[node0];
                                     int node0a = node0;
@@ -4321,7 +4173,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     }
                                     if(nsteps==-1)
                                     {
-                                        //printf("Error!%d, %d\n",node0,tsfmnode);
                                         continue;
                                     }
                                     // Now try to find the corresponding Ucbasis row
@@ -4356,41 +4207,27 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                         }
                                         
                                         node0a = children[max_child*node0a+childidx];
-                                        memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);
-                                        
-
+                                        memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);                                        
                                     }
-                                    printf("and01 else 4363 y\n");
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error01else!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
                                     memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
                                     memset(childstep, 0, sizeof(int) * nsteps);
-                                    printf("01else4376finish!%d, %d\n",node0,colbfp);
                                 }
                                 
                             }
-                            
-                        
-
+                                                    
                 }
                 else if(sameshell==0)
                 {
-                    //printf("OHH!\n");
-                    //for(int k=csrd5->csrrow[bf1st];k<csrd5->csrrow[bf1st+1];k++)
                         for(int l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
                             {
                                 int gamma = bf1st;
                                 int delta = csrdc5->csrcol[l];
                                 double value = csrdc5->csrval[l];
-                                //printf("l %d,%d\n",l,delta);
                                 int tsfmnode = h2eri->leafidx[gamma*h2eri->num_bf+delta];
                                 if(tsfmnode==-1)
                                     continue;
@@ -4404,45 +4241,29 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 
                                 if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
                                 {
-                                    printf("000if407!%d, %d\n",node0,colbfp);
                                     int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
                                     
                                     int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
                                     
                                     for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
                                     {
-                                        //printf("beforem! %d,xdata %.16g,ydata %.16g element\n",m,S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+m,S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]);
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx]->ncol*ptr+m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00if4383!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            printf("more information:j=%d,Urbasis[node0]->ncol=%d\n",j,Urbasis[node0]->ncol);
-                                            printf("more information:S51cbasisx->ncol=%d,S51cbasisy->ncol=%d\n",S51cbasisx[tsfmidx+if2l1*npairs]->ncol,S51cbasisy[i]->ncol);
-                                            printf("more information:value=%f,ptr=%d,if2l1=%d\n",value,ptr,if2l1);
-                                            printf("more information:gamma=%d,delta=%d,S51cbasisx->data=%.16g, value=%.16g,\n",gamma,delta,S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx]->ncol*ptr+m],value);
-                                            
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
-                                    printf("000if4407finish!%d, %d\n",node0,colbfp);
                                 }
                                 
                                 
                                 else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
                                 {
-                                    printf("00elseif4434!%d, %d\n",node0,colbfp);
                                     double tmpv = 0;
                                     int n0idx = 0;
-                                    int rown0idx = 0;
                                     int tmprow = 0;
                                     int tsfmidx = testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
-                                    
                                     int ptr = colbfp - h2eri->mat_cluster[2*h2eri->parent[tsfmnode]];
                                     int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
                                     // Firstly, compute the index of the node0 in its parent
-                                    rown0idx = childstart[node0];
+                                    int rown0idx = childstart[node0];
                                     if(U[h2eri->parent[node0]]->nrow==0)
                                     {
                                         printf("Error!%d\n",h2eri->parent[node0]);
@@ -4455,37 +4276,15 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                         tmpv = 0;
                                         for (int k = 0; k < Urbasis[h2eri->parent[node0]]->ncol; k++)
                                         {
-                                            tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+k] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
-                                            if(fabs(tmpv>1e+7))
-                                            {
-                                                printf("Errortmpv!%f in pairidx %d, row %d and column %d\n",tmpv,tsfmidx,m,j);
-                                                printf("more information:j=%d,Urbasis[node0]->ncol=%d\n",j,Urbasis[node0]->ncol);
-                                                printf("more information:(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k=%d\n",(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k);
-                                                printf("more information:upper bound of U matrix is %d\n",U[h2eri->parent[node0]]->nrow*U[h2eri->parent[node0]]->ncol);
-                                                printf("row0idx=%d,m=%d,k=%d\n",rown0idx,m,k);
-                                            }
+                                            tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+k] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];                                                                                    
                                         }
-                                        //printf("In elseif tmpv is %f,value is %.16g, ydatais %.16g\n",tmpv,value,S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]);
-                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
-                                        
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00elseif4427!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            printf("more information:j=%d,Urbasis[node0]->ncol=%d\n",j,Urbasis[node0]->ncol);
-                                            printf("more information:S51cbasisx->ncol=%d,S51cbasisy->ncol=%d\n",S51cbasisx[tsfmidx+if2l1*npairs]->ncol,S51cbasisy[i]->ncol);
-                                            printf("more information:value=%f,ptr=%d,if2l1=%d\n",value,ptr,if2l1);
-                                            printf("more information:gamma=%d,delta=%d,tmpv=%.16g, value=%.16g,\n",gamma,delta,tmpv,value);
-                                            
-                                            exit(1);
-                                        }
+                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;                                                                            
                                         nflop+=1;
                                     }
-                                    printf("00elseif4483finish!%d, %d\n",node0,colbfp);
                                 }
                                 
                                 else
                                 {
-                                    printf("00else4488!%d, %d\n",node0,colbfp);
                                     //Firstly, find which ancient constructs the node
                                     int level0 = h2eri->node_level[node0];
                                     int node0a = node0;
@@ -4548,27 +4347,18 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                         
 
                                     }
-                                    printf("and 00 else b4551 y\n");
+                                    //printf("and 00 else b4551 y\n");
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00else!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
                                     memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
-
-                                    printf("00else4565finish!%d, %d\n",node0,colbfp);
                                 }
                             }
-                    //for(int k=csrd5->csrrow[bf2nd];k<csrd5->csrrow[bf2nd+1];k++)
                     //Here Y matrix is still bf2nd but we use bf1st to represent it
                         for(int l=csrdc5->csrrow[bf1st];l<csrdc5->csrrow[bf1st+1];l++)
                             {
-                                //printf("l1 %d,%d\n",l,bf1st);
                                 int gamma = bf2nd;
                                 int delta = csrdc5->csrcol[l];
                                 double value = csrdc5->csrval[l];
@@ -4586,35 +4376,20 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 
                                 if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
                                 {
-                                    printf("001if4589!%d, %d\n",node0,colbfp);
 
                                     int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
                                     int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
 
                                     for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
                                     {
-                                        //printf("beforem! %d,xdata %.16g,ydata %.16g element\n",m,S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+m,S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]);
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00if4553!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            printf("more information:j=%d,Urbasis[node0]->ncol=%d\n",j,Urbasis[node0]->ncol);
-                                            printf("more information:S51cbasisx->ncol=%d,S51cbasisy->ncol=%d\n",S51cbasisx[tsfmidx+if2l1*npairs]->ncol,S51cbasisy[i]->ncol);
-                                            printf("more information:value=%f,ptr=%d,if2l1=%d\n",value,ptr,if2l1);
-                                            printf("more information:gamma=%d,delta=%d,S51cbasisx->data=%.16g, value=%.16g,\n",gamma,delta,S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx]->ncol*ptr+m],value);
-                                            printf("more information:j*ncol+m=%d,basisynrow=%d\n",j*Urbasis[node0]->ncol+m,S51cbasisy[i]->nrow);
-                                            
-                                            exit(0);
-                                        }
+                                        
                                         nflop+=1;
-                                    }
-                                    printf("001if4611finish!%d, %d\n",node0,colbfp);
-                                    
+                                    }                                    
                                 }
                                 
                                 else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
                                 {
-                                    printf("001elseif4617!%d, %d\n",node0,colbfp);
                                     double tmpv = 0;
                                     int n0idx = 0;
                                     int rown0idx = 0;
@@ -4634,37 +4409,15 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                         for (int k = 0; k < Urbasis[h2eri->parent[node0]]->ncol; k++)
                                         {
                                             tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+k] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
-                                            //nflop+=1;
-                                            if(fabs(tmpv>1e+7))
-                                            {
-                                                printf("Errortmpv!%f in pairidx %d, row %d and column %d\n",tmpv,tsfmidx,m,j);
-                                                printf("more information:j=%d,Urbasis[node0]->ncol=%d\n",j,Urbasis[node0]->ncol);
-                                                printf("more information:(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k=%d\n",(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k);
-                                                printf("more information:upper bound of U matrix is %d\n",U[h2eri->parent[node0]]->nrow*U[h2eri->parent[node0]]->ncol);
-                                                printf("row0idx=%d,m=%d,k=%d\n",rown0idx,m,k);
-                                            }
                                         }
-                                        //printf("In elseif tmpv is %f,value is %.16g, ydatais %.16g\n",tmpv,value,S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]);
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00elseif4594!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            printf("more information:j=%d,Urbasis[node0]->ncol=%d\n",j,Urbasis[node0]->ncol);
-                                            printf("more information:S51cbasisx->ncol=%d,S51cbasisy->ncol=%d\n",S51cbasisx[tsfmidx+if2l1*npairs]->ncol,S51cbasisy[i]->ncol);
-                                            printf("more information:value=%f,ptr=%d,if2l1=%d\n",value,ptr,if2l1);
-                                            printf("more information:gamma=%d,delta=%d,S51cbasisx->data=%.16g, value=%.16g,\n",gamma,delta,S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx]->ncol*ptr+m],value);
-                                            
-                                            exit(0);
-                                        }
+                                        
                                         nflop+=1;
-                                    }
-                                    printf("001elseif4661finish!%d, %d\n",node0,colbfp);
-                                    
+                                    }                                    
                                 }
 
                                 else
                                 {
-                                    //printf("00else!%d, %d\n",node0,colbfp);
                                     //Firstly, find which ancient constructs the node
                                     int level0 = h2eri->node_level[node0];
                                     int node0a = node0;
@@ -4721,19 +4474,12 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                         memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);
                                         
                                     }
-                                    printf("and 001 elseb4724 y\n");
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+4)
-                                        {
-                                            printf("Error00else!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
                                     memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
-                                    //printf("00elsefinish!%d, %d\n",node0,colbfp);
                                     memset(childstep, 0, sizeof(int) * nsteps);
                                     
                                 }
@@ -4758,16 +4504,13 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                 int bf2nd = h2eri->bf2nd[idx];
                 if(sameshell==1)
                 {
-                    //for(size_t k=csrd5->csrrow[bf1st];k<csrd5->csrrow[bf1st+1];k++)
                         for(size_t l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
                             {
                                 int gamma = bf1st;
-                                int delta = csrdc5->csrcol[l];
-                                
-                                double value = csrdc5->csrval[l];
-                                
+                                int delta = csrdc5->csrcol[l];                                
+                                double value = csrdc5->csrval[l];                                
                                 int tsfmleaf = h2eri->leafidx[gamma*h2eri->num_bf+delta];
-                                int bol = 0;
+                                
                                 if(tsfmleaf==-1)
                                     continue;
 
@@ -4785,27 +4528,19 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 }
                                 if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
                                 {
-                                    printf("11if4788!%d, %d\n",node0,colbfp);
-                                    bol=1;
+                                    
                                     int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
                                     int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
                                     for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
                                     {
                                             S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+m];
-                                            if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                            {
-                                                printf("Error11if!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                                break;
-                                            }
                                             nflop+=1;
                                     }
-                                    printf("11if4788finish!%d, %d\n",node0,colbfp);
                                 }
                                 
                                 else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
                                 {
-                                    printf("11elseif!4807%d, %d\n",node0,colbfp);
-                                    bol=1;
+                                    
                                     double tmpv = 0;
                                     int n0idx = 0;
                                     int rown0idx = 0;
@@ -4830,22 +4565,14 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                         {
                                             tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[k+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
                                         }
-                                        //printf("tmpv!%f\n",tmpv);
                                         
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error11elseif!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
-                                    printf("11elseif4843finish!%d, %d\n",node0,colbfp);
                                 }
 
                                 else
                                 {
-                                    printf("11else4848!%d, %d\n",node0,colbfp);
                                     //Firstly, find which ancient constructs the node
                                     int level0 = h2eri->node_level[node0];
                                     int node0a = node0;
@@ -4868,7 +4595,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     // This is the part where the transform node is even higher than the node0
                                     if(nsteps!=-1)
                                     {
-                                            //printf("Error!%d, %d\n",node0,tsfmnode);
                                         
                                         // Now try to find the corresponding Ucbasis row
                                         
@@ -4903,15 +4629,10 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                             memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);
                                             
                                         }
-                                        printf("and 11 else y 4906\n");
+                                        //printf("and 11 else y 4906\n");
                                         for(int m=0;m<Urbasis[node0]->ncol;m++)
                                         {
                                             S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                            if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error11else1!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                             nflop+=1;
                                         }
                                         memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
@@ -4920,7 +4641,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     else
                                     {
 
-                                        printf("11elseelse4923!%d, %d\n",node0,colbfp);
                                         //Firstly, construct two vectors. One is a list of the children of the node0
                                         //that forms a split, the other is the corresponding Ucbasis index
                                         tsfmnode = tsfmleaf;
@@ -4938,12 +4658,7 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 
                                             int heightd = node_height[nodesidx[dec]];
                                             int leveld = node_level[nodesidx[dec]];
-                                            /*if(leveld-level0>0) continue;
-                                            printf("Error!%d, %d, ndesc%d \n",leveld,level0,ndesc);
-                                            printf("Error.%d, %d\n",nodesidx[dec],node0);
-                                            printf("basisidx is %d\n",basisidx[dec]);
-                                            printf("Here node0 is %d, tsfmnode is %d, tsfmleaf is %d, heightd is %d, leveld is %d\n",node0,tsfmnode,tsfmleaf,heightd,leveld);
-                                            */
+                                            
                                             int nodecol = childstep[heightd];
                                             int noderow = nodesidx[dec];
                                             // nodesidx[dec] is the row node, nodecol is the column node
@@ -4960,11 +4675,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                                 int nvec = Urbasis[noderow]->ncol;
                                                 int pare = h2eri->parent[noderow];
                                                 int nrows = Urbasis[pare]->ncol;
-                                                if(U[pare]->nrow==0)
-                                                {
-                                                    printf("Error!%d\n",pare);
-                                                    exit(0);
-                                                }
                                                 CBLAS_GEMV(CblasRowMajor, CblasNoTrans, nrows, nvec, 1.0, Upinv[pare]->data+desrow, Upinv[pare]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
                                                 for(int m=0;m<nrows;m++)
                                                 {
@@ -4974,15 +4684,9 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                                 memset(tmparray1, 0, sizeof(double) * nrows);
                                                 noderow = pare;
                                             }
-                                            //printf("and 11 else r\n");
                                             for(int m=0;m<Urbasis[node0]->ncol;m++)
                                             {
                                                 S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                                if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+4)
-                                                {
-                                                    printf("Error11else4983!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                                    break;
-                                                }
                                                 nflop+=1;
                                             }
                                             memset(tmparray0, 0, sizeof(double) * Urbasis[node0]->ncol);
@@ -4991,9 +4695,7 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 
 
                                     }
-                                    
-                                printf("11else4995finish!%d, %d\n",node0,colbfp);
-                                    
+                                                                        
                                 }
                                 
                                 
@@ -5005,8 +4707,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                 }
                 else if(sameshell==0)
                 {
-                    //printf("OHH!\n");
-                    //for(int k=csrd5->csrrow[bf1st];k<csrd5->csrrow[bf1st+1];k++)
                         for(int l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
                             {
                                 int gamma = bf1st;
@@ -5032,26 +4732,18 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 }
                                 if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
                                 {
-                                    printf("10if05035!%d, %d\n",node0,colbfp);
                                     int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
                                     
                                     int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
                                     for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error10if5044!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
-                                    printf("10if05049finish!%d, %d\n",node0,colbfp);
                                 }
                                 
                                 else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
                                 {
-                                    printf("10elseif5054!%d, %d\n",node0,colbfp);
                                     double tmpv = 0;
                                     int n0idx = 0;
                                     int rown0idx = 0;
@@ -5077,20 +4769,13 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                             tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[k+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
                                         }
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error!5082%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
-                                    printf("10elseif5087finish!%d, %d\n",node0,colbfp);
                                 
                                 }
                                 
                                 else
                                 {
-                                    printf("10else5093!%d, %d\n",node0,colbfp);
                                     //Firstly, find which ancient constructs the node
                                     int level0 = h2eri->node_level[node0];
                                     int node0a = node0;
@@ -5132,10 +4817,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                             int rowstart=childstart[children[max_child*node0a+childidx]];
                                             int rownum=Urbasis[children[max_child*node0a+childidx]]->ncol;
                                             CBLAS_GEMV(CblasRowMajor, CblasNoTrans, rownum, Urbasis[node0a]->ncol, 1.0, U[node0a]->data+rowstart*U[node0a]->ncol,U[node0a]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
-                                            if(U[node0a]->nrow==0)
-                                            {
-                                                printf("Error!%d, %d\n",node0a,childidx);
-                                            }
                                             memset(tmparray0, 0, sizeof(double) * Urbasis[node0a]->ncol);
                                             for(int m=0;m<rownum;m++)
                                             {
@@ -5146,15 +4827,10 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                             memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);
                                             
                                         }
-                                        printf("and 10 else 5149 y\n");
+                                        //printf("and 10 else 5149 y\n");
                                         for(int m=0;m<Urbasis[node0]->ncol;m++)
                                         {
                                             S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                            if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error11elkse5155!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                             nflop+=1;
                                         }
                                         memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
@@ -5162,7 +4838,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     // This is the part where the transform node is lower than the node0
                                     else
                                     {
-                                        printf("10elseelse5165!%d, %d, %d, %d, %d\n",node0,tsfmnode,tsfmidx,colbfp,h2eri->mat_cluster[2*tsfmnode]);
                                         //Firstly, construct two vectors. One is a list of the children of the node0
                                         //that forms a split, the other is the corresponding Ucbasis index
                                         tsfmnode = tsfmleaf;
@@ -5180,18 +4855,13 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 
                                             int heightd = node_height[nodesidx[dec]];
                                             int leveld = node_level[nodesidx[dec]];
-                                            /*if(leveld-level0>0) continue;
-                                            printf("Error!%d, %d, ndesc%d \n",leveld,level0,ndesc);
-                                            printf("Error.%d, %d\n",nodesidx[dec],node0);
-                                            printf("basisidx is %d\n",basisidx[dec]);
-                                            printf("Here node0 is %d, tsfmnode is %d, tsfmleaf is %d, heightd is %d, leveld is %d\n",node0,tsfmnode,tsfmleaf,heightd,leveld);
-                                            */
+                                            
                                             int nodecol = childstep[heightd];
                                             int noderow = nodesidx[dec];
                                             // nodesidx[dec] is the row node, nodecol is the column node
                                             int colptr = colbfp-h2eri->mat_cluster[2*nodecol];
                                             int tsfmidx = basisidx[dec];
-                                            for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->nrow;m++)
+                                            for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
                                             {
                                                 tmparray0[m]=S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*colptr];
                                             }
@@ -5202,11 +4872,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                                 int nvec = Urbasis[noderow]->ncol;
                                                 int pare = h2eri->parent[noderow];
                                                 int nrows = Urbasis[pare]->ncol;
-                                                if(U[pare]->nrow==0)
-                                                {
-                                                    printf("Error!%d\n",pare);
-                                                    exit(0);
-                                                }
                                                 CBLAS_GEMV(CblasRowMajor, CblasNoTrans, nrows, nvec, 1.0, Upinv[pare]->data+desrow, Upinv[pare]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
                                                 for(int m=0;m<nrows;m++)
                                                 {
@@ -5215,15 +4880,9 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                                 memset(tmparray1, 0, sizeof(double) * nrows);
                                                 noderow = pare;
                                             }
-                                            printf("and 10 else5218 r\n");
                                             for(int m=0;m<Urbasis[node0]->ncol;m++)
                                             {
                                                 S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                                if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                                {
-                                                    printf("Error11else22!5224%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                                    break;
-                                                }
                                                 nflop+=1;
                                             }
                                             memset(tmparray0, 0, sizeof(double) * Urbasis[node0]->ncol);
@@ -5234,12 +4893,10 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     }
                                     
 
-                                printf("10else5237finish!%d, %d\n",node0,colbfp);    
                                 }
                                 
                                 
                             }
-                    //for(int k=csrd5->csrrow[bf2nd];k<csrd5->csrrow[bf2nd+1];k++)
                         for(int l=csrdc5->csrrow[bf1st];l<csrdc5->csrrow[bf1st+1];l++)
                             {
                                 int gamma = bf2nd;
@@ -5265,27 +4922,21 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                 }
                                 if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
                                 {
-                                    printf("10if1!5268%d, %d\n",node0,colbfp);
                                     int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
                                     
                                     int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
                                     for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error10iff!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
-                                    printf("10if15282finish!%d, %d\n",node0,colbfp);
+                                    //printf("10if15282finish!%d, %d\n",node0,colbfp);
                                 }
                                 
                                 
                                 else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
                                 {
-                                    printf("10elseif5288!%d, %d\n",node0,colbfp);
+                                    //printf("10elseif5288!%d, %d\n",node0,colbfp);
                                     double tmpv = 0;
                                     int n0idx = 0;
                                     int rown0idx = 0;
@@ -5310,20 +4961,13 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                             tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[k+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
                                         }
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error10elseif!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
-                                    printf("10elseif5320finish!%d, %d\n",node0,colbfp);
                                 }
 
                             
                                 else
                                 {
-                                    printf("10else!5326 %d, %d\n",node0,colbfp);
                                     //Firstly, find which ancient constructs the node
                                     int level0 = h2eri->node_level[node0];
                                     int node0a = node0;
@@ -5346,7 +4990,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     // This is the part where the transform node is even higher than the node0
                                     if(nsteps!=-1)
                                     {
-                                            //printf("Error!%d, %d\n",node0,tsfmnode);
                                         
                                         // Now try to find the corresponding Ucbasis row
                                         
@@ -5356,9 +4999,7 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                         {
                                             tmparray0[m]=S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr];
                                         }
-
                                         
-
                                         for(int generation=0;generation<nsteps+1;generation++)
                                         {
                                             int childidx = childstep[nsteps-generation];
@@ -5376,15 +5017,10 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                             memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);
                                             
                                         }
-                                        printf("and 10 else 5379 y\n");
+                                        //printf("and 10 else 5379 y\n");
                                         for(int m=0;m<Urbasis[node0]->ncol;m++)
                                         {
                                             S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                            if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                            {
-                                                printf("Error100else!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                                break;
-                                            }
                                             nflop+=1;
                                         }
                                         memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
@@ -5392,7 +5028,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                     // This is the part where the transform node is lower than the node0
                                     else
                                     {
-                                        //printf("10elseelse!%d, %d, %d, %d, %d\n",node0,tsfmnode,tsfmidx,colbfp,h2eri->mat_cluster[2*tsfmnode]);
                                         //Firstly, construct two vectors. One is a list of the children of the node0
                                         //that forms a split, the other is the corresponding Ucbasis index
                                         tsfmnode = tsfmleaf;
@@ -5410,12 +5045,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 
                                             int heightd = node_height[nodesidx[dec]];
                                             int leveld = node_level[nodesidx[dec]];
-                                            /*if(leveld-level0>0) continue;
-                                            printf("Error!%d, %d, ndesc%d \n",leveld,level0,ndesc);
-                                            printf("Error.%d, %d\n",nodesidx[dec],node0);
-                                            printf("basisidx is %d\n",basisidx[dec]);
-                                            printf("Here node0 is %d, tsfmnode is %d, tsfmleaf is %d, heightd is %d, leveld is %d\n",node0,tsfmnode,tsfmleaf,heightd,leveld);
-                                            */
                                             int nodecol = childstep[heightd];
                                             int noderow = nodesidx[dec];
                                             // nodesidx[dec] is the row node, nodecol is the column node
@@ -5449,11 +5078,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
                                             for(int m=0;m<Urbasis[node0]->ncol;m++)
                                             {
                                                 S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                                if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                                {
-                                                    printf("Error100else2!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                                    break;
-                                                }
                                                 nflop+=1;
                                             }
                                             memset(tmparray0, 0, sizeof(double) * Urbasis[node0]->ncol);
@@ -5463,7 +5087,6 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 
                                     }
                                     
-                                printf("10elsefinish5466!%d, %d\n",node0,colbfp);
                                     
                                 }
                                 
@@ -5484,6 +5107,8 @@ size_t H2ERI_build_S5_Y(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
     printf("S5Y finish!\n");
     return nflop;
 }
+
+
 
 // If testcase=0; we do everything.
 // If testcase=1; we only do if
@@ -5559,7 +5184,7 @@ size_t H2ERI_build_S5_Y_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense
     {
         int node0 = pair1st[i];
         int node1 = pair2nd[i];
-        if(i%1000==1) printf("pairidx %d, node0 %d, node1 %d\n",i,node0,node1);
+        printf("pairidx %d, node0 %d, node1 %d\n",i,node0,node1);
         int startpoint=h2eri->mat_cluster[2*node1];
         H2E_dense_mat_init(&S51cbasisy[i], Urbasis[node1]->nrow,Urbasis[node0]->ncol);
         memset(S51cbasisy[i]->data, 0, sizeof(DTYPE) * Urbasis[node1]->nrow * Urbasis[node0]->ncol);
@@ -5612,7 +5237,7 @@ size_t H2ERI_build_S5_Y_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense
                                         }
                                         nflop+=1;
                                     }
-                                   // printf("01if4245finish!%d,%d\n",node0,colbfp);
+                                   //printf("01if4245finish!%d,%d\n",node0,colbfp);
 
                                     
                                 }
@@ -6336,7 +5961,7 @@ size_t H2ERI_build_S5_Y_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense
                                                 memset(tmparray1, 0, sizeof(double) * nrows);
                                                 noderow = pare;
                                             }
-                                            //printf("and 11 else r\n");
+                                            printf("and 11 else r\n");
                                             for(int m=0;m<Urbasis[node0]->ncol;m++)
                                             {
                                                 S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
@@ -6523,7 +6148,7 @@ size_t H2ERI_build_S5_Y_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense
                                     }
                                     
                                     // This is the part where the transform node is lower than the node0
-                                    if(testcase==3) continue;
+                                    //if(testcase==3) continue;
                                     else
                                     {
                                         //printf("10elseelse5165!%d, %d, %d, %d, %d\n",node0,tsfmnode,tsfmidx,colbfp,h2eri->mat_cluster[2*tsfmnode]);
@@ -6555,7 +6180,7 @@ size_t H2ERI_build_S5_Y_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense
                                             // nodesidx[dec] is the row node, nodecol is the column node
                                             int colptr = colbfp-h2eri->mat_cluster[2*nodecol];
                                             int tsfmidx = basisidx[dec];
-                                            for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->nrow;m++)
+                                            for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
                                             {
                                                 tmparray0[m]=S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*colptr];
                                             }
@@ -6860,42 +6485,40 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
     int *node_level    = h2eri->node_level;
     int *node_height   = h2eri->node_height;
     size_t nflop=0;
-
+    printf("Now we are in S5Y\n");
 
     //Allocate 2 arrays to do matrix-vector product. Most of the array is zero
     double *tmparray0;
     tmparray0=(double*) malloc(sizeof(double)*h2eri->num_sp_bfp);
+    ASSERT_PRINTF(tmparray0!=NULL, "malloc fails for tmparray0\n");
     memset(tmparray0, 0, sizeof(double) * h2eri->num_sp_bfp);
     double *tmparray1;
     tmparray1=(double*) malloc(sizeof(double)*h2eri->num_sp_bfp);
+    ASSERT_PRINTF(tmparray1!=NULL, "malloc fails for tmparray1\n");
     memset(tmparray1, 0, sizeof(double) * h2eri->num_sp_bfp);
     int *nodesidx;
     nodesidx=(int*) malloc(sizeof(int)*h2eri->num_bf);
+    ASSERT_PRINTF(nodesidx!=NULL, "malloc fails for nodesidx\n");
     memset(nodesidx, 0, sizeof(int) * h2eri->num_bf);
     int *basisidx;
     basisidx=(int*) malloc(sizeof(int)*h2eri->num_bf);
+    ASSERT_PRINTF(basisidx!=NULL, "malloc fails for basisidx\n");
     memset(basisidx, 0, sizeof(int) * h2eri->num_bf);
     int *childstep;
-    childstep=(int*) malloc(sizeof(int)*h2eri->max_level);
-    memset(childstep, 0, sizeof(int) * h2eri->max_level);
+    childstep=(int*) malloc(sizeof(int)*h2eri->max_level+2);
+    ASSERT_PRINTF(childstep!=NULL, "malloc fails for childstep\n");
+    memset(childstep, 0, sizeof(int) * h2eri->max_level+2);
     // childorder means that this node is the childorder[i]th child of its parent
     int *childorder;
     childorder=(int*) malloc(sizeof(int)*h2eri->n_node);
+    ASSERT_PRINTF(childorder!=NULL, "malloc fails for childorder\n");
     memset(childorder, 0, sizeof(int) * h2eri->n_node);
     // childstart means the start point of the childorder[i]th child of its parent in the U matrix
     int *childstart;
     childstart=(int*) malloc(sizeof(int)*h2eri->n_node);
+    ASSERT_PRINTF(childstart!=NULL, "malloc fails for childstart\n");
     memset(childstart, 0, sizeof(int) * h2eri->n_node);
-    /*
-    for(int i=0;i<h2eri->max_child*h2eri->n_node;i++)
-    {
-        if(h2eri->children[i]!=NULL)
-        {
-            childorder[h2eri->children[i]]=i%h2eri->max_child;
-        }
-    }
-    */
-   for(int i=0;i<h2eri->n_node;i++)
+    for(int i=0;i<h2eri->n_node;i++)
     {
         if(h2eri->n_child[i]!=0)
         {
@@ -6909,15 +6532,15 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
     {
         if(h2eri->n_child[i]!=0)
         {
-            int *children = h2eri->children + i * max_child;
-            childstart[children[0]]=0;
+            int *childrentmp = h2eri->children + i * max_child;
+            childstart[childrentmp[0]]=0;
             for(int j=1;j<h2eri->n_child[i];j++)
             {
-                childstart[children[j]]=childstart[children[j-1]]+U[children[j-1]]->ncol;
+                childstart[childrentmp[j]]=childstart[childrentmp[j-1]]+U[childrentmp[j-1]]->ncol;
             }
         }
     }
-    //printf("Now we are in S5Y\n");
+    printf("S5Y for loop starts\n");
     for(int i=0;i<npairs;i++)
     {
         int node0 = pair1st[i];
@@ -6926,6 +6549,7 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
         int startpoint=h2eri->mat_cluster[2*node1];
         H2E_dense_mat_init(&S51cbasisy[i], Urbasis[node1]->nrow,Urbasis[node0]->ncol);
         memset(S51cbasisy[i]->data, 0, sizeof(DTYPE) * Urbasis[node1]->nrow * Urbasis[node0]->ncol);
+        //printf("S51cbasisy[%d] is initialized with size %d, %d\n",i,Urbasis[node1]->nrow,Urbasis[node0]->ncol);
         if(h2eri->n_child[node0]==0)
         {
             for(int j=0;j<Urbasis[node1]->nrow;j++)
@@ -6935,11 +6559,8 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                 int sameshell=h2eri->sameshell[idx];
                 int bf1st = h2eri->bf1st[idx];
                 int bf2nd = h2eri->bf2nd[idx];
-                //printf("row j. %d, sameshell = %d\n",j,sameshell);
-                //printf("j. %d,%d\n",j,sameshell);
                 if(sameshell==1)
                 {
-                    //for(size_t k=csrd5->csrrow[bf1st];k<csrd5->csrrow[bf1st+1];k++)
                         for(size_t l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
                             {
                                 int gamma = bf1st;
@@ -6952,56 +6573,32 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                 }
                                 
                                 double value = csrdc5->csrval[l];
-                                
                                 int tsfmnode = h2eri->leafidx[gamma*h2eri->num_bf+delta];
-                                int bol = 0;
                                 if(tsfmnode==-1)
                                     continue;
                                 if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
                                 {
-                                    bol=1;
-                                    int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
-                                    
-                                    
+                                    int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);                                                                        
                                     int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
-                                    printf("01if!%d, %d, %d, %d, %d, %d\n",node0,tsfmnode,tsfmidx,ptr,colbfp,h2eri->mat_cluster[2*tsfmnode]);
                                     for(int m=0;m<S51cbasisy[i]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[ptr*S51cbasisx[tsfmidx+if2l1*npairs]->ncol+m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error01if!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
-                                    }
-                                    
+                                    }                                    
                                 }
                                 
-                                //*
                                 else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
                                 {
                                     double tmpv = 0;
-                                    int n0idx = 0;
-                                    int rown0idx = 0;
+                                    
                                     int tmprow = 0;
                                     int tsfmidx = testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
                                     int ptr = colbfp - h2eri->mat_cluster[2*h2eri->parent[tsfmnode]];
-                                    int *parent_children = children + h2eri->parent[node0] * max_child;
+                                    //int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
                                     // Firstly, compute the index of the node0 in its parent
-                                    for (int k = 0; k < h2eri->n_child[h2eri->parent[node0]]; k++)
-                                        {
-                                            if(parent_children[k]==node0)
-                                            {
-                                                n0idx = k;
-                                                rown0idx = tmprow;
-                                                break;
-                                            }
-                                            tmprow += Urbasis[parent_children[k]]->ncol;
-                                        }
-                                    //printf("elseif node0 is %d, tsfmnode is %d, tsfmidx is %d, parent of node0 is %d, index is %d, rowindex is %d\n",node0,tsfmnode,tsfmidx,h2eri->parent[node0],n0idx,rown0idx); 
-                                    //printf("j is %d ptr is %d colbfp is %d mu is %d nu is %d\n",j,ptr,colbfp,gamma,delta);                               
+                                    int rown0idx = childstart[node0];
+                                    if(U[h2eri->parent[node0]]->nrow==0) continue;
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     { 
                                         // Secondly, compute the value of the current element
@@ -7010,24 +6607,14 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                         {
                                             tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+k] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
                                         }
-                                        //printf("tmpv!%f\n",tmpv);
-                                        printf("01elseif!\n",node0,tsfmnode,tsfmidx,ptr,colbfp,h2eri->mat_cluster[2*tsfmnode]);
-                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error01elseif!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
+                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;                                        
                                         nflop+=1;
                                     }
-                                    //printf("Error!%d, %d, %d\n",node0,tsfmnode,testadmpair(nodeadmpairs,nodeadmpairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]));
-
                                 }
                                 //*/
                                 
                                 else
                                 {
-                                    printf("01else!%d, %d, %d, %d\n",node0,tsfmnode,colbfp,h2eri->mat_cluster[2*tsfmnode]);
                                     //Firstly, find which ancient constructs the node
                                     int level0 = h2eri->node_level[node0];
                                     int node0a = node0;
@@ -7049,7 +6636,6 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                     }
                                     if(nsteps==-1)
                                     {
-                                        //printf("Error!%d, %d\n",node0,tsfmnode);
                                         continue;
                                     }
                                     // Now try to find the corresponding Ucbasis row
@@ -7073,7 +6659,10 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                         }
                                         int rownum=Urbasis[children[max_child*node0a+childidx]]->ncol;
                                         CBLAS_GEMV(CblasRowMajor, CblasNoTrans, rownum, Urbasis[node0a]->ncol, 1.0, U[node0a]->data+rowstart*U[node0a]->ncol,U[node0a]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
-                                       
+                                        if(U[node0a]->nrow==0)
+                                        {
+                                            printf("Error!%d, %d\n",node0a,childidx);
+                                        }
                                         memset(tmparray0, 0, sizeof(double) * Urbasis[node0a]->ncol);
                                         for(int m=0;m<rownum;m++)
                                         {
@@ -7081,41 +6670,27 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                         }
                                         
                                         node0a = children[max_child*node0a+childidx];
-                                        memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);
-                                        
-
+                                        memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);                                        
                                     }
-                                    printf("and else y\n");
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error01else!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
                                     memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
                                     memset(childstep, 0, sizeof(int) * nsteps);
-                                    
                                 }
                                 
                             }
-                            
-                        
-
+                                                    
                 }
                 else if(sameshell==0)
                 {
-                    //printf("OHH!\n");
-                    //for(int k=csrd5->csrrow[bf1st];k<csrd5->csrrow[bf1st+1];k++)
                         for(int l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
                             {
                                 int gamma = bf1st;
                                 int delta = csrdc5->csrcol[l];
                                 double value = csrdc5->csrval[l];
-                                //printf("l %d,%d\n",l,delta);
                                 int tsfmnode = h2eri->leafidx[gamma*h2eri->num_bf+delta];
                                 if(tsfmnode==-1)
                                     continue;
@@ -7129,19 +6704,13 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
 
                                 if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
                                 {
-                                    //printf("If works well\n");
                                     int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
                                     
                                     int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
-                                    printf("00if!%d, %d, %d, %d, %d, %d\n",node0,tsfmnode,tsfmidx,ptr,colbfp,h2eri->mat_cluster[2*tsfmnode]);
+                                    
                                     for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx]->ncol*ptr+m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00if!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
                                 }
@@ -7149,28 +6718,20 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                 
                                 else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
                                 {
-                                    //printf("Else if works well\n");
                                     double tmpv = 0;
                                     int n0idx = 0;
-                                    int rown0idx = 0;
                                     int tmprow = 0;
                                     int tsfmidx = testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
-                                    
                                     int ptr = colbfp - h2eri->mat_cluster[2*h2eri->parent[tsfmnode]];
                                     int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
-                                        // Firstly, compute the index of the node0 in its parent
-                                        for (int k = 0; k < h2eri->n_child[h2eri->parent[node0]]; k++)
-                                        {
-                                            if(parent_children[k]==node0)
-                                            {
-                                                n0idx = k;
-                                                rown0idx = tmprow;
-                                                break;
-                                            }
-                                            tmprow += Urbasis[parent_children[k]]->ncol;
-                                        }
-                                    printf("00elseif!%d, %d, %d, %d, %d, %d\n",node0,tsfmnode,tsfmidx,ptr,colbfp,h2eri->mat_cluster[2*tsfmnode]);
+                                    // Firstly, compute the index of the node0 in its parent
+                                    int rown0idx = childstart[node0];
+                                    if(U[h2eri->parent[node0]]->nrow==0)
+                                    {
+                                        printf("Error!%d\n",h2eri->parent[node0]);
+                                        exit(1);
+                                    }
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         
@@ -7178,24 +6739,15 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                         tmpv = 0;
                                         for (int k = 0; k < Urbasis[h2eri->parent[node0]]->ncol; k++)
                                         {
-                                            //!this is the previous error place
-                                            tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1]->ncol*ptr+k] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
+                                            tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+k] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];                                                                                    
                                         }
-                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00elseif!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
+                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;                                                                            
                                         nflop+=1;
                                     }
-                                
                                 }
                                 
                                 else
                                 {
-                                    printf("00else!%d, %d, %d, %d\n",node0,tsfmnode,colbfp,h2eri->mat_cluster[2*tsfmnode]);
-                                    
                                     //Firstly, find which ancient constructs the node
                                     int level0 = h2eri->node_level[node0];
                                     int node0a = node0;
@@ -7240,6 +6792,11 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                             rowstart+=Urbasis[children[max_child*node0a+k]]->ncol;
                                         }
                                         int rownum=Urbasis[children[max_child*node0a+childidx]]->ncol;
+                                        if(U[node0a]->nrow==0)
+                                        {
+                                            printf("Error!%d, %d\n",node0a,childidx);
+                                            exit(1);
+                                        }
                                         CBLAS_GEMV(CblasRowMajor, CblasNoTrans, rownum, Urbasis[node0a]->ncol, 1.0, U[node0a]->data+rowstart*U[node0a]->ncol,U[node0a]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
                                        
                                         memset(tmparray0, 0, sizeof(double) * Urbasis[node0a]->ncol);
@@ -7253,27 +6810,18 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                         
 
                                     }
-                                    printf("and else y\n");
+                                    //printf("and 00 else b4551 y\n");
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00else!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
                                     memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
-
-                                    
                                 }
                             }
-                    //for(int k=csrd5->csrrow[bf2nd];k<csrd5->csrrow[bf2nd+1];k++)
                     //Here Y matrix is still bf2nd but we use bf1st to represent it
                         for(int l=csrdc5->csrrow[bf1st];l<csrdc5->csrrow[bf1st+1];l++)
                             {
-                                //printf("l1 %d,%d\n",l,bf1st);
                                 int gamma = bf2nd;
                                 int delta = csrdc5->csrcol[l];
                                 double value = csrdc5->csrval[l];
@@ -7294,25 +6842,17 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
 
                                     int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
                                     int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
-                                    printf("00if!%d, %d, %d, %d, %d, %d\n",node0,tsfmnode,tsfmidx,ptr,colbfp,h2eri->mat_cluster[2*tsfmnode]);
 
                                     for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
                                     {
-                                        //printf("m! %d, element\n",m,S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+m);
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00if!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
+                                        
                                         nflop+=1;
-                                    }
-                                    
+                                    }                                    
                                 }
                                 
                                 else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
                                 {
-                                    printf("00elseif!%d, %d, %d, %d\n",node0,tsfmnode,colbfp,h2eri->mat_cluster[2*tsfmnode]);
                                     double tmpv = 0;
                                     int n0idx = 0;
                                     int rown0idx = 0;
@@ -7322,16 +6862,8 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                     int *parent_children = children + h2eri->parent[node0] * max_child;
                                     //Compute the current column using the node0 basis
                                     // Firstly, compute the index of the node0 in its parent
-                                    for (int k = 0; k < h2eri->n_child[h2eri->parent[node0]]; k++)
-                                        {
-                                            if(parent_children[k]==node0)
-                                            {
-                                                n0idx = k;
-                                                rown0idx = tmprow;
-                                                break;
-                                            }
-                                            tmprow += Urbasis[parent_children[k]]->ncol;
-                                        }
+                                    rown0idx = childstart[node0];
+                                    if(U[h2eri->parent[node0]]->nrow==0) continue;
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         
@@ -7340,22 +6872,15 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                         for (int k = 0; k < Urbasis[h2eri->parent[node0]]->ncol; k++)
                                         {
                                             tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+k] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
-                                            //nflop+=1;
                                         }
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00elseif!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
+                                        
                                         nflop+=1;
-                                    }
-                                    
+                                    }                                    
                                 }
 
                                 else
                                 {
-                                    printf("00else!%d, %d, %d, %d\n",node0,tsfmnode,colbfp,h2eri->mat_cluster[2*tsfmnode]);
                                     //Firstly, find which ancient constructs the node
                                     int level0 = h2eri->node_level[node0];
                                     int node0a = node0;
@@ -7393,13 +6918,13 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                     for(int generation=0;generation<nsteps+1;generation++)
                                     {
                                         int childidx = childstep[nsteps-generation];
-                                        int rowstart=0;
-                                        for(int k=0;k<childidx;k++)
-                                        {
-                                            rowstart+=Urbasis[children[max_child*node0a+k]]->ncol;
-                                        }
+                                        int rowstart=childstart[children[max_child*node0a+childidx]];
                                         //nflop+=1;
                                         int rownum=Urbasis[children[max_child*node0a+childidx]]->ncol;
+                                        if(U[node0a]->nrow==0)
+                                        {
+                                            printf("Error!%d, %d\n",node0a,childidx);
+                                        }
                                         CBLAS_GEMV(CblasRowMajor, CblasNoTrans, rownum, Urbasis[node0a]->ncol, 1.0, U[node0a]->data+rowstart*U[node0a]->ncol,U[node0a]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
                                        
                                         memset(tmparray0, 0, sizeof(double) * Urbasis[node0a]->ncol);
@@ -7415,15 +6940,616 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
                                     for(int m=0;m<Urbasis[node0]->ncol;m++)
                                     {
                                         S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
-                                        if(fabs(S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m])>1e+10)
-                                        {
-                                            printf("Error00else!%f in pairidx %d, row %d and column %d\n",S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m],tsfmidx,m,j);
-                                            break;
-                                        }
                                         nflop+=1;
                                     }
                                     memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
+                                    memset(childstep, 0, sizeof(int) * nsteps);
+                                    
+                                }
+                                
+                            }
+                }           
+            }
+        }
+        else
+        {
+            int height0 = h2eri->node_height[node0];
+            int height1 = h2eri->node_height[node1];
+            if(height0!=height1)
+            {
+                printf("Error! height not match%d, %d\n",node0,node1);
+            }
+            for(int j=0;j<Urbasis[node1]->nrow;j++)
+            {
+                int idx=startpoint+j; //This idx is the S51 column basis data we compute
+                int sameshell=h2eri->sameshell[idx];
+                int bf1st = h2eri->bf1st[idx];
+                int bf2nd = h2eri->bf2nd[idx];
+                if(sameshell==1)
+                {
+                        for(size_t l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
+                            {
+                                int gamma = bf1st;
+                                int delta = csrdc5->csrcol[l];                                
+                                double value = csrdc5->csrval[l];                                
+                                int tsfmleaf = h2eri->leafidx[gamma*h2eri->num_bf+delta];
+                                
+                                if(tsfmleaf==-1)
+                                    continue;
 
+                                int colbfp = h2eri->bfpidx[gamma*h2eri->num_bf+delta];
+                                int if2l1 = 0;
+                                if(h2eri->sameshell[colbfp]==0 && gamma>delta)
+                                {
+                                    if2l1=1;
+                                }
+
+                                int tsfmnode = tsfmleaf;
+                                for(int h=0;h<height1;h++)
+                                {
+                                    tsfmnode = h2eri->parent[tsfmnode];
+                                }
+                                if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
+                                {
+                                    
+                                    int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
+                                    int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
+                                    for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
+                                    {
+                                            S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr+m];
+                                            nflop+=1;
+                                    }
+                                }
+                                
+                                else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
+                                {
+                                    
+                                    double tmpv = 0;
+                                    int n0idx = 0;
+                                    int rown0idx = 0;
+                                    int tmprow = 0;
+                                    int tsfmidx = testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
+                                    
+                                    int ptr = colbfp - h2eri->mat_cluster[2*h2eri->parent[tsfmnode]];
+                                    int *parent_children = children + h2eri->parent[node0] * max_child;
+                                    //Compute the current column using the node0 basis
+                                    // Firstly, compute the index of the node0 in its parent
+                                    rown0idx = childstart[node0];
+                                    if(U[h2eri->parent[node0]]->nrow==0)
+                                    {
+                                        printf("Error!%d\n",h2eri->parent[node0]);
+                                    }
+                                    //printf("Now node0 is %d, tsfmnode is %d, tsfmidx is %d, parent of node0 is %d, index is %d, rowindex is %d\n",node0,tsfmnode,tsfmidx,h2eri->parent[node0],n0idx,rown0idx);                                    
+                                    for(int m=0;m<Urbasis[node0]->ncol;m++)
+                                    { 
+                                        // Secondly, compute the value of the current element
+                                        tmpv = 0;
+                                        for (int k = 0; k < Urbasis[h2eri->parent[node0]]->ncol; k++)
+                                        {
+                                            tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[k+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
+                                        }
+                                        
+                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
+                                        nflop+=1;
+                                    }
+                                }
+
+                                else
+                                {
+                                    //Firstly, find which ancient constructs the node
+                                    int level0 = h2eri->node_level[node0];
+                                    int node0a = node0;
+                                    int tsfma=tsfmnode;
+                                    int nsteps=-1;
+                                    int tsfmidx = -1;
+                                    for(int k=0;k<level0-1;k++)
+                                    {
+                                        childstep[k]=childorder[node0a];
+                                        node0a = h2eri->parent[node0a];
+                                        tsfma = h2eri->parent[tsfma];
+                                        
+                                        if(testpair(nodepairs,nodepairidx,node0a,tsfma)!=-1)
+                                        {
+                                            nsteps=k; //in fact it is nsteps+1
+                                            tsfmidx = testpair(nodepairs,nodepairidx,node0a,tsfma);
+                                            break;
+                                        }
+                                    }
+                                    // This is the part where the transform node is even higher than the node0
+                                    if(nsteps!=-1)
+                                    {
+                                        
+                                        // Now try to find the corresponding Ucbasis row
+                                        
+                                        int ptr = colbfp - h2eri->mat_cluster[2*tsfma];
+                                        
+                                        for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
+                                        {
+                                            tmparray0[m]=S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr];
+                                        }
+
+                                        
+
+                                        for(int generation=0;generation<nsteps+1;generation++)
+                                        {
+                                            int childidx = childstep[nsteps-generation];
+                                            int rowstart=childstart[children[max_child*node0a+childidx]];
+                                            int rownum=Urbasis[children[max_child*node0a+childidx]]->ncol;
+                                            if(U[node0a]->nrow==0)
+                                            {
+                                                printf("Error!%d, %d\n",node0a,childidx);
+                                                exit(0);
+                                            }
+                                            CBLAS_GEMV(CblasRowMajor, CblasNoTrans, rownum, Urbasis[node0a]->ncol, 1.0, U[node0a]->data+rowstart*U[node0a]->ncol,U[node0a]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
+                                        
+                                            memset(tmparray0, 0, sizeof(double) * Urbasis[node0a]->ncol);
+                                            for(int m=0;m<rownum;m++)
+                                            {
+                                                tmparray0[m]=tmparray1[m];
+                                            }
+                                            
+                                            node0a = children[max_child*node0a+childidx];
+                                            memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);
+                                            
+                                        }
+                                        //printf("and 11 else y 4906\n");
+                                        for(int m=0;m<Urbasis[node0]->ncol;m++)
+                                        {
+                                            S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
+                                            nflop+=1;
+                                        }
+                                        memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
+                                    }
+                                    // This is the part where the transform node is lower than the node0
+                                    else
+                                    {
+
+                                        //Firstly, construct two vectors. One is a list of the children of the node0
+                                        //that forms a split, the other is the corresponding Ucbasis index
+                                        tsfmnode = tsfmleaf;
+                                        for(int h=0;h<height1;h++)
+                                        {
+                                            
+                                            childstep[h]=tsfmnode;
+                                            //childstep is now the ancient tree of the tsfmleaf
+                                            tsfmnode = h2eri->parent[tsfmnode];
+                                        }
+                                        childstep[height1]=tsfmnode;
+                                        int ndesc = Split_node_pairs(h2eri,node0, tsfmleaf, childstep,nodesidx,basisidx,nodepairs,nodepairidx);
+                                        for(int dec =0;dec<ndesc;dec++)
+                                        {
+
+                                            int heightd = node_height[nodesidx[dec]];
+                                            int leveld = node_level[nodesidx[dec]];
+                                            
+                                            int nodecol = childstep[heightd];
+                                            int noderow = nodesidx[dec];
+                                            // nodesidx[dec] is the row node, nodecol is the column node
+                                            int colptr = colbfp-h2eri->mat_cluster[2*nodecol];
+                                            int tsfmidx = basisidx[dec];
+                                            for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
+                                            {
+                                                tmparray0[m]=S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*colptr];
+                                            }
+                                            
+                                            for(int gener = 0;gener<leveld-level0;gener++)
+                                            {
+                                                int desrow = childstart[noderow];
+                                                int nvec = Urbasis[noderow]->ncol;
+                                                int pare = h2eri->parent[noderow];
+                                                int nrows = Urbasis[pare]->ncol;
+                                                CBLAS_GEMV(CblasRowMajor, CblasNoTrans, nrows, nvec, 1.0, Upinv[pare]->data+desrow, Upinv[pare]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
+                                                for(int m=0;m<nrows;m++)
+                                                {
+                                                    tmparray0[m]=tmparray1[m];
+                                                    //nflop+=1;
+                                                }
+                                                memset(tmparray1, 0, sizeof(double) * nrows);
+                                                noderow = pare;
+                                            }
+                                            for(int m=0;m<Urbasis[node0]->ncol;m++)
+                                            {
+                                                S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
+                                                nflop+=1;
+                                            }
+                                            memset(tmparray0, 0, sizeof(double) * Urbasis[node0]->ncol);
+
+                                        }
+
+
+                                    }
+                                                                        
+                                }
+                                
+                                
+                                
+                            }
+                            
+                        
+
+                }
+                else if(sameshell==0)
+                {
+                        for(int l=csrdc5->csrrow[bf2nd];l<csrdc5->csrrow[bf2nd+1];l++)
+                            {
+                                int gamma = bf1st;
+                                int delta = csrdc5->csrcol[l];
+                                
+                                double value = csrdc5->csrval[l];
+                                
+                                int tsfmleaf = h2eri->leafidx[gamma*h2eri->num_bf+delta];
+                                int bol = 0;
+                                if(tsfmleaf==-1)
+                                    continue;
+
+                                int colbfp = h2eri->bfpidx[gamma*h2eri->num_bf+delta];
+                                int if2l1 = 0;
+                                if(h2eri->sameshell[colbfp]==0 && gamma>delta)
+                                {
+                                    if2l1=1;
+                                }
+                                int tsfmnode = tsfmleaf;
+                                for(int h=0;h<height1;h++)
+                                {
+                                    tsfmnode = h2eri->parent[tsfmnode];
+                                }
+                                if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
+                                {
+                                    int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
+                                    
+                                    int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
+                                    for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
+                                    {
+                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr];
+                                        nflop+=1;
+                                    }
+                                }
+                                
+                                else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
+                                {
+                                    double tmpv = 0;
+                                    int n0idx = 0;
+                                    int rown0idx = 0;
+                                    int tmprow = 0;
+                                    int tsfmidx = testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
+                                    int ptr = colbfp - h2eri->mat_cluster[2*h2eri->parent[tsfmnode]];
+                                    int *parent_children = children + h2eri->parent[node0] * max_child;
+                                    //Compute the current column using the node0 basis
+                                    // Firstly, compute the index of the node0 in its parent
+                                    rown0idx = childstart[node0];
+
+                                    if(U[h2eri->parent[node0]]->nrow==0)
+                                    {
+                                        printf("Error!%d\n",h2eri->parent[node0]);
+                                    }
+                                    for(int m=0;m<Urbasis[node0]->ncol;m++)
+                                    {
+                                        
+                                        // Secondly, compute the value of the current element
+                                        tmpv = 0;
+                                        for (int k = 0; k < Urbasis[h2eri->parent[node0]]->ncol; k++)
+                                        {
+                                            tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[k+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
+                                        }
+                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
+                                        nflop+=1;
+                                    }
+                                
+                                }
+                                
+                                else
+                                {
+                                    //Firstly, find which ancient constructs the node
+                                    int level0 = h2eri->node_level[node0];
+                                    int node0a = node0;
+                                    int tsfma=tsfmnode;
+                                    int nsteps=-1;
+                                    int tsfmidx = -1;
+                                    for(int k=0;k<level0-1;k++)
+                                    {
+                                        childstep[k]=childorder[node0a];
+                                        node0a = h2eri->parent[node0a];
+                                        tsfma = h2eri->parent[tsfma];
+                                        
+                                        if(testpair(nodepairs,nodepairidx,node0a,tsfma)!=-1)
+                                        {
+                                            nsteps=k; //in fact it is nsteps+1
+                                            tsfmidx = testpair(nodepairs,nodepairidx,node0a,tsfma);
+                                            break;
+                                        }
+                                    }
+                                    // This is the part where the transform node is even higher than the node0
+                                    if(nsteps!=-1)
+                                    {
+                                            //printf("Error!%d, %d\n",node0,tsfmnode);
+                                        
+                                        // Now try to find the corresponding Ucbasis row
+                                        
+                                        int ptr = colbfp - h2eri->mat_cluster[2*tsfma];
+                                        
+                                        for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
+                                        {
+                                            tmparray0[m]=S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr];
+                                        }
+
+                                        
+
+                                        for(int generation=0;generation<nsteps+1;generation++)
+                                        {
+                                            int childidx = childstep[nsteps-generation];
+                                            int rowstart=childstart[children[max_child*node0a+childidx]];
+                                            int rownum=Urbasis[children[max_child*node0a+childidx]]->ncol;
+                                            CBLAS_GEMV(CblasRowMajor, CblasNoTrans, rownum, Urbasis[node0a]->ncol, 1.0, U[node0a]->data+rowstart*U[node0a]->ncol,U[node0a]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
+                                            memset(tmparray0, 0, sizeof(double) * Urbasis[node0a]->ncol);
+                                            for(int m=0;m<rownum;m++)
+                                            {
+                                                tmparray0[m]=tmparray1[m];
+                                            }
+                                            
+                                            node0a = children[max_child*node0a+childidx];
+                                            memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);
+                                            
+                                        }
+                                        //printf("and 10 else 5149 y\n");
+                                        for(int m=0;m<Urbasis[node0]->ncol;m++)
+                                        {
+                                            S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
+                                            nflop+=1;
+                                        }
+                                        memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
+                                    }
+                                    // This is the part where the transform node is lower than the node0
+                                    else
+                                    {
+                                        //Firstly, construct two vectors. One is a list of the children of the node0
+                                        //that forms a split, the other is the corresponding Ucbasis index
+                                        tsfmnode = tsfmleaf;
+                                        for(int h=0;h<height1;h++)
+                                        {
+                                            
+                                            childstep[h]=tsfmnode;
+                                            //childstep is now the ancient tree of the tsfmleaf
+                                            tsfmnode = h2eri->parent[tsfmnode];
+                                        }
+                                        childstep[height1]=tsfmnode;
+                                        int ndesc = Split_node_pairs(h2eri,node0, tsfmleaf, childstep,nodesidx,basisidx,nodepairs,nodepairidx);
+                                        for(int dec =0;dec<ndesc;dec++)
+                                        {
+
+                                            int heightd = node_height[nodesidx[dec]];
+                                            int leveld = node_level[nodesidx[dec]];
+                                            
+                                            int nodecol = childstep[heightd];
+                                            int noderow = nodesidx[dec];
+                                            // nodesidx[dec] is the row node, nodecol is the column node
+                                            int colptr = colbfp-h2eri->mat_cluster[2*nodecol];
+                                            int tsfmidx = basisidx[dec];
+                                            for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
+                                            {
+                                                tmparray0[m]=S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*colptr];
+                                            }
+                                            
+                                            for(int gener = 0;gener<leveld-level0;gener++)
+                                            {
+                                                int desrow = childstart[noderow];
+                                                int nvec = Urbasis[noderow]->ncol;
+                                                int pare = h2eri->parent[noderow];
+                                                int nrows = Urbasis[pare]->ncol;
+                                                CBLAS_GEMV(CblasRowMajor, CblasNoTrans, nrows, nvec, 1.0, Upinv[pare]->data+desrow, Upinv[pare]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
+                                                for(int m=0;m<nrows;m++)
+                                                {
+                                                    tmparray0[m]=tmparray1[m];
+                                                }
+                                                memset(tmparray1, 0, sizeof(double) * nrows);
+                                                noderow = pare;
+                                            }
+                                            for(int m=0;m<Urbasis[node0]->ncol;m++)
+                                            {
+                                                S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
+                                                nflop+=1;
+                                            }
+                                            memset(tmparray0, 0, sizeof(double) * Urbasis[node0]->ncol);
+
+                                        }
+
+
+                                    }
+                                    
+
+                                }
+                                
+                                
+                            }
+                        for(int l=csrdc5->csrrow[bf1st];l<csrdc5->csrrow[bf1st+1];l++)
+                            {
+                                int gamma = bf2nd;
+                                int delta = csrdc5->csrcol[l];
+                                
+                                double value = csrdc5->csrval[l];
+                               
+                                int tsfmleaf = h2eri->leafidx[gamma*h2eri->num_bf+delta];
+                                int bol = 0;
+                                if(tsfmleaf==-1)
+                                    continue;
+
+                                int colbfp = h2eri->bfpidx[gamma*h2eri->num_bf+delta];
+                                int if2l1 = 0;
+                                if(h2eri->sameshell[colbfp]==0 && gamma>delta)
+                                {
+                                    if2l1=1;
+                                }
+                                int tsfmnode = tsfmleaf;
+                                for(int h=0;h<height1;h++)
+                                {
+                                    tsfmnode = h2eri->parent[tsfmnode];
+                                }
+                                if(testpair(nodepairs,nodepairidx,node0,tsfmnode)!=-1)
+                                {
+                                    int tsfmidx = testpair(nodepairs,nodepairidx,node0,tsfmnode);
+                                    
+                                    int ptr = colbfp - h2eri->mat_cluster[2*tsfmnode];
+                                    for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
+                                    {
+                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr];
+                                        nflop+=1;
+                                    }
+                                    //printf("10if15282finish!%d, %d\n",node0,colbfp);
+                                }
+                                
+                                
+                                else if (testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode])!=-1)
+                                {
+                                    //printf("10elseif5288!%d, %d\n",node0,colbfp);
+                                    double tmpv = 0;
+                                    int n0idx = 0;
+                                    int rown0idx = 0;
+                                    int tmprow = 0;
+                                    int tsfmidx = testpair(nodepairs,nodepairidx,h2eri->parent[node0],h2eri->parent[tsfmnode]);
+                                    int ptr = colbfp - h2eri->mat_cluster[2*h2eri->parent[tsfmnode]];
+                                    int *parent_children = children + h2eri->parent[node0] * max_child;
+                                    //Compute the current column using the node0 basis
+                                    // Firstly, compute the index of the node0 in its parent
+                                    rown0idx = childstart[node0];
+                                    if(U[h2eri->parent[node0]]->nrow==0)
+                                    {
+                                        printf("Error!%d\n",h2eri->parent[node0]);
+                                    }
+                                    for(int m=0;m<Urbasis[node0]->ncol;m++)
+                                    {
+                                        
+                                        // Secondly, compute the value of the current element
+                                        tmpv = 0;
+                                        for (int k = 0; k < Urbasis[h2eri->parent[node0]]->ncol; k++)
+                                        {
+                                            tmpv += S51cbasisx[tsfmidx+if2l1*npairs]->data[k+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr] * U[h2eri->parent[node0]]->data[(m+rown0idx)*U[h2eri->parent[node0]]->ncol+k];
+                                        }
+                                        S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmpv;
+                                        nflop+=1;
+                                    }
+                                }
+
+                            
+                                else
+                                {
+                                    //Firstly, find which ancient constructs the node
+                                    int level0 = h2eri->node_level[node0];
+                                    int node0a = node0;
+                                    int tsfma=tsfmnode;
+                                    int nsteps=-1;
+                                    int tsfmidx = -1;
+                                    for(int k=0;k<level0-1;k++)
+                                    {
+                                        childstep[k]=childorder[node0a];
+                                        node0a = h2eri->parent[node0a];
+                                        tsfma = h2eri->parent[tsfma];
+                                        
+                                        if(testpair(nodepairs,nodepairidx,node0a,tsfma)!=-1)
+                                        {
+                                            nsteps=k; //in fact it is nsteps+1
+                                            tsfmidx = testpair(nodepairs,nodepairidx,node0a,tsfma);
+                                            break;
+                                        }
+                                    }
+                                    // This is the part where the transform node is even higher than the node0
+                                    if(nsteps!=-1)
+                                    {
+                                        
+                                        // Now try to find the corresponding Ucbasis row
+                                        
+                                        int ptr = colbfp - h2eri->mat_cluster[2*tsfma];
+                                        
+                                        for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
+                                        {
+                                            tmparray0[m]=S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*ptr];
+                                        }
+                                        
+                                        for(int generation=0;generation<nsteps+1;generation++)
+                                        {
+                                            int childidx = childstep[nsteps-generation];
+                                            int rowstart=childstart[children[max_child*node0a+childidx]];
+                                            int rownum=Urbasis[children[max_child*node0a+childidx]]->ncol;
+                                            CBLAS_GEMV(CblasRowMajor, CblasNoTrans, rownum, Urbasis[node0a]->ncol, 1.0, U[node0a]->data+rowstart*U[node0a]->ncol,U[node0a]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
+                                        
+                                            memset(tmparray0, 0, sizeof(double) * Urbasis[node0a]->ncol);
+                                            for(int m=0;m<rownum;m++)
+                                            {
+                                                tmparray0[m]=tmparray1[m];
+                                            }
+                                            
+                                            node0a = children[max_child*node0a+childidx];
+                                            memset(tmparray1, 0, sizeof(double) * Urbasis[node0a]->ncol);
+                                            
+                                        }
+                                        //printf("and 10 else 5379 y\n");
+                                        for(int m=0;m<Urbasis[node0]->ncol;m++)
+                                        {
+                                            S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
+                                            nflop+=1;
+                                        }
+                                        memset(tmparray0, 0, sizeof(double) *Urbasis[node0]->ncol);
+                                    }
+                                    // This is the part where the transform node is lower than the node0
+                                    else
+                                    {
+                                        //Firstly, construct two vectors. One is a list of the children of the node0
+                                        //that forms a split, the other is the corresponding Ucbasis index
+                                        tsfmnode = tsfmleaf;
+                                        for(int h=0;h<height1;h++)
+                                        {
+                                            
+                                            childstep[h]=tsfmnode;
+                                            //childstep is now the ancient tree of the tsfmleaf
+                                            tsfmnode = h2eri->parent[tsfmnode];
+                                        }
+                                        childstep[height1]=tsfmnode;
+                                        int ndesc = Split_node_pairs(h2eri,node0, tsfmleaf, childstep,nodesidx,basisidx,nodepairs,nodepairidx);
+                                        for(int dec =0;dec<ndesc;dec++)
+                                        {
+
+                                            int heightd = node_height[nodesidx[dec]];
+                                            int leveld = node_level[nodesidx[dec]];
+                                            int nodecol = childstep[heightd];
+                                            int noderow = nodesidx[dec];
+                                            // nodesidx[dec] is the row node, nodecol is the column node
+                                            int colptr = colbfp-h2eri->mat_cluster[2*nodecol];
+                                            int tsfmidx = basisidx[dec];
+                                            for(int m=0;m<S51cbasisx[tsfmidx+if2l1*npairs]->ncol;m++)
+                                            {
+                                                tmparray0[m]=S51cbasisx[tsfmidx+if2l1*npairs]->data[m+S51cbasisx[tsfmidx+if2l1*npairs]->ncol*colptr];
+                                            }
+                                            
+                                            for(int gener = 0;gener<leveld-level0;gener++)
+                                            {
+                                                int desrow = childstart[noderow];
+                                                int nvec = Urbasis[noderow]->ncol;
+                                                int pare = h2eri->parent[noderow];
+                                                int nrows = Urbasis[pare]->ncol;
+                                                if(U[pare]->nrow==0)
+                                                {
+                                                    printf("Error3!%d\n",pare);
+                                                    exit(0);
+                                                }
+                                                CBLAS_GEMV(CblasRowMajor, CblasNoTrans, nrows, nvec, 1.0, Upinv[pare]->data+desrow, Upinv[pare]->ncol, tmparray0, 1, 0.0, tmparray1, 1);
+                                                for(int m=0;m<nrows;m++)
+                                                {
+                                                    tmparray0[m]=tmparray1[m];
+                                                }
+                                                memset(tmparray1, 0, sizeof(double) * nrows);
+                                                noderow = pare;
+                                            }
+                                            //printf("and 10 else r\n");
+                                            for(int m=0;m<Urbasis[node0]->ncol;m++)
+                                            {
+                                                S51cbasisy[i]->data[j*Urbasis[node0]->ncol+m]+=value*tmparray0[m];
+                                                nflop+=1;
+                                            }
+                                            memset(tmparray0, 0, sizeof(double) * Urbasis[node0]->ncol);
+
+                                        }
+
+
+                                    }
+                                    
                                     
                                 }
                                 
@@ -7433,10 +7559,17 @@ size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_m
         }
         
     }
+    printf("S5Y start to finish!\n");
+    free(tmparray0);
+    free(tmparray1);
+    free(nodesidx);
+    free(basisidx);
+    free(childstep);
+    free(childorder);
+    free(childstart);
+    printf("S5Y finish!\n");
     return nflop;
 }
-
-
 
 void H2ERI_build_S5test(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
     int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv)
@@ -8629,6 +8762,62 @@ double compute_eleval_S51(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis,H2E_dense_mat_
     return value;
 }
 
+//This is to compute S51 with provided row and column index in nodebfp format
+double compute_nodeeleval_S51(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis,H2E_dense_mat_p* S51cbasis,H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx, int rowbfp, int columnbfp)
+{
+    //int nbf=h2eri->num_bf;
+    int row = h2eri->bf1st[rowbfp]*h2eri->num_bf+h2eri->bf2nd[rowbfp];
+    int column = h2eri->bf1st[columnbfp]*h2eri->num_bf+h2eri->bf2nd[columnbfp];
+    int rowleaf = h2eri->leafidx[row];
+    int columnleaf = h2eri->leafidx[column];
+    double value = 0.0;
+    if(rowbfp==-1||columnbfp==-1)
+    {
+        //printf("Error: No bfp index found\n");
+        return 0.0;
+    }  
+    int node0 = rowleaf;
+    int node1 = columnleaf;
+    int pairidx = -1;
+    int height = 0;
+    for(int i=0;i<nodepairs[rowleaf]->length;i++)
+    {
+       
+        if(nodepairs[rowleaf]->data[i]==columnleaf)
+        {
+            pairidx = nodepairidx[rowleaf]->data[i];
+        }
+    }
+    if(pairidx==-1)
+    {
+        while(pairidx==-1 && height<h2eri->max_level-1)
+        {
+            node0 = h2eri->parent[node0];
+            node1 = h2eri->parent[node1];
+            for(int i=0;i<nodepairs[node0]->length;i++)
+            {
+                if(nodepairs[node0]->data[i]==node1)
+                {
+                    pairidx = nodepairidx[node0]->data[i];
+                }
+            }
+            height++;
+        }
+    }
+    if(pairidx==-1)
+    {
+        //printf("Error: No pair index found\n");
+        return 0;
+    }
+    int rowptr = rowbfp - h2eri->mat_cluster[2*node0];
+    int columnptr = columnbfp - h2eri->mat_cluster[2*node1];
+    for(int j=0;j<Urbasis[node0]->ncol;j++)
+    {
+        value+=S51cbasis[pairidx]->data[columnptr*S51cbasis[pairidx]->ncol+j]*Urbasis[node0]->data[rowptr*Urbasis[node0]->ncol+j];
+    }
+    return value;
+}
+
 
 // Provided the row and column coordinate, compute the value of the element in the admissible ERI matrix
 double compute_eleval_Wlr(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis,H2E_dense_mat_p* Ucbasis,H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, int row, int column)
@@ -8706,6 +8895,43 @@ double calc_S1S51(CSRmat_p S1, H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dens
             {
                 value+=S1->csrval[j]*compute_eleval_S51(h2eri, Urbasis, S51cbasis, nodepairs, nodepairidx, S1->csrcol[j],i);
             }
+    }
+
+    return value;
+}
+
+
+double calc_S1S51_node(CSRmat_p S1, H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p *S51cbasis, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx)
+{
+    double value = 0.0;
+    for(int i=0;i<S1->nrow;i++)
+    {
+        int mu = h2eri->bf1st[i];
+        int nu = h2eri->bf2nd[i];
+        for(size_t j=S1->csrrow[i];j<S1->csrrow[i+1];j++)
+        {
+            value+=S1->csrval[j]*compute_eleval_S51(h2eri, Urbasis, S51cbasis, nodepairs, nodepairidx, S1->csrcol[j],nu*h2eri->num_bf+mu);
+        }
+        if(h2eri->sameshell[i]==1) continue;
+        for(size_t j=S1->csrrow[i];j<S1->csrrow[i+1];j++)
+        {
+            value+=S1->csrval[j]*compute_eleval_S51(h2eri, Urbasis, S51cbasis, nodepairs, nodepairidx, S1->csrcol[j],mu*h2eri->num_bf+nu);
+        }
+    }
+
+    return value;
+}
+
+
+double calc_S1S51_bothnode(CSRmat_p S1, H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p *S51cbasis, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx)
+{
+    double value = 0.0;
+    for(int i=0;i<S1->nrow;i++)
+    {
+        for(size_t j=S1->csrrow[i];j<S1->csrrow[i+1];j++)
+        {
+            value+=S1->csrval[j]*compute_nodeeleval_S51(h2eri, Urbasis, S51cbasis, nodepairs, nodepairidx, S1->csrcol[j],i);
+        }
     }
 
     return value;
@@ -8873,3 +9099,5 @@ double calc_S51_self_interaction(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_de
     H2E_dense_mat_destroy(&tmpmat1);
     return energy;
 }
+
+

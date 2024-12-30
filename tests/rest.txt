@@ -1,0 +1,81 @@
+INFO: use H2ERI J (relerr 1.00e-09), HF exchange K
+CMS_import_basis() line 455 Warning: no valid basis type in gbs file... assuming Simint
+normalization() line 68 Warning: NOT performing normalization for CARTESIAN
+CMS_import_guess() line 682 Found SAD file for H
+CMS_import_guess() line 712 Using SAD file for H
+CMS_import_guess() line 682 Found SAD file for C
+CMS_import_guess() line 712 Using SAD file for C
+CMS_import_guess() line 682 Found SAD file for N
+CMS_import_guess() line 712 Using SAD file for N
+CMS_import_guess() line 682 Found SAD file for O
+CMS_import_guess() line 712 Using SAD file for O
+CMS_import_guess() line 682 Found SAD file for P
+CMS_import_guess() line 712 Using SAD file for P
+CMS_import_guess() line 682 Found SAD file for S
+CMS_import_guess() line 712 Using SAD file for S
+CMS basis set memory usage = 0.39 MB
+Job information:
+    basis set       = cc-pVDZ
+    molecule        = alkane_92.xyz
+    atoms           = 92
+    shells          = 366
+    basis functions = 760
+    occupied orbits = 121
+    virtual orbits  = 639
+    charge          = 0
+    electrons       = 242
+Simint screen method    = SIMINT_SCREEN_SCHWARZ 
+Simint prim screen tol  = 1.00e-14
+TinyDFT memory allocation and initialization over, elapsed time = 0.186 (s)
+CMS Simint memory usage = 228.35 MB 
+TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 0.312 (s)
+Screened unique shell pairs: 17447 out of 133956 (density = 13.02%)
+111
+222
+Eliminating linear dependency in overlap matrix S: 0 eigenvalues < 1.00e-05 are removed
+HFSCF iteration started...
+Nuclear repulsion energy = 2362.8622243047
+--------------- Iteration 0 ---------------
+* Iteration runtime     = 34.679 (s)
+* Energy = -1190.5283583384
+--------------- Iteration 1 ---------------
+* Iteration runtime     = 34.742 (s)
+* Energy = -1171.5433158509, delta = 1.898504e+01
+The Eoe, Ete and Eex are respectively -6294.075640, 2937.581143 and -177.911043
+--------------- Iteration 2 ---------------
+* Iteration runtime     = 34.649 (s)
+* Energy = -1172.1767856888, delta = -6.334698e-01
+The Eoe, Ete and Eex are respectively -6272.383209, 2914.539141 and -177.194942
+--------------- Iteration 3 ---------------
+* Iteration runtime     = 34.870 (s)
+* Energy = -1172.2424142356, delta = -6.562855e-02
+The Eoe, Ete and Eex are respectively -6282.472904, 2925.466320 and -178.098055
+--------------- Iteration 4 ---------------
+* Iteration runtime     = 34.646 (s)
+* Energy = -1172.2518473197, delta = -9.433084e-03
+The Eoe, Ete and Eex are respectively -6279.101476, 2921.903248 and -177.915843
+--------------- Iteration 5 ---------------
+* Iteration runtime     = 34.887 (s)
+* Energy = -1172.2526276709, delta = -7.803512e-04
+The Eoe, Ete and Eex are respectively -6279.370667, 2922.228008 and -177.972192
+--------------- Iteration 6 ---------------
+* Iteration runtime     = 34.693 (s)
+* Energy = -1172.2526338216, delta = -6.150629e-06
+The Eoe, Ete and Eex are respectively -6279.372455, 2922.231052 and -177.973455
+--------------- Iteration 7 ---------------
+* Iteration runtime     = 37.346 (s)
+* Energy = -1172.2526347441, delta = -9.224991e-07
+The Eoe, Ete and Eex are respectively -6279.369476, 2922.228243 and -177.973625
+--------------- Iteration 8 ---------------
+* Iteration runtime     = 35.595 (s)
+* Energy = -1172.2526347569, delta = -1.284593e-08
+The Eoe, Ete and Eex are respectively -6279.368900, 2922.227677 and -177.973637
+--------------- Iteration 9 ---------------
+* Iteration runtime     = 35.290 (s)
+* Energy = -1172.2526347580, delta = -1.103217e-09
+The Eoe, Ete and Eex are respectively -6279.368938, 2922.227729 and -177.973649
+--------------- Iteration 10 ---------------
+* Iteration runtime     = 35.358 (s)
+* Energy = -1172.2526347581, delta = -4.638423e-11
+The Eoe, Ete and Eex are respectively -6279.369004, 2922.227799 and -177.973655
+slurmstepd: error: *** JOB 718782 ON xm087 CANCELLED AT 2024-09-16T22:42:54 DUE TO TIME LIMIT ***

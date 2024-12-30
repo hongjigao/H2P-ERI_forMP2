@@ -1,0 +1,91 @@
+Job started at Mon Sep 23 05:04:05 PM EDT 2024
+INFO: use H2ERI J (relerr 1.00e-09), HF exchange K
+CMS_import_basis() line 455 Warning: no valid basis type in gbs file... assuming Simint
+normalization() line 68 Warning: NOT performing normalization for CARTESIAN
+CMS_import_guess() line 682 Found SAD file for H
+CMS_import_guess() line 712 Using SAD file for H
+CMS_import_guess() line 682 Found SAD file for C
+CMS_import_guess() line 712 Using SAD file for C
+CMS_import_guess() line 682 Found SAD file for N
+CMS_import_guess() line 712 Using SAD file for N
+CMS_import_guess() line 682 Found SAD file for O
+CMS_import_guess() line 712 Using SAD file for O
+CMS_import_guess() line 682 Found SAD file for P
+CMS_import_guess() line 712 Using SAD file for P
+CMS_import_guess() line 682 Found SAD file for S
+CMS_import_guess() line 712 Using SAD file for S
+CMS basis set memory usage = 0.41 MB
+Job information:
+    basis set       = cc-pVDZ
+    molecule        = water50.xyz
+    atoms           = 150
+    shells          = 600
+    basis functions = 1250
+    occupied orbits = 250
+    virtual orbits  = 1000
+    charge          = 0
+    electrons       = 500
+Simint screen method    = SIMINT_SCREEN_SCHWARZ 
+Simint prim screen tol  = 1.00e-14
+TinyDFT memory allocation and initialization over, elapsed time = 0.094 (s)
+CMS Simint memory usage = 290.16 MB 
+TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 0.469 (s)
+Screened unique shell pairs: 43746 out of 360000 (density = 12.15%)
+111
+222
+Eliminating linear dependency in overlap matrix S: 0 eigenvalues < 1.00e-05 are removed
+HFSCF iteration started...
+Nuclear repulsion energy = 10992.5562746743
+--------------- Iteration 0 ---------------
+* Iteration runtime     = 58.948 (s)
+* Energy = -3800.8383774590
+--------------- Iteration 1 ---------------
+* Iteration runtime     = 55.114 (s)
+* Energy = -3799.4370787293, delta = 1.401299e+00
+The Eoe, Ete and Eex are respectively -27289.135200, 12950.958753 and -453.816906
+--------------- Iteration 2 ---------------
+* Iteration runtime     = 54.648 (s)
+* Energy = -3801.0660833728, delta = -1.629005e+00
+The Eoe, Ete and Eex are respectively -27190.999348, 12839.102473 and -441.725484
+--------------- Iteration 3 ---------------
+* Iteration runtime     = 58.691 (s)
+* Energy = -3801.4549246018, delta = -3.888412e-01
+The Eoe, Ete and Eex are respectively -27249.014135, 12904.671962 and -449.669027
+--------------- Iteration 4 ---------------
+* Iteration runtime     = 59.981 (s)
+* Energy = -3801.6383672825, delta = -1.834427e-01
+The Eoe, Ete and Eex are respectively -27227.749525, 12880.420860 and -446.865977
+--------------- Iteration 5 ---------------
+* Iteration runtime     = 57.896 (s)
+* Energy = -3801.6405085973, delta = -2.141315e-03
+The Eoe, Ete and Eex are respectively -27227.540326, 12880.271693 and -446.928150
+--------------- Iteration 6 ---------------
+* Iteration runtime     = 58.565 (s)
+* Energy = -3801.6406176423, delta = -1.090450e-04
+The Eoe, Ete and Eex are respectively -27227.595274, 12880.341381 and -446.943000
+--------------- Iteration 7 ---------------
+* Iteration runtime     = 59.482 (s)
+* Energy = -3801.6406371578, delta = -1.951548e-05
+The Eoe, Ete and Eex are respectively -27227.589608, 12880.338418 and -446.945722
+--------------- Iteration 8 ---------------
+* Iteration runtime     = 56.866 (s)
+* Energy = -3801.6406379680, delta = -8.101920e-07
+The Eoe, Ete and Eex are respectively -27227.584539, 12880.333374 and -446.945748
+--------------- Iteration 9 ---------------
+* Iteration runtime     = 57.504 (s)
+* Energy = -3801.6406380123, delta = -4.436333e-08
+The Eoe, Ete and Eex are respectively -27227.584871, 12880.333679 and -446.945721
+--------------- Iteration 10 ---------------
+* Iteration runtime     = 56.818 (s)
+* Energy = -3801.6406380200, delta = -7.672952e-09
+The Eoe, Ete and Eex are respectively -27227.585074, 12880.333899 and -446.945738
+--------------- Iteration 11 ---------------
+* Iteration runtime     = 54.124 (s)
+* Energy = -3801.6406380207, delta = -7.039489e-10
+The Eoe, Ete and Eex are respectively -27227.585163, 12880.334010 and -446.945759
+--------------- Iteration 12 ---------------
+* Iteration runtime     = 54.584 (s)
+* Energy = -3801.6406380207, delta = -1.818989e-12
+The Eoe, Ete and Eex are respectively -27227.585180, 12880.334025 and -446.945758
+/cm/local/apps/slurm/var/spool/job721624/slurm_script: line 11: 108349 Killed                  ./mp2finaltry.exe cc-pVDZ/cc-pVDZ.gbs waters/water50.xyz 50 1e-9 3e-5 water50job5 1e-6 1e-6
+Job completed successfully at Mon Sep 23 05:42:57 PM EDT 2024

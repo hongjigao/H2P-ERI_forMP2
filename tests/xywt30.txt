@@ -1,0 +1,15 @@
+nbf is 750
+maxx and maxy are respectively 1.002414 and 31.830034
+The number of values larger than 1e-3 for D is 36333
+The number of values larger than 3e-4 for D is 76231
+The number of values larger than 1e-4 for D is 131586
+The number of values larger than 3e-5 for D is 214761
+The number of values larger than 1e-5 for D is 301820
+The number of values larger than 3e-6 for D is 396910
+The number of values larger than 1e-3 for DC is 84680
+The number of values larger than 3e-4 for DC is 160638
+The number of values larger than 1e-4 for DC is 253690
+The number of values larger than 3e-5 for DC is 365838
+The number of values larger than 1e-5 for DC is 453778
+The number of values larger than 3e-6 for DC is 516650
+The total time is 1041.263 (s)

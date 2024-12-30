@@ -1,0 +1,14 @@
+nbf is 500
+maxx and maxy are respectively 1.002395 and 31.463565
+The number of values larger than 1e-3 for D is 21570
+The number of values larger than 3e-4 for D is 43364
+The number of values larger than 1e-4 for D is 71998
+The number of values larger than 3e-5 for D is 112057
+The number of values larger than 1e-5 for D is 152084
+The number of values larger than 3e-6 for D is 191776
+The number of values larger than 1e-3 for DC is 47178
+The number of values larger than 3e-4 for DC is 84784
+The number of values larger than 1e-4 for DC is 128602
+The number of values larger than 3e-5 for DC is 177224
+The number of values larger than 1e-5 for DC is 212600
+The number of values larger than 3e-6 for DC is 235586

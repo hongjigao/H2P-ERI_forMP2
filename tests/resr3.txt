@@ -1,0 +1,3 @@
+INFO: use H2ERI J (relerr 1.00e-09), HF exchange K
+CMS_import_basis() line 455 Warning: no valid basis type in gbs file... assuming Simint
+/cm/local/apps/slurm/var/spool/job718779/slurm_script: line 9: 555206 Illegal instruction     (core dumped) ./mp2testxyboth.exe cc-pVDZ/cc-pVDZ.gbs alkane/alkane_62.xyz 50 1e-9 1e-6 mpccboth621job 1e-6 1e-6

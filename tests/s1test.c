@@ -296,21 +296,7 @@ int main(int argc, char **argv)
     printf("The number of basis functions is %d\n",nbf);
     printf("1The number of nodes is %d\n",h2eri->n_node);
     
-    COOmat_p cooh2d;
-    COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
-    size_t nnz=cooh2d->nnz;
     
-    double thres=1e-7;
-    COOmat_p cooh2d1;
-    COOmat_init(&cooh2d1,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    compresscoo(cooh2d, cooh2d1, thres);
-    CSRmat_p csrh2d;
-    CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-
-    Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d1->nnz, cooh2d1,csrh2d);
-    printf("TestCSRh2d\n");
-    TestCSR(csrh2d);
     
     TinyDFT_build_MP2info_eig(TinyDFT, TinyDFT->F_mat,
                                TinyDFT->X_mat, TinyDFT->D_mat,
@@ -326,11 +312,12 @@ int main(int argc, char **argv)
     }
     printf("The norm of the D matrix is %f\n",norm);
     
-
+    double thresxy = atof(argv[6]);
+    double threstsfm = atof(argv[7]);
     printf("Now build cooden\n");
     COOmat_p cooden;
     COOmat_init(&cooden,h2eri->num_bf,h2eri->num_bf);
-    size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->D_mat, cooden);
+    size_t nden =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thresxy, TinyDFT->D_mat, cooden);
     printf("Now build csrden\n");
     CSRmat_p csrden;
     CSRmat_init(&csrden,h2eri->num_bf,h2eri->num_bf);
@@ -339,47 +326,116 @@ int main(int argc, char **argv)
     printf("Now build coodc\n");
     COOmat_p coodc;
     COOmat_init(&coodc,h2eri->num_bf,h2eri->num_bf);
-    size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thres, TinyDFT->DC_mat, coodc);
+    size_t ndc =Extract_COO_DDCMat(h2eri->num_bf, h2eri->num_bf, thresxy, TinyDFT->DC_mat, coodc);
     printf("Now build csrdc\n");
     CSRmat_p csrdc;
     CSRmat_init(&csrdc,h2eri->num_bf,h2eri->num_bf);
     Double_COO_to_CSR( h2eri->num_bf,  ndc, coodc,csrdc);
     TestCSR(csrdc);
     printf("Now build gdle\n");
-    CSRmat_p gdle;
-    CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-    double st1,et1;
-    st1 = get_wtime_sec();
-    Xindextransform3(h2eri->num_bf,csrh2d,csrden,gdle);
-    TestCSR(gdle);
-    printf("Now build gdls\n");
-    et1 = get_wtime_sec();
-    CSRmat_p gdls;
-    CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
-        
-    st1 = get_wtime_sec();
-    Yindextransform3(h2eri->num_bf,gdle,csrdc,gdls);
-    et1 = get_wtime_sec();
-        
-    printf("The Y Index transformation time is %.3lf (s)\n",et1-st1);
-    printf("GDLS\n");
-    TestCSR(gdls);
-    printf("Now do energy calculation \n");
-    st1 = get_wtime_sec();
-    //    double energy;
-    //    energy = Calc_S1energy(gdls);
-    //    printf("The energy is %f\n",energy);
-    CSRmat_p colgdls;
-    CSRmat_init(&colgdls,nbf*nbf,nbf*nbf);
-    CSR_to_CSC(nbf*nbf, gdls,colgdls);
-    //TestCSR(colgdls);
 
-    double energy;
-    energy = Calc_S1energy(gdls,colgdls);
-    printf("The S1 energy is %.16g\n",energy);
+
+    COOmat_p cooh2d;
+    COOmat_init(&cooh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+    H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
+    size_t nnz=cooh2d->nnz;
     
+    
+    
+    for(int i=0;i<1;i++)
+    {
+        double thres = atof(argv[5]);
+        printf("The threshold is %e\n",thres);
+        COOmat_p cooh2d1;
+        COOmat_init(&cooh2d1,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+        compresscoo(cooh2d, cooh2d1, thres);
+
+        CSRmat_p csrh2d;
+        CSRmat_init(&csrh2d,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+
+        Double_COO_to_CSR( h2eri->num_bf*h2eri->num_bf,  cooh2d1->nnz, cooh2d1,csrh2d);
+        printf("TestCSRh2d\n");
+        TestCSR(csrh2d);
+        CSRmat_p gdle;
+        CSRmat_init(&gdle,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+        double st1,et1;
+        st1 = get_wtime_sec();
+        Xindextransform3(h2eri->num_bf,csrh2d,csrden,gdle);
+        printf("!!!!!!!!!!!testgdle");
+        TestCSR(gdle);
+        CSRmat_p gdle1;
+        CSRmat_init(&gdle1,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+        compresscsr(gdle,gdle1,thres);
+        printf("!!!!!!!!!!!testgdle1\n");
+        TestCSR(gdle1);
+        CSRmat_p gdle2;
+        CSRmat_init(&gdle2,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+        Xindextransform4(h2eri->num_bf,csrh2d,csrden,gdle2,threstsfm);
+        printf("!!!!!!!!!!!testgdle2\n");
+        TestCSR(gdle2);
+
+        printf("Now build gdls\n");
+        et1 = get_wtime_sec();
+        CSRmat_p gdls;
+        CSRmat_init(&gdls,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+            
+        st1 = get_wtime_sec();
+        Yindextransform3(h2eri->num_bf,gdle,csrdc,gdls);
+        et1 = get_wtime_sec();
+            
+        printf("The Y Index transformation time is %.3lf (s)\n",et1-st1);
+        printf("@@@@@@@@@@GDLS\n");
+        TestCSR(gdls);
+        printf("Now do energy calculation \n");
+        st1 = get_wtime_sec();
+        //    double energy;
+        //    energy = Calc_S1energy(gdls);
+        //    printf("The energy is %f\n",energy);
+        CSRmat_p colgdls;
+        CSRmat_init(&colgdls,nbf*nbf,nbf*nbf);
+        CSR_to_CSC(nbf*nbf, gdls,colgdls);
+        printf("TestCOLGDLS\n");
+        TestCSR(colgdls);
+        //CSRmat_p gdls1;
+        //CSRmat_init(&gdls1,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+        //Yindextransform3(h2eri->num_bf,gdle1,csrdc,gdls1);
+        //printf("TestGDLS1\n");
+        //TestCSR(gdls1);
+        CSRmat_p gdls2;
+        CSRmat_init(&gdls2,h2eri->num_bf*h2eri->num_bf,h2eri->num_bf*h2eri->num_bf);
+        Yindextransform4(h2eri->num_bf,gdle2,csrdc,gdls2,threstsfm);
+        printf("@@@@@@@@@@@TestGDLS2\n");
+        TestCSR(gdls2);
+        CSRmat_p colgdls2;
+        CSRmat_init(&colgdls2,nbf*nbf,nbf*nbf);
+        CSR_to_CSC(nbf*nbf, gdls2,colgdls2);
+        //TestCSR(colgdls2);
 
 
+        double energy;
+        energy = Calc_S1energy(gdls,colgdls);
+        printf("The S1 energy is %.16g\n",energy);
+        double energy2;
+        energy2 = Calc_S1energy(gdls2,colgdls2);
+        printf("The S1 energy 2 is %.16g\n",energy2);
+        COOmat_destroy(cooh2d1);
+        CSRmat_destroy(csrh2d);
+        CSRmat_destroy(gdle);
+        CSRmat_destroy(gdls);
+        CSRmat_destroy(colgdls);
+        //CSRmat_destroy(gdls1);
+        CSRmat_destroy(gdls2);
+        CSRmat_destroy(colgdls2);
+        CSRmat_destroy(gdle1);
+
+    
+    }
+
+    COOmat_destroy(cooden);
+    CSRmat_destroy(csrden);
+    COOmat_destroy(coodc);
+    CSRmat_destroy(csrdc);
+    COOmat_destroy(cooh2d);
 
 
 

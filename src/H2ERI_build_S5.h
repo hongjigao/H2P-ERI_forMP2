@@ -87,7 +87,7 @@ void H2ERI_build_S5test(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p
 size_t H2ERI_build_S5_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
     int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv, double thr);
 
-size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, CSRmat_p csrdc5, int npairs, int *pair1st,
+size_t H2ERI_build_S5_X(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* Ucbasis, CSRmat_p csrd5, int npairs, int *pair1st,
     int *pair2nd, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, H2E_dense_mat_p* S51cbasis,H2E_dense_mat_p* Upinv);
 
 size_t H2ERI_build_S5_Ytest(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p* S51cbasisx, CSRmat_p csrdc5, int npairs, int *pair1st,
@@ -106,10 +106,12 @@ size_t H2ERI_build_S5_Y_draft(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense
 // nodepairidx: the index of the node pairs in the H2 partition, which is the order that S51cbasis is ordered
 // In S1S523, mnkl is column major while in S1S51 it is row major
 double compute_eleval_S51(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis,H2E_dense_mat_p* S51cbasis,H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx, int row, int column);
+double compute_nodeeleval_S51(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis,H2E_dense_mat_p* S51cbasis,H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx, int rowbfp, int columnbfp);
 double compute_eleval_Wlr(H2ERI_p h2eri, H2E_dense_mat_p* Urbasis,H2E_dense_mat_p* Ucbasis,H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx, int row, int column);
 double calc_S1S51(CSRmat_p S1, H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p *S51cbasis, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx);
 double calc_S1S523(CSRmat_p mnke, H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p *Ucbasis, H2E_int_vec_p *nodeadmpairs, H2E_int_vec_p *nodeadmpairidx);
-
+double calc_S1S51_node(CSRmat_p S1, H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p *S51cbasis, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx);
+double calc_S1S51_bothnode(CSRmat_p S1, H2ERI_p h2eri, H2E_dense_mat_p* Urbasis, H2E_dense_mat_p *S51cbasis, H2E_int_vec_p *nodepairs, H2E_int_vec_p *nodepairidx);
 
 // Compute S51 self interaction
 // Input parameters

@@ -1,0 +1,36 @@
+nbf is 160
+The total energy with xy is 0.7057786611203251
+The number of basis functions is 160
+The number of nodes is 25
+The scf time is 6.192239999771118
+The number of pairs is 256
+The number of admissible pairs is 48
+The number of inadmissible pairs is 72
+The largest number of X is 21706
+The largest number of Y is 21640
+The gap factor is 25.61636607749374
+The number of quadrature points is 8
+The threshold for X and Y is 1e-06
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 6.192239999771118
+Running time for building nodepairs, Ur and Uc is 0.02485108375549316
+Running time for building Upinv is 4.792213439941406e-05
+Running time for building xy is 0.09546470642089844
+Running time for dense index transformation is 477.9649271965027
+Running time for calculating S1 is 4.956307888031006
+Running time for building S5x is 37.65659594535828
+Running time for building S5xy is 94.11770129203796
+Running time for calculating S1S51 is 235.1635119915009
+The total running time is 128.4832220077515
+memory cost for dense ERI is 85461031
+Equals 652.0159225463867 
+memory cost for half ERI is 105985657
+Equals 808.6063919067383 
+memory cost for ERI is 74544256
+memory cost for S5xy is 118040235
+The number of flops for S5x is 21430847892
+The number of flops for S5y is 66421049392
+The sums1 energy is 19.03788426810003
+The sums5 energy is 18.3341274185704
+The sums1s5 energy is -18.33311651277505

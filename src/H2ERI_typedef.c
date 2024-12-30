@@ -307,7 +307,7 @@ void H2ERI_print_statistic(H2ERI_p h2eri)
         );
     }
     
-    printf("=============================================================\n");
+    printf("finish=============================================================\n");
 }
 
 // Reset timing statistical info of an H2ERI structure

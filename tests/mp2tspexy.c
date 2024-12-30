@@ -579,7 +579,8 @@ int main(int argc, char **argv)
     double denseindtrans=0;
     double calcs1=0;
     double builds5=0;
-    double builds5xy=0;
+    double builds5x=0;
+    double builds5y=0;
     double calcs51=0;
     size_t erimem = csrh2d->nnz;
     size_t mosthalf=0;
@@ -760,15 +761,19 @@ int main(int argc, char **argv)
         st1 = get_wtime_sec();
         H2E_dense_mat_p *S51cbasisx;
         S51cbasisx = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs*2);
-        
-        size_t nfqx = H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrden,csrdc,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasisx,Upinv);
+        size_t nfqx = H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrd5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasisx,Upinv);
         printf("Finish x build y in quad %d\n",quad);
+        et1 = get_wtime_sec();
+        printf("build S5x time in quad %d is %.16g\n",quad, et1-st1);
+        builds5x += et1-st1;
+        st1 = get_wtime_sec();
         H2E_dense_mat_p *S51cbasisy;
         S51cbasisy = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
-        size_t nfqy = H2ERI_build_S5_Y(h2eri,Urbasis,S51cbasisx,csrdc,npairs,pair1st,pair2nd,nodepairs,nodepairidx,S51cbasisy,Upinv);
+        size_t nfqy = H2ERI_build_S5_Ytest(h2eri,Urbasis,S51cbasisx,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodepairidx,S51cbasisy,Upinv);
         et1 = get_wtime_sec();
-        printf("build S5xy time in quad %d is %.16g\n",quad, et1-st1);
-        builds5xy += et1-st1;
+        printf("build S5y time in quad %d is %.16g\n",quad, et1-st1);
+
+        builds5y += et1-st1;
         s51energyxy = calc_S51_self_interaction(h2eri, Urbasis, S51cbasisy, npairs, pair1st, pair2nd);
         s1s5xy = calc_S1S51(gdls,h2eri, Urbasis,S51cbasisy, nodepairs, nodepairidx);
         printf("The S51xy energy in quad %d is %.16g\n",quad,s51energyxy);
@@ -890,7 +895,8 @@ int main(int argc, char **argv)
     fprintf(fileou, "Running time for dense index transformation is %.16g\n",denseindtrans);
     fprintf(fileou, "Running time for calculating S1 is %.16g\n",calcs1);
     fprintf(fileou, "Running time for building S5 is %.16g\n",builds5);
-    fprintf(fileou, "Running time for building S5xy is %.16g\n",builds5xy);
+    fprintf(fileou, "Running time for building S5x is %.16g\n",builds5x);
+    fprintf(fileou, "Running time for building S5y is %.16g\n",builds5y);
     fprintf(fileou, "Running time for calculating S1S51 is %.16g\n",calcs51);
     fprintf(fileou, "The total running time is %.16g\n",ett-stt);
     fprintf(fileou, "memory cost for dense ERI is %ld\n",mostdense);

@@ -1,0 +1,47 @@
+nbf is 1010
+The total energy with xy is 4.596614797845936
+The number of basis functions is 1010
+The number of nodes is 121
+The scf time is 1497.484538793564
+The number of pairs is 1792
+The number of admissible pairs is 528
+The number of inadmissible pairs is 336
+The largest number of X is 492316
+The largest number of Y is 490342
+The gap factor is 28.60240514362021
+The number of quadrature points is 8
+The threshold for X and Y is 1e-06
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 1497.484538793564
+Running time for building nodepairs, Ur and Uc is 3.288753032684326
+Running time for building Upinv is 519.5544710159302
+Running time for building xy is 10.30191016197205
+Running time for dense index transformation is 31649.94490981102
+Running time for calculating S1 is 118.4781641960144
+Running time for building S5x is 21433.1604218483
+Running time for building S5xy is 37533.79305911064
+Running time for calculating S1S51 is 4521.179544448853
+The total running time is 13117.43282198906
+memory cost for dense ERI is 2339658660
+Equals 17850.1789855957 
+memory cost for half ERI is 2172049322
+Equals 16571.42121887207 
+memory cost for ERI is 1059293701
+memory cost for S5xy is 2004109362
+The number of flops for S5x is 1259569577191
+The number of flops for S5y is 1730054885572
+The sums1 energy is 140.3328489356927
+The sums5 energy is 135.7458255832075
+The sums1s5 energy is -135.7410298605271
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 122, 486, 1010
+  * Number of symm-unique screened shell pairs : 29398
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 29398
+  * Kernel matrix size             : 119688
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 7.500000e+00
+  * Number of levels (root at 0)   : 5
+  * Number of nodes                : 121
+  * Number of nodes on each level  : 1, 8, 16, 32, 64

@@ -1,0 +1,361 @@
+Job started at Mon Sep 30 09:26:19 AM EDT 2024
+INFO: use H2ERI J (relerr 1.00e-09), HF exchange K
+CMS_import_basis() line 455 Warning: no valid basis type in gbs file... assuming Simint
+normalization() line 68 Warning: NOT performing normalization for CARTESIAN
+CMS_import_guess() line 682 Found SAD file for H
+CMS_import_guess() line 712 Using SAD file for H
+CMS_import_guess() line 682 Found SAD file for C
+CMS_import_guess() line 712 Using SAD file for C
+CMS_import_guess() line 682 Found SAD file for N
+CMS_import_guess() line 712 Using SAD file for N
+CMS_import_guess() line 682 Found SAD file for O
+CMS_import_guess() line 712 Using SAD file for O
+CMS_import_guess() line 682 Found SAD file for P
+CMS_import_guess() line 712 Using SAD file for P
+CMS_import_guess() line 682 Found SAD file for S
+CMS_import_guess() line 712 Using SAD file for S
+CMS basis set memory usage = 0.47 MB
+Job information:
+    basis set       = cc-pVDZ
+    molecule        = alkane_272.xyz
+    atoms           = 272
+    shells          = 1086
+    basis functions = 2260
+    occupied orbits = 361
+    virtual orbits  = 1899
+    charge          = 0
+    electrons       = 722
+Simint screen method    = SIMINT_SCREEN_SCHWARZ 
+Simint prim screen tol  = 1.00e-14
+TinyDFT memory allocation and initialization over, elapsed time = 0.273 (s)
+CMS Simint memory usage = 463.41 MB 
+TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 1.208 (s)
+Screened unique shell pairs: 54527 out of 1179396 (density = 4.62%)
+111
+222
+Eliminating linear dependency in overlap matrix S: 0 eigenvalues < 1.00e-05 are removed
+HFSCF iteration started...
+Nuclear repulsion energy = 9649.8156054976
+--------------- Iteration 0 ---------------
+* Iteration runtime     = 133.734 (s)
+* Energy = -3570.1824121508
+--------------- Iteration 1 ---------------
+* Iteration runtime     = 119.766 (s)
+* Energy = -3512.3233792400, delta = 5.785903e+01
+The Eoe, Ete and Eex are respectively -24002.076668, 11372.282961 and -532.345278
+--------------- Iteration 2 ---------------
+* Iteration runtime     = 120.045 (s)
+* Energy = -3514.2126579724, delta = -1.889279e+00
+The Eoe, Ete and Eex are respectively -23938.373175, 11304.665972 and -530.321061
+--------------- Iteration 3 ---------------
+* Iteration runtime     = 119.865 (s)
+* Energy = -3514.4051113049, delta = -1.924533e-01
+The Eoe, Ete and Eex are respectively -23967.733018, 11336.458482 and -532.946181
+--------------- Iteration 4 ---------------
+* Iteration runtime     = 116.614 (s)
+* Energy = -3514.4317512333, delta = -2.663993e-02
+The Eoe, Ete and Eex are respectively -23957.912706, 11326.090136 and -532.424787
+--------------- Iteration 5 ---------------
+* Iteration runtime     = 114.720 (s)
+* Energy = -3514.4340513361, delta = -2.300103e-03
+The Eoe, Ete and Eex are respectively -23958.744891, 11327.088439 and -532.593205
+--------------- Iteration 6 ---------------
+* Iteration runtime     = 114.439 (s)
+* Energy = -3514.4340656151, delta = -1.427905e-05
+The Eoe, Ete and Eex are respectively -23958.741665, 11327.088361 and -532.596368
+--------------- Iteration 7 ---------------
+* Iteration runtime     = 114.781 (s)
+* Energy = -3514.4340674555, delta = -1.840353e-06
+The Eoe, Ete and Eex are respectively -23958.734156, 11327.081115 and -532.596631
+--------------- Iteration 8 ---------------
+* Iteration runtime     = 114.593 (s)
+* Energy = -3514.4340674894, delta = -3.388504e-08
+The Eoe, Ete and Eex are respectively -23958.732255, 11327.079257 and -532.596675
+--------------- Iteration 9 ---------------
+* Iteration runtime     = 115.042 (s)
+* Energy = -3514.4340674910, delta = -1.591616e-09
+The Eoe, Ete and Eex are respectively -23958.732493, 11327.079531 and -532.596711
+--------------- Iteration 10 ---------------
+* Iteration runtime     = 114.067 (s)
+* Energy = -3514.4340674910, delta = -8.685674e-11
+The Eoe, Ete and Eex are respectively -23958.732660, 11327.079713 and -532.596726
+--------------- SCF iterations finished ---------------
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 272, 1086, 2260
+  * Number of symm-unique screened shell pairs : 68448
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 68448
+  * Kernel matrix size             : 278338
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 7.500000e+00
+  * Number of levels (root at 0)   : 6
+  * Number of nodes                : 249
+  * Number of nodes on each level  : 1, 8, 16, 32, 64, 128
+  * Number of nodes on each height : 128, 64, 32, 16, 8, 1
+  * Minimum admissible pair level  : 2
+  * Number of reduced adm. pairs   : 1248
+  * Number of reduced inadm. pairs : 688
+==================== H2ERI storage info ====================
+  * Just-In-Time B & D build      : No
+  * H2 representation U, B, D     : 392.69, 187.50, 30527.69 (MB) 
+  * Matvec auxiliary arrays       : 1722.66 (MB) 
+  * Max / Avg compressed rank     : 223, 133 
+==================== H2ERI timing info =====================
+  * H2 construction time (sec)   = 207.397 
+      |----> Point partition     = 0.007 
+      |----> U construction      = 46.824 
+      |----> B construction      = 0.267 
+      |----> D construction      = 160.300 
+  * H2 matvec average time (sec) = 0.876, 35.19 GB/s
+      |----> Forward transformation      = 0.019, 20.42 GB/s
+      |----> Intermediate multiplication = 0.021, 9.01 GB/s
+      |----> Backward transformation     = 0.006, 65.31 GB/s
+      |----> Dense multiplication        = 0.828, 36.08 GB/s
+      |----> OpenMP vector operations    = 0.003, 1.27 GB/s
+finish=============================================================
+The time for SCF is 1528.270 (s)
+The number of basis functions is 2260
+1The number of nodes is 249
+Empty node 0, 30
+Empty node 1, 61
+Empty node 2, 92
+Empty node 3, 123
+Empty node 4, 154
+Empty node 5, 185
+Empty node 6, 216
+Empty node 7, 247
+Empty node 0, 248
+Now init pairwise information
+Now we are going to build the Ucbasis
+Now we are going to build the leafidx
+The number of pairs is 4000
+The time for building the nodepairs, Ur and Uc is 2.595 (s)
+Now we are going to build the Upinv
+Finish build pinv
+The time for building the Upinv is 1.321 (s)
+The total number of full elements in D0 is 1444814063
+The total number of elements in D0 is 732387390
+The total number of full elements in D1 is 12912027895
+The total number of elements in D1 is 3268938077
+ whole data D0 right
+Right in D1 total
+The total number of elements in COO matrix is 14356841958
+The time for construction of ERI is 283.784 (s)
+The gap factor is 28.71527408665914
+quad file name: 1_xk08_2E1
+Omega Array:
+0.064309164622387
+0.160465799927234
+0.288080444739366
+0.481650418969758
+0.799169660808508
+1.338126605669961
+2.301417441287326
+4.414062707798380
+Alpha Array:
+0.024862664149670
+0.135604828607850
+0.356110877538480
+0.733493609849653
+1.360335512245883
+2.404703724059327
+4.174369639254090
+7.361229313422080
+Thread 0 processing index 0
+The 0th omega is 0.064309, the 0th alpha is 0.024863
+Thread 4 processing index 4
+The 4th omega is 0.799170, the 4th alpha is 1.360336
+Thread 2 processing index 2
+The 2th omega is 0.288080, the 2th alpha is 0.356111
+Thread 7 processing index 7
+The 7th omega is 4.414063, the 7th alpha is 7.361229
+Thread 3 processing index 3
+The 3th omega is 0.481650, the 3th alpha is 0.733494
+Thread 6 processing index 6
+The 6th omega is 2.301417, the 6th alpha is 4.174370
+Thread 1 processing index 1
+The 1th omega is 0.160466, the 1th alpha is 0.135605
+Thread 5 processing index 5
+The 5th omega is 1.338127, the 5th alpha is 2.404704
+The useful csrden and csrdc are 764044 and 451620
+Thres1 = 1e-05, Thres2 = 0.0001
+The number of elements in the d5 of quad 6 is 440626
+The useful csrden and csrdc are 609578 and 271406
+The number of elements in the d5 of quad 6 is 168476
+The useful csrden and csrdc are 883000 and 730106
+Thres1 = 1e-05, Thres2 = 0.0001
+The number of elements in the d5 of quad 7 is 301342
+Thres1 = 1e-05, Thres2 = 0.0001
+The number of elements in the d5 of quad 3 is 552080
+The number of elements in the d5 of quad 7 is 81000
+The number of elements in the d5 of quad 3 is 369844
+The useful csrden and csrdc are 887656 and 793548
+Thres1 = 1e-05, Thres2 = 0.0001
+The number of elements in the d5 of quad 4 is 556364
+The number of elements in the d5 of quad 4 is 397846
+The useful csrden and csrdc are 674128 and 802718
+Thres1 = 1e-05, Thres2 = 0.0001
+The number of elements in the d5 of quad 0 is 355530
+The number of elements in the d5 of quad 0 is 415354
+The useful csrden and csrdc are 878062 and 761380
+Thres1 = 1e-05, Thres2 = 0.0001
+The number of elements in the d5 of quad 2 is 548218
+The number of elements in the d5 of quad 2 is 395248
+The useful csrden and csrdc are 851430 and 781878
+Thres1 = 1e-05, Thres2 = 0.0001
+The number of elements in the d5 of quad 1 is 513862
+The number of elements in the d5 of quad 1 is 414070
+The useful csrden and csrdc are 902776 and 650634
+Thres1 = 1e-05, Thres2 = 0.0001
+The number of elements in the d5 of quad 5 is 568172
+The number of elements in the d5 of quad 5 is 276376
+The total number of elements in carmat : nto = 176989358
+Now destroy
+Now free
+Destroy success!
+1e
+The S1 energy is 1.291986232623571e-05
+Now we are going to build the S51cbasisxy in quad 7
+The total number of elements in carmat : nto = 938890282
+Now destroy
+Now free
+Destroy success!
+1e
+The S1 energy is 0.003657608477082348
+Now we are going to build the S51cbasisxy in quad 6
+Finish x build y in quad 7
+build S5x time in quad 7 is 1991.643540859222
+Now we are in S5Y
+S5Y for loop starts
+S5Y start to finish!
+S5Y finish!
+build S5y time in quad 7 is 501.3512380123138
+The S51xy energy in quad 7 is 5.808426678442554e-06
+The S1S51xy energy in quad 7 is -5.449873213615618e-06
+Finish1 quad 7
+Finish quad 7
+The total number of elements in carmat : nto = 1933733306
+Now destroy
+Now free
+Destroy success!
+1e
+The S1 energy is 0.1752594264934239
+Now we are going to build the S51cbasisxy in quad 5
+Finish x build y in quad 6
+build S5x time in quad 6 is 3504.286823034286
+Now we are in S5Y
+S5Y for loop starts
+S5Y start to finish!
+S5Y finish!
+build S5y time in quad 6 is 1076.170891046524
+The total number of elements in carmat : nto = 4058810626
+Now destroy
+Now free
+Destroy success!
+1e
+The S1 energy is 41.82703363794404
+Now we are going to build the S51cbasisxy in quad 3
+The S51xy energy in quad 6 is 0.001997737808470572
+The S1S51xy energy in quad 6 is -0.002010633683997317
+Finish1 quad 6
+Finish quad 6
+The total number of elements in carmat : nto = 4992583954
+Now destroy
+Now free
+Destroy success!
+1e
+The S1 energy is 257.7475464664988
+Now we are going to build the S51cbasisxy in quad 2
+The total number of elements in carmat : nto = 3002912459
+Finish x build y in quad 5
+build S5x time in quad 5 is 3719.205270051956
+Now we are in S5Y
+S5Y for loop starts
+Now destroy
+Now free
+Destroy success!
+1e
+The S1 energy is 3.635950016672162
+Now we are going to build the S51cbasisxy in quad 4
+S5Y start to finish!
+S5Y finish!
+build S5y time in quad 5 is 1717.872586965561
+The total number of elements in carmat : nto = 5963387715
+Now destroy
+Now free
+Destroy success!
+1e
+The total number of elements in carmat : nto = 5624074604
+Now destroy
+Now free
+Destroy success!
+1e
+The S1 energy is 872.1640550401206
+Now we are going to build the S51cbasisxy in quad 1
+The S1 energy is 1726.514660724184
+Now we are going to build the S51cbasisxy in quad 0
+The S51xy energy in quad 5 is 0.12180693146231
+The S1S51xy energy in quad 5 is -0.1218287315564071
+Finish1 quad 5
+Finish quad 5
+Finish x build y in quad 3
+build S5x time in quad 3 is 4567.757781028748
+Now we are in S5Y
+S5Y for loop starts
+Finish x build y in quad 4
+build S5x time in quad 4 is 4437.51811003685
+Now we are in S5Y
+S5Y for loop starts
+Finish x build y in quad 2
+build S5x time in quad 2 is 4918.36812877655
+Now we are in S5Y
+S5Y for loop starts
+Finish x build y in quad 0
+build S5x time in quad 0 is 2587.469103097916
+Now we are in S5Y
+S5Y for loop starts
+S5Y start to finish!
+S5Y finish!
+build S5y time in quad 3 is 2277.777653932571
+Finish x build y in quad 1
+build S5x time in quad 1 is 4425.481586933136
+Now we are in S5Y
+S5Y for loop starts
+S5Y start to finish!
+S5Y finish!
+build S5y time in quad 4 is 2498.311293125153
+S5Y start to finish!
+S5Y finish!
+build S5y time in quad 2 is 2560.553580999374
+S5Y start to finish!
+S5Y finish!
+build S5y time in quad 0 is 2650.660886049271
+The S51xy energy in quad 3 is 38.84415177392611
+The S1S51xy energy in quad 3 is -38.80809941151662
+Finish1 quad 3
+Finish quad 3
+The S51xy energy in quad 4 is 3.051924048215621
+The S1S51xy energy in quad 4 is -3.052910057215322
+Finish1 quad 4
+Finish quad 4
+The S51xy energy in quad 0 is 1695.711587352515
+The S1S51xy energy in quad 0 is -1693.920751862433
+Finish1 quad 0
+Finish quad 0
+S5Y start to finish!
+S5Y finish!
+build S5y time in quad 1 is 2766.658964157104
+The S51xy energy in quad 2 is 247.623435366338
+The S1S51xy energy in quad 2 is -247.8734781261979
+Finish1 quad 2
+Finish quad 2
+The S51xy energy in quad 1 is 849.1296852497574
+The S1S51xy energy in quad 1 is -850.292521084735
+Finish1 quad 1
+Finish quad 1
+The total time is 23639.253 (s)
+File 'alkane272job5.txt' opened successfully.
+TinyDFT total memory usage = 1350.90 MB
+Timer: Simint setup, Simint ERI actual, Fock mat accum. = 572.445810, 325.148751, 185.052367 sec
+Simint statistic: avg. ket-side nprim, prim unscreened ratio, SIMD unscreened ratio = 90.9, 69.6 %, 2.9 %
+Job completed successfully at Mon Sep 30 04:00:51 PM EDT 2024

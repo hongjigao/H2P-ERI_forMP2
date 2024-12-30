@@ -1,0 +1,47 @@
+nbf is 760
+The total energy with xy is 3.451976931484435
+The number of basis functions is 760
+The number of nodes is 121
+The scf time is 1066.491865158081
+The number of pairs is 1792
+The number of admissible pairs is 528
+The number of inadmissible pairs is 336
+The largest number of X is 341492
+The largest number of Y is 337966
+The gap factor is 28.50143804402237
+The number of quadrature points is 8
+The threshold for X and Y is 1e-06
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 1066.491865158081
+Running time for building nodepairs, Ur and Uc is 3.474190950393677
+Running time for building Upinv is 583.1770150661469
+Running time for building xy is 2.631494283676147
+Running time for dense index transformation is 14968.3750231266
+Running time for calculating S1 is 89.06998085975647
+Running time for building S5x is 28653.61984658241
+Running time for building S5xy is 50746.78553438187
+Running time for calculating S1S51 is 4571.884595870972
+The total running time is 11906.44425392151
+memory cost for dense ERI is 1562751098
+Equals 11922.84468078613 
+memory cost for half ERI is 1325278233
+Equals 10111.07050323486 
+memory cost for ERI is 619687213
+memory cost for S5xy is 1848330852
+The number of flops for S5x is 1139640777866
+The number of flops for S5y is 1583551785948
+The sums1 energy is 486.8809262497791
+The sums5 energy is 483.5900835887552
+The sums1s5 energy is -483.5095164535249
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 92, 366, 760
+  * Number of symm-unique screened shell pairs : 21588
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 21588
+  * Kernel matrix size             : 87958
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 7.500000e+00
+  * Number of levels (root at 0)   : 5
+  * Number of nodes                : 121
+  * Number of nodes on each level  : 1, 8, 16, 32, 64

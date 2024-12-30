@@ -2,9 +2,11 @@
 #
 #SBATCH --job-name=test1
 #SBATCH --output=rest1.txt
-#SBATCH --ntasks-per-node=40
-#SBATCH --nodes=2
-#SBATCH --time=4:00:00
-#SBATCH -p short-40core
+#SBATCH --nodes=1
+#SBATCH --time=48:00:00
+#SBATCH -p hbm-1tb-long-96core
 
-./mp2tspexy.exe sto-3g/sto-3g.gbs alkane/alkane_122.xyz 50 1e-9 1e-5 test1221 1e-6
+export OMP_NUM_THREADS=8
+echo "Job started at `date`"
+./mp2testxyboth.exe cc-pVDZ/cc-pVDZ.gbs waters/water50.xyz 50 1e-9 3e-5 water50job5 1e-6 1e-6
+echo "Job completed successfully at `date`"

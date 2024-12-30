@@ -39,6 +39,7 @@ void H2ERI_build_COO_fulldensetest(H2ERI_p h2eri , COOmat_p coomat)
     int    *r_inadm_pairs = h2eri->r_inadm_pairs;
     size_t D0_total_size = 0;
     int * fullnrow = (int*) malloc(sizeof(int) * (n_node));
+    ASSERT_PRINTF(fullnrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
     memset(fullnrow, 0, sizeof(int) * (n_node));
     int countleaf=0;
     //Count the number of points in each node
@@ -132,7 +133,6 @@ void H2ERI_build_COO_fulldensetest(H2ERI_p h2eri , COOmat_p coomat)
         for(int j=0;j<Di_nrow;j++)
         {
             if(h2eri->sameshell[startpoint+j]==1)
-            //if(1)
             {   
                 //printf("1");         
                 rowidx=startpoint+j;
@@ -254,14 +254,14 @@ void H2ERI_build_COO_fulldensetest(H2ERI_p h2eri , COOmat_p coomat)
                 }
             }
         }
-        if(dspot != Di->size) printf("%d node Wrong\n",i);
+        //if(dspot != Di->size) printf("%d node Wrong\n",i);
         numdata += pointspot;
         dspot = 0;
         pointspot=0;
     }
     if(numdata != D0_total_size) printf(" whole data D0 Wrong\n");
-    //if(numdata == D0_total_size) printf(" whole data D0 right\n");
-    //printf("Start to store D1\n");
+    if(numdata == D0_total_size) printf(" whole data D0 right\n");
+    printf("Start to store D1\n");
     int *rowN            = coomat->coorow+numdata;
     int *colN            = coomat->coocol+numdata;
     double *DataN           = coomat->cooval+numdata;
@@ -315,26 +315,26 @@ void H2ERI_build_COO_fulldensetest(H2ERI_p h2eri , COOmat_p coomat)
                         else
                         {
                             colidx=colstartpoint+k;
-                        //first value
-                        lambda = h2eri->bf1st[colidx];
-                        sigma = h2eri->bf2nd[colidx];
-                        colvalue = sigma * num_bf + lambda;
-                        rowspot[pointspot]=rowvalue;
-                        colspot[pointspot]=colvalue;
-                        Dataspot[pointspot]=Di->data[dspot];
-                        rowspot[pointspot+1]=colvalue;
-                        colspot[pointspot+1]=rowvalue;
-                        Dataspot[pointspot+1]=Di->data[dspot];
-                        //second value
-                        lambda = h2eri->bf2nd[colidx];
-                        sigma = h2eri->bf1st[colidx];
-                        colvalue = sigma * num_bf + lambda;
-                        rowspot[pointspot+2]=rowvalue;
-                        colspot[pointspot+2]=colvalue;
-                        Dataspot[pointspot+2]=Di->data[dspot];
-                        rowspot[pointspot+3]=colvalue;
-                        colspot[pointspot+3]=rowvalue;
-                        Dataspot[pointspot+3]=Di->data[dspot];
+                            //first value
+                            lambda = h2eri->bf1st[colidx];
+                            sigma = h2eri->bf2nd[colidx];
+                            colvalue = sigma * num_bf + lambda;
+                            rowspot[pointspot]=rowvalue;
+                            colspot[pointspot]=colvalue;
+                            Dataspot[pointspot]=Di->data[dspot];
+                            rowspot[pointspot+1]=colvalue;
+                            colspot[pointspot+1]=rowvalue;
+                            Dataspot[pointspot+1]=Di->data[dspot];
+                            //second value
+                            lambda = h2eri->bf2nd[colidx];
+                            sigma = h2eri->bf1st[colidx];
+                            colvalue = sigma * num_bf + lambda;
+                            rowspot[pointspot+2]=rowvalue;
+                            colspot[pointspot+2]=colvalue;
+                            Dataspot[pointspot+2]=Di->data[dspot];
+                            rowspot[pointspot+3]=colvalue;
+                            colspot[pointspot+3]=rowvalue;
+                            Dataspot[pointspot+3]=Di->data[dspot];
                             pointspot+=4;
                             dspot+=1;
                             //printf("2");
@@ -436,21 +436,355 @@ void H2ERI_build_COO_fulldensetest(H2ERI_p h2eri , COOmat_p coomat)
         
 
         //printf("!!");
-        if(dspot != Di->size) printf("Wrong in nodes %d and %d\n",node0,node1);
+        //if(dspot != Di->size) printf("Wrong in nodes %d and %d\n",node0,node1);
         //if(dspot == Di->size) printf("Right in nodes %d and %d\n",node0,node1);
         //printf("The number of elements is %d\n",pointspot);
         numdataN += pointspot;
         dspot = 0;
         pointspot=0;
     }
-
-    if(numdataN != D1_total_size) printf("Wrong in D1 total\n");
+    free(fullnrow);
+    //if(numdataN != D1_total_size) printf("Wrong in D1 total\n");
     //if(numdataN == D1_total_size) printf("Right in D1 total\n");
+    printf("The total number of elements in COO matrix is %lu\n",numdata+numdataN);
 }
 
 
 
+void H2ERI_build_COO_noderow(H2ERI_p h2eri , COOmat_p coomat)
+{
+    int *mat_cluster     = h2eri->mat_cluster;
+    int n_leaf_node      = h2eri->n_leaf_node;
+    int n_node           = h2eri->n_node;
+    int n_r_inadm_pair   = h2eri->n_r_inadm_pair;
+    int num_bf           = h2eri->num_bf;
+    int *sp_bfp_sidx     = h2eri->sp_bfp_sidx;
+    int *D_nrow          = h2eri->D_nrow;
+    int *D_ncol          = h2eri->D_ncol;
+    int *n_child         = h2eri->n_child;
+    int num_sp = h2eri->num_sp;
+    int *shell_bf_sidx = h2eri->shell_bf_sidx;
+    int *sp_shell_idx  = h2eri->sp_shell_idx;
+    H2E_dense_mat_p  *c_D_blks   = h2eri->c_D_blks;
+    int *pt_cluster      = h2eri->pt_cluster;
+    int    *leaf_nodes    = h2eri->height_nodes;
+    int    *r_inadm_pairs = h2eri->r_inadm_pairs;
+    size_t D0_total_size = 0;
+    int * fullnrow = (int*) malloc(sizeof(int) * (n_node));
+    ASSERT_PRINTF(fullnrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(fullnrow, 0, sizeof(int) * (n_node));
+    int *nodenrow = (int*) malloc(sizeof(int) * (n_node));
+    ASSERT_PRINTF(nodenrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(nodenrow, 0, sizeof(int) * (n_node));
+    int countleaf=0;
+    //Count the number of points in each node
+    for (int i = 0; i < n_node; i++)
+    {
+        if(n_child[i]==0)
+        {
+            H2E_dense_mat_p Di = c_D_blks[countleaf];
+            countleaf+=1;
+            //size_t Di_size = Di->size;
+            int startpoint = h2eri->mat_cluster[2*i];
+            for(int j=0;j<Di->nrow;j++)
+            {
+                if(h2eri->sameshell[startpoint+j]==1)
+                {
+                    fullnrow[i]+=1;
+                    nodenrow[i]+=1;
+                }
+                else if(h2eri->sameshell[startpoint+j]==0)
+                {
+                    fullnrow[i]+=2;
+                    nodenrow[i]+=1;
+                }
+            }
+        }
+        else
+        {
+            int nchild = n_child[i];
+            for(int j=0;j<nchild;j++)
+            {
+                fullnrow[i]+=fullnrow[h2eri->children[i*h2eri->max_child+j]];
+                nodenrow[i]+=nodenrow[h2eri->children[i*h2eri->max_child+j]];
+            }
+        }
+    }
+    size_t D1_total_size = 0;
+    for (int i = 0; i < n_leaf_node; i++)
+    {
+        int node = leaf_nodes[i];
+        D0_total_size += nodenrow[node]*fullnrow[node];
+    }
+    for (int i = 0; i < n_r_inadm_pair; i++)
+    {
+        int node0 = r_inadm_pairs[2 * i];
+        int node1 = r_inadm_pairs[2 * i + 1];
+        D1_total_size += nodenrow[node0]*fullnrow[node1];
+        D1_total_size += nodenrow[node1]*fullnrow[node0];
+    }
 
+    printf("The total number of full elements in D0 is %lu\n",D0_total_size);
+    printf("The total number of elements in D0 is %lu\n",h2eri->nD0element);
+    printf("The total number of full elements in D1 is %lu\n",D1_total_size);
+    printf("The total number of elements in D1 is %lu\n",h2eri->nD1element);
+    coomat->nnz=D0_total_size+D1_total_size;
+    coomat->coorow = (int*) malloc(sizeof(int) * (coomat->nnz));
+    coomat->coocol = (int*) malloc(sizeof(int) * (coomat->nnz));
+    coomat->cooval = (double*) malloc(sizeof(double) * (coomat->nnz));
+    ASSERT_PRINTF(coomat->coorow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(coomat->coocol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(coomat->cooval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    int *rowD            = coomat->coorow;
+    int *colD            = coomat->coocol;
+    double *DataD           = coomat->cooval;
+    int *rowspot;
+    int *colspot;
+    double *Dataspot;
+    int rowspotupdate=0;
+    int colspotupdate=0;
+    int mu;
+    int nu;
+    int lambda;
+    int sigma;
+    int rowidx;
+    int rowvalue;
+    int colidx;
+    int colvalue;
+
+    size_t numdata=0;
+    //Store the information in D0 into COO matrix
+    for(int i=0;i<n_leaf_node;i++)
+    {
+        //printf("The %dth leaf node\n",i);
+        int node = leaf_nodes[i];
+        //number of shell pairs in the node
+        //       int node_npts = pt_e - pt_s + 1;
+        int Di_nrow = D_nrow[i];
+        int Di_ncol = D_ncol[i];
+        int dspot=0;
+        int pointspot=0;
+        H2E_dense_mat_p Di = c_D_blks[i];
+        rowspot=rowD+numdata;
+        colspot=colD+numdata;
+        Dataspot=DataD+numdata;
+        int startpoint = h2eri->mat_cluster[2*node];
+        for(int j=0;j<Di_nrow;j++)
+        {   
+            rowidx=startpoint+j;
+            for(int k=0;k<Di_ncol;k++)
+            {
+                if(h2eri->sameshell[startpoint+k]==1)
+                    {
+                        colidx=startpoint+k;
+                        lambda = h2eri->bf1st[colidx];
+                        sigma = h2eri->bf2nd[colidx];
+                        colvalue = sigma * num_bf + lambda;
+                        rowspot[pointspot]=rowidx;
+                        colspot[pointspot]=colvalue;
+                        Dataspot[pointspot]=Di->data[dspot];
+                        pointspot+=1;
+                        dspot+=1;
+                        //printf("1");
+                    }
+                    else
+                    {
+                        
+                        colidx=startpoint+k;
+                        //first value
+                        lambda = h2eri->bf1st[colidx];
+                        sigma = h2eri->bf2nd[colidx];
+                        colvalue = sigma * num_bf + lambda;
+                        rowspot[pointspot]=rowidx;
+                        colspot[pointspot]=colvalue;
+                        Dataspot[pointspot]=Di->data[dspot];
+                        //second value
+                        lambda = h2eri->bf2nd[colidx];
+                        sigma = h2eri->bf1st[colidx];
+                        colvalue = sigma * num_bf + lambda;
+                        rowspot[pointspot+1]=rowidx;
+                        colspot[pointspot+1]=colvalue;
+                        Dataspot[pointspot+1]=Di->data[dspot];
+                        //    Di->data[dspot]=0;
+                        dspot+=1;
+                        pointspot+=2;
+                        //printf("2");
+                    }
+
+            }
+        }
+        //if(dspot != Di->size) printf("%d node Wrong\n",i);
+        numdata += pointspot;
+        dspot = 0;
+        pointspot=0;
+    }
+    if(numdata != D0_total_size) printf(" whole data D0 Wrong\n");
+    if(numdata == D0_total_size) printf(" whole data D0 right\n");
+    //printf("Start to store D1\n");
+    int *rowN            = coomat->coorow+numdata;
+    int *colN            = coomat->coocol+numdata;
+    double *DataN           = coomat->cooval+numdata;
+    size_t numdataN=0;
+    //store the information in D1 in COO matrix
+    for (int i = 0; i < n_r_inadm_pair; i++)
+    {
+        int node0 = r_inadm_pairs[2 * i];
+        int node1 = r_inadm_pairs[2 * i + 1];
+        int Di_ncol = D_ncol[i+n_leaf_node];
+        int Di_nrow = D_nrow[i+n_leaf_node];
+        //printf("Inadmissible pair %d has %d rows and %d cols\n",i,Di_nrow,Di_ncol);
+        //printf("Full rows and columns are %d and %d\n",fullnrow[node0],fullnrow[node1]);
+        //printf("The number of elements is %d\n",fullnrow[node0]*fullnrow[node1]);
+        H2E_dense_mat_p Di = c_D_blks[i+n_leaf_node];
+        int dspot=0;
+        int pointspot=0;
+        rowspot=rowN+numdataN;
+        colspot=colN+numdataN;
+        Dataspot=DataN+numdataN;
+        int rowstartpoint = h2eri->mat_cluster[2*node0];
+        int colstartpoint = h2eri->mat_cluster[2*node1];
+        
+        for(int j=0;j<Di_nrow;j++)
+        {
+            
+            if(h2eri->sameshell[rowstartpoint+j]==1)
+                {
+                    rowidx=rowstartpoint+j;
+                    mu = h2eri->bf1st[rowidx];
+                    nu = h2eri->bf2nd[rowidx];
+                    rowvalue = nu * num_bf + mu;
+                    for(int k=0;k<Di_ncol;k++)
+                    {
+                        if(h2eri->sameshell[colstartpoint+k]==1)
+                        {
+                            colidx=colstartpoint+k;
+                            lambda = h2eri->bf1st[colidx];
+                            sigma = h2eri->bf2nd[colidx];
+                            colvalue = sigma * num_bf + lambda;
+                            rowspot[pointspot]=rowidx;
+                            colspot[pointspot]=colvalue;
+                            Dataspot[pointspot]=Di->data[dspot];
+                            rowspot[pointspot+1]=colidx;
+                            colspot[pointspot+1]=rowvalue;
+                            Dataspot[pointspot+1]=Di->data[dspot];
+                            pointspot+=2;
+                            dspot+=1;
+                            //printf("1");
+                        }
+                        else
+                        {
+                            colidx=colstartpoint+k;
+                            //first value
+                            lambda = h2eri->bf1st[colidx];
+                            sigma = h2eri->bf2nd[colidx];
+                            colvalue = sigma * num_bf + lambda;
+                            rowspot[pointspot]=rowidx;
+                            colspot[pointspot]=colvalue;
+                            Dataspot[pointspot]=Di->data[dspot];
+                            rowspot[pointspot+1]=colidx;
+                            colspot[pointspot+1]=rowvalue;
+                            Dataspot[pointspot+1]=Di->data[dspot];
+                            //second value
+                            lambda = h2eri->bf2nd[colidx];
+                            sigma = h2eri->bf1st[colidx];
+                            colvalue = sigma * num_bf + lambda;
+                            rowspot[pointspot+2]=rowidx;
+                            colspot[pointspot+2]=colvalue;
+                            Dataspot[pointspot+2]=Di->data[dspot];
+                            pointspot+=3;
+                            dspot+=1;
+                            //printf("2");
+                        }
+
+                    }
+                }
+            else
+            {
+                for(int k=0;k<Di_ncol;k++)
+                {
+                    if(h2eri->sameshell[colstartpoint+k]==1)
+                    {
+                        rowidx=rowstartpoint+j;
+                        mu = h2eri->bf1st[rowidx];
+                        nu = h2eri->bf2nd[rowidx];
+                        rowvalue = nu * num_bf + mu;
+                        colidx=colstartpoint+k;
+                        lambda = h2eri->bf1st[colidx];
+                        sigma = h2eri->bf2nd[colidx];
+                        colvalue = sigma * num_bf + lambda;
+                        rowspot[pointspot]=rowidx;
+                        colspot[pointspot]=colvalue;
+                        Dataspot[pointspot]=Di->data[dspot];
+                        rowspot[pointspot+1]=colidx;
+                        colspot[pointspot+1]=rowvalue;
+                        Dataspot[pointspot+1]=Di->data[dspot];
+                        mu = h2eri->bf2nd[rowidx];
+                        nu = h2eri->bf1st[rowidx];
+                        rowvalue = nu * num_bf + mu;
+                        
+                        rowspot[pointspot+2]=colidx;
+                        colspot[pointspot+2]=rowvalue;
+                        Dataspot[pointspot+2]=Di->data[dspot];
+                        pointspot+=3;
+                        dspot+=1;
+                        //printf("3");
+                    }
+                    else
+                    {
+                        rowidx=rowstartpoint+j;
+                        mu = h2eri->bf1st[rowidx];
+                        nu = h2eri->bf2nd[rowidx];
+                        rowvalue = nu * num_bf + mu;
+                        colidx=colstartpoint+k;
+                        //first value
+                        lambda = h2eri->bf1st[colidx];
+                        sigma = h2eri->bf2nd[colidx];
+                        colvalue = sigma * num_bf + lambda;
+                        rowspot[pointspot]=rowidx;
+                        colspot[pointspot]=colvalue;
+                        Dataspot[pointspot]=Di->data[dspot];
+                        rowspot[pointspot+1]=colidx;
+                        colspot[pointspot+1]=rowvalue;
+                        Dataspot[pointspot+1]=Di->data[dspot];
+                        //second colvalue
+                        lambda = h2eri->bf2nd[colidx];
+                        sigma = h2eri->bf1st[colidx];
+                        colvalue = sigma * num_bf + lambda;
+                        rowspot[pointspot+2]=rowidx;
+                        colspot[pointspot+2]=colvalue;
+                        Dataspot[pointspot+2]=Di->data[dspot];
+                        //second rowvalue
+                        mu = h2eri->bf2nd[rowidx];
+                        nu = h2eri->bf1st[rowidx];
+                        rowvalue = nu * num_bf + mu;
+                        rowspot[pointspot+3]=colidx;
+                        colspot[pointspot+3]=rowvalue;
+                        Dataspot[pointspot+3]=Di->data[dspot];
+                        pointspot+=4;
+                        dspot+=1;
+                        //printf("4");
+                    }
+                }
+            
+            }
+        }
+        
+        
+
+        //printf("!!");
+        //if(dspot != Di->size) printf("Wrong in nodes %d and %d\n",node0,node1);
+        //if(dspot == Di->size) printf("Right in nodes %d and %d\n",node0,node1);
+        //printf("The number of elements is %d\n",pointspot);
+        numdataN += pointspot;
+        dspot = 0;
+        pointspot=0;
+    }
+    free(fullnrow);
+    free(nodenrow);
+    if(numdataN != D1_total_size) printf("Wrong in D1 total\n");
+    if(numdataN == D1_total_size) printf("Right in D1 total\n");
+    printf("The total number of elements in COO matrix is %lu\n",numdata+numdataN);
+}
 
 
 
@@ -723,9 +1057,80 @@ void compresscoo(COOmat_p cooini, COOmat_p coofinal, double thres)
             pointer +=1;
         }
     }
-    COOmat_destroy(cooini);
+    //COOmat_destroy(cooini);
 
 }
+
+
+
+void compresscsr(CSRmat_p csrini, CSRmat_p csrfinal, double thres)
+{
+    size_t nva=0;
+    double max = 0;
+    double *nele;
+    nele = (double*) malloc(sizeof(double) * (csrini->nrow));
+    ASSERT_PRINTF(nele != NULL, "Failed to allocate arrays for compresscsr indexing\n");
+    memset(nele, 0, sizeof(double) * (csrini->nrow));
+    for(size_t i=0;i<csrini->nnz;i++)
+    {
+        if(fabs(csrini->csrval[i])>max)
+            max=fabs(csrini->csrval[i]);
+    }
+    for(int i=0;i<csrini->nrow;i++)
+    {
+        if(csrini->csrrow[i+1]-csrini->csrrow[i]>0)
+        {
+            for(size_t j=csrini->csrrow[i];j<csrini->csrrow[i+1];j++)
+            {
+                if(fabs(csrini->csrval[j])>max*thres)
+                {
+                    nele[i]+=1;
+                    nva+=1;
+                }    
+            }
+        }
+    }
+    csrfinal->nnz=nva;
+    csrfinal->csrrow = (int*) malloc(sizeof(int) * (nva));
+    csrfinal->csrcol = (int*) malloc(sizeof(int) * (nva));
+    csrfinal->csrval = (double*) malloc(sizeof(double) * (nva));
+    ASSERT_PRINTF(csrfinal->csrrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrfinal->csrcol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrfinal->csrval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    csrfinal->csrrow[0]=0;
+    for(int i=0;i<csrini->nrow;i++)
+    {
+        csrfinal->csrrow[i+1]=nele[i];
+    }
+    for(int i=1;i<csrini->nrow+1;i++)
+    {
+        csrfinal->csrrow[i]+=csrfinal->csrrow[i-1];
+    }
+    size_t pointer=0;
+    for(int i=0;i<csrini->nrow;i++)
+    {
+        if(csrini->csrrow[i+1]-csrini->csrrow[i]>0)
+        {
+            for(size_t j=csrini->csrrow[i];j<csrini->csrrow[i+1];j++)
+            {
+                if(fabs(csrini->csrval[j])>max*thres)
+                {
+                    csrfinal->csrcol[pointer]=csrini->csrcol[j];
+                    csrfinal->csrval[pointer]=csrini->csrval[j];
+                    pointer +=1;
+                }    
+            }
+        }
+    }
+    if(pointer!=nva)
+    {
+        printf("Problematic.%ld,%ld\n",pointer,nva);
+    }
+    //COOmat_destroy(cooini);
+
+}
+
+
 
 void Double_COO_to_CSR(
     const int nrow, const size_t nnz, COOmat_p coomat, CSRmat_p csrmat
@@ -840,18 +1245,7 @@ void mergeSort(int *key, double *val, size_t l, size_t r) {
 
 
 
-void mergeSort1(int* arr, int l, int r) {
-    if (l < r) {
-        // Same as (l+r)/2, but avoids overflow for large l and h
-        int m = l + (r - l) / 2;
 
-        // Sort first and second halves
-        mergeSort1(arr, l, m);
-        mergeSort1(arr, m + 1, r);
-
-        merge1(arr, l, m, r);
-    }
-}
 
 void merge1(int *arr, int l, int m, int r) {
     int i, j, k;
@@ -897,6 +1291,21 @@ void merge1(int *arr, int l, int m, int r) {
     }
 }
 
+
+void mergeSort1(int* arr, int l, int r) {
+    if (l < r) {
+        // Same as (l+r)/2, but avoids overflow for large l and h
+        int m = l + (r - l) / 2;
+
+        // Sort first and second halves
+        mergeSort1(arr, l, m);
+        mergeSort1(arr, m + 1, r);
+
+        merge1(arr, l, m, r);
+    }
+}
+
+
 size_t Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, double * mat, COOmat_p coomat)
 {
     // Firstly, go through the elements of the matrix and find the maximum absolute value
@@ -909,7 +1318,7 @@ size_t Extract_COO_DDCMat(const int nrow, const int ncol, const double thres, do
         }
         
     }
-    if(maxval<coomat->maxv*0.05) maxval = coomat->maxv*0.05;
+    if(maxval<coomat->maxv*0.05) maxval = coomat->maxv*0.07;
     //printf("find maxv success, which is %f\n", maxval);
     // Then compute the number of elements that is no less than maxval*thres
     size_t nlarge=0;
@@ -1546,7 +1955,349 @@ void Xindextransform3(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtra
 }
 
 
+void Xindextransform4(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtrans, double thres)
+{
+    H2E_int_vec_p *eleidx;
+    H2E_dense_mat_p *eleval;
+    eleidx = (H2E_int_vec_p*) malloc(sizeof(H2E_int_vec_p) * (nbf*nbf));
+    eleval = (H2E_dense_mat_p*) malloc(sizeof(H2E_dense_mat_p) * (nbf*nbf));
+    ASSERT_PRINTF(eleidx != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(eleval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    int * nval;
+    nval = (int*) malloc(sizeof(int) * (nbf*nbf));
+    ASSERT_PRINTF(nval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(nval, 0, sizeof(int) * (nbf*nbf));
+    H2E_int_vec_p tmpidx;
+    H2E_dense_mat_p tmpval;
+    H2E_int_vec_init(&tmpidx, nbf*nbf);
+    memset(tmpidx->data, 0, sizeof(int) * nbf*nbf);
+    H2E_dense_mat_init(&tmpval, 1, nbf*nbf);
+    memset(tmpval->data, 0, sizeof(double) *nbf*nbf);
+    int * idxarray;
+    idxarray = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxarray != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxarray, 0, sizeof(int) * nbf*nbf);
+    int * idxlarge;
+    idxlarge = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxlarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxlarge, 0, sizeof(int) * nbf*nbf);
+    double * valuelarge;
+    valuelarge = (double*) malloc(sizeof(double) * nbf*nbf);
+    ASSERT_PRINTF(valuelarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(valuelarge, 0, sizeof(double) * nbf*nbf);
 
+    int tmpvalsize=0;
+    for(int i=0;i<nbf*nbf;i++)
+    {
+        if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {     
+            int nunique=0;
+            int nlarge=0;
+            for(size_t j=csrh2d->csrrow[i];j<csrh2d->csrrow[i+1];j++)
+            {
+                int colidx=csrh2d->csrcol[j];
+                int epsilon = colidx / nbf;
+                int kappa = colidx % nbf;
+                for(int k=csrden->csrrow[kappa];k<csrden->csrrow[kappa+1];k++)
+                {
+                    if(tmpidx->data[epsilon*nbf+csrden->csrcol[k]]==0)
+                    {
+                        nunique+=1;
+                        idxarray[nunique-1]=epsilon*nbf+csrden->csrcol[k];
+                    }
+                    tmpidx->data[epsilon*nbf+csrden->csrcol[k]]=1;
+                    tmpval->data[epsilon*nbf+csrden->csrcol[k]]+=csrh2d->csrval[j]*csrden->csrval[k];
+                }
+            }
+            
+            mergeSort1(idxarray, 0, nunique-1);
+            for(int l=0;l<nunique;l++)
+            {
+                int colidx=idxarray[l];
+                if(fabs(tmpval->data[colidx])>thres)
+                {
+                    idxlarge[nlarge]=colidx;
+                    valuelarge[nlarge]=tmpval->data[colidx];
+                    nlarge+=1;
+                }
+                tmpidx->data[colidx]=0;
+                tmpval->data[colidx]=0;
+                idxarray[l]=0;
+                
+            }
+            //printf("in row %d, the number of large elements is %d, nunique is %d\n",i,nlarge,nunique);
+            if(nlarge==0)
+            {
+                //printf("Here all small weird!%d\n",i);
+                H2E_int_vec_init(&eleidx[i], 0);
+                eleidx[i]->length=0;
+                H2E_dense_mat_init(&eleval[i], 0, 0);
+                continue;
+            }
+            //printf("The number of large elements in row %d is %d\n",i,nlarge);
+            //printf("tmplength before loop: %ld\n", tmplength);
+
+            //printf("The number of unique elements in row %d is %d\n",i,nunique);
+            H2E_int_vec_init(&eleidx[i], nlarge);
+            eleidx[i]->length=nlarge;
+            nval[i]=nlarge;
+            H2E_dense_mat_init(&eleval[i], 1, nlarge);
+            memset(eleidx[i]->data, 0, sizeof(int) * nlarge);
+            memset(eleval[i]->data, 0, sizeof(double) * nlarge);
+            //int ptrvec=0;
+            for(int l=0;l<nlarge;l++)
+            {
+                int colidx=idxlarge[l];
+                eleidx[i]->data[l]=colidx;
+                eleval[i]->data[l]=valuelarge[l];
+                idxlarge[l]=0;
+                valuelarge[l]=0;
+                tmpvalsize+=1;
+            }
+        }
+        else
+        {
+            H2E_int_vec_init(&eleidx[i], 0);
+            eleidx[i]->length=0;
+            H2E_dense_mat_init(&eleval[i], 0, 0);
+        }
+    }
+    //printf("Now destroy\n");
+    H2E_int_vec_destroy(&tmpidx);
+    H2E_dense_mat_destroy(&tmpval);
+    //printf("Now allocate\n");
+    size_t ntotal=0;
+    for(int i=0; i<nbf*nbf;i++) 
+    {
+        if(nval[i]!=0)
+        {
+            ntotal+=nval[i];
+        }
+    }
+    //printf("The total number of elements in coomat : nto = %lu\n",ntotal);
+    //printf("tempval size is %d\n",tmpvalsize);
+    csrtrans->csrrow = (size_t*) malloc(sizeof(size_t) * (nbf*nbf+1));
+    csrtrans->csrcol = (int*) malloc(sizeof(int) * (ntotal));
+    csrtrans->csrval = (double*) malloc(sizeof(double) * (ntotal));
+    ASSERT_PRINTF(csrtrans->csrrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrcol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    csrtrans->nnz=ntotal;
+    memset(csrtrans->csrrow, 0, sizeof(size_t) * (nbf*nbf+1));
+    for(int i=0; i<nbf*nbf;i++)
+    {
+        //if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {
+            csrtrans->csrrow[i+1]=csrtrans->csrrow[i]+nval[i];
+        }
+    }
+    //printf("Now fill\n");
+    size_t totv=0;
+    for(int i=0; i<nbf*nbf;i++)
+    {
+        if(nval[i]!=0)
+        {
+            //totv+=eleidx[i]->length;
+            //printf("2The number of elements in row %d is %d, total is %lu,%lu\n",i,eleidx[i]->length,totv,csrtrans->csrrow[i+1]);
+            for(size_t j=csrtrans->csrrow[i];j<csrtrans->csrrow[i+1];j++)
+            {
+                csrtrans->csrcol[j]=eleidx[i]->data[j-csrtrans->csrrow[i]];
+                csrtrans->csrval[j]=eleval[i]->data[j-csrtrans->csrrow[i]];
+            }
+            
+        }
+    }
+    //printf("Now destroy\n");
+    for(int i=0; i<nbf*nbf;i++)
+    {
+        if(nval[i]!=0)
+        {
+            H2E_int_vec_destroy(&eleidx[i]);
+            H2E_dense_mat_destroy(&eleval[i]);
+        }
+    }
+    free(eleidx);
+    free(eleval);
+    free(nval);
+    free(idxarray);
+    free(idxlarge);
+    free(valuelarge);
+    H2E_int_vec_destroy(&tmpidx);
+    H2E_dense_mat_destroy(&tmpval);    
+}
+
+
+void Xindextransform5(int nbf, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrtrans, double thres)
+{
+    int nrow = csrh2d->nrow;
+    H2E_int_vec_p *eleidx;
+    H2E_dense_mat_p *eleval;
+    eleidx = (H2E_int_vec_p*) malloc(sizeof(H2E_int_vec_p) * (nrow));
+    eleval = (H2E_dense_mat_p*) malloc(sizeof(H2E_dense_mat_p) * (nrow));
+    ASSERT_PRINTF(eleidx != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(eleval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    int * nval;
+    nval = (int*) malloc(sizeof(int) * (nrow));
+    ASSERT_PRINTF(nval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(nval, 0, sizeof(int) * (nrow));
+    H2E_int_vec_p tmpidx;
+    H2E_dense_mat_p tmpval;
+    H2E_int_vec_init(&tmpidx, nbf*nbf);
+    memset(tmpidx->data, 0, sizeof(int) * nbf*nbf);
+    H2E_dense_mat_init(&tmpval, 1, nbf*nbf);
+    memset(tmpval->data, 0, sizeof(double) *nbf*nbf);
+    int * idxarray;
+    idxarray = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxarray != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxarray, 0, sizeof(int) * nbf*nbf);
+    int * idxlarge;
+    idxlarge = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxlarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxlarge, 0, sizeof(int) * nbf*nbf);
+    double * valuelarge;
+    valuelarge = (double*) malloc(sizeof(double) * nbf*nbf);
+    ASSERT_PRINTF(valuelarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(valuelarge, 0, sizeof(double) * nbf*nbf);
+
+    int tmpvalsize=0;
+    for(int i=0;i<nrow;i++)
+    {
+        if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {     
+            int nunique=0;
+            int nlarge=0;
+            for(size_t j=csrh2d->csrrow[i];j<csrh2d->csrrow[i+1];j++)
+            {
+                int colidx=csrh2d->csrcol[j];
+                int epsilon = colidx / nbf;
+                int kappa = colidx % nbf;
+                for(int k=csrden->csrrow[kappa];k<csrden->csrrow[kappa+1];k++)
+                {
+                    if(tmpidx->data[epsilon*nbf+csrden->csrcol[k]]==0)
+                    {
+                        nunique+=1;
+                        idxarray[nunique-1]=epsilon*nbf+csrden->csrcol[k];
+                    }
+                    tmpidx->data[epsilon*nbf+csrden->csrcol[k]]=1;
+                    tmpval->data[epsilon*nbf+csrden->csrcol[k]]+=csrh2d->csrval[j]*csrden->csrval[k];
+                }
+            }
+            
+            mergeSort1(idxarray, 0, nunique-1);
+            for(int l=0;l<nunique;l++)
+            {
+                int colidx=idxarray[l];
+                if(fabs(tmpval->data[colidx])>thres)
+                {
+                    idxlarge[nlarge]=colidx;
+                    valuelarge[nlarge]=tmpval->data[colidx];
+                    nlarge+=1;
+                }
+                tmpidx->data[colidx]=0;
+                tmpval->data[colidx]=0;
+                idxarray[l]=0;
+                
+            }
+            //printf("in row %d, the number of large elements is %d, nunique is %d\n",i,nlarge,nunique);
+            if(nlarge==0)
+            {
+                //printf("Here all small weird!%d\n",i);
+                H2E_int_vec_init(&eleidx[i], 0);
+                eleidx[i]->length=0;
+                H2E_dense_mat_init(&eleval[i], 0, 0);
+                continue;
+            }
+            //printf("The number of large elements in row %d is %d\n",i,nlarge);
+            //printf("tmplength before loop: %ld\n", tmplength);
+
+            //printf("The number of unique elements in row %d is %d\n",i,nunique);
+            H2E_int_vec_init(&eleidx[i], nlarge);
+            eleidx[i]->length=nlarge;
+            nval[i]=nlarge;
+            H2E_dense_mat_init(&eleval[i], 1, nlarge);
+            memset(eleidx[i]->data, 0, sizeof(int) * nlarge);
+            memset(eleval[i]->data, 0, sizeof(double) * nlarge);
+            //int ptrvec=0;
+            for(int l=0;l<nlarge;l++)
+            {
+                int colidx=idxlarge[l];
+                eleidx[i]->data[l]=colidx;
+                eleval[i]->data[l]=valuelarge[l];
+                idxlarge[l]=0;
+                valuelarge[l]=0;
+                tmpvalsize+=1;
+            }
+        }
+        else
+        {
+            H2E_int_vec_init(&eleidx[i], 0);
+            eleidx[i]->length=0;
+            H2E_dense_mat_init(&eleval[i], 0, 0);
+        }
+    }
+    //printf("Now destroy\n");
+    H2E_int_vec_destroy(&tmpidx);
+    H2E_dense_mat_destroy(&tmpval);
+    //printf("Now allocate\n");
+    size_t ntotal=0;
+    for(int i=0; i<nrow;i++) 
+    {
+        if(nval[i]!=0)
+        {
+            ntotal+=nval[i];
+        }
+    }
+    //printf("The total number of elements in coomat : nto = %lu\n",ntotal);
+    //printf("tempval size is %d\n",tmpvalsize);
+    csrtrans->csrrow = (size_t*) malloc(sizeof(size_t) * (nrow+1));
+    csrtrans->csrcol = (int*) malloc(sizeof(int) * (ntotal));
+    csrtrans->csrval = (double*) malloc(sizeof(double) * (ntotal));
+    ASSERT_PRINTF(csrtrans->csrrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrcol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    csrtrans->nnz=ntotal;
+    memset(csrtrans->csrrow, 0, sizeof(size_t) * (nrow+1));
+    for(int i=0; i<nrow;i++)
+    {
+        //if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {
+            csrtrans->csrrow[i+1]=csrtrans->csrrow[i]+nval[i];
+        }
+    }
+    //printf("Now fill\n");
+    size_t totv=0;
+    for(int i=0; i<nrow;i++)
+    {
+        if(nval[i]!=0)
+        {
+            //totv+=eleidx[i]->length;
+            //printf("2The number of elements in row %d is %d, total is %lu,%lu\n",i,eleidx[i]->length,totv,csrtrans->csrrow[i+1]);
+            for(size_t j=csrtrans->csrrow[i];j<csrtrans->csrrow[i+1];j++)
+            {
+                csrtrans->csrcol[j]=eleidx[i]->data[j-csrtrans->csrrow[i]];
+                csrtrans->csrval[j]=eleval[i]->data[j-csrtrans->csrrow[i]];
+            }
+            
+        }
+    }
+    //printf("Now destroy\n");
+    for(int i=0; i<nrow;i++)
+    {
+        if(nval[i]!=0)
+        {
+            H2E_int_vec_destroy(&eleidx[i]);
+            H2E_dense_mat_destroy(&eleval[i]);
+        }
+    }
+    free(eleidx);
+    free(eleval);
+    free(nval);
+    free(idxarray);
+    free(idxlarge);
+    free(valuelarge);
+    H2E_int_vec_destroy(&tmpidx);
+    H2E_dense_mat_destroy(&tmpval);    
+}
 
 void Yindextransform1(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans)
 {
@@ -1875,6 +2626,168 @@ void Yindextransform2(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtran
 }
 
 
+void Yindextransform4(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans,double thres)
+{
+    H2E_int_vec_p *eleidx;
+    H2E_dense_mat_p *eleval;
+    eleidx = (H2E_int_vec_p*) malloc(sizeof(H2E_int_vec_p) * (nbf*nbf));
+    eleval = (H2E_dense_mat_p*) malloc(sizeof(H2E_dense_mat_p) * (nbf*nbf));
+    int * nval;
+    nval = (int*) malloc(sizeof(int) * (nbf*nbf));
+    memset(nval, 0, sizeof(int) * (nbf*nbf));
+    H2E_int_vec_p tmpidx;
+    H2E_dense_mat_p tmpval;
+    H2E_int_vec_init(&tmpidx, nbf*nbf);
+    memset(tmpidx->data, 0, sizeof(int) * nbf*nbf);
+    H2E_dense_mat_init(&tmpval, 1, nbf*nbf);
+    memset(tmpval->data, 0, sizeof(double) *nbf*nbf);
+    
+    int * idxarray;
+    idxarray = (int*) malloc(sizeof(int) * nbf*nbf);
+    memset(idxarray, 0, sizeof(int) * nbf*nbf);
+    int * idxlarge;
+    idxlarge = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxlarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxlarge, 0, sizeof(int) * nbf*nbf);
+    double * valuelarge;
+    valuelarge = (double*) malloc(sizeof(double) * nbf*nbf);
+    ASSERT_PRINTF(valuelarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(valuelarge, 0, sizeof(double) * nbf*nbf);
+    for(int i=0;i<nbf*nbf;i++)
+    {
+        if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {     
+            int nunique=0;
+            int nlarge=0;
+            for(size_t j=csrh2d->csrrow[i];j<csrh2d->csrrow[i+1];j++)
+            {
+                int colidx=csrh2d->csrcol[j];
+                int epsilon = colidx / nbf;
+                int kappa = colidx % nbf;
+                for(int k=csrdc->csrrow[epsilon];k<csrdc->csrrow[epsilon+1];k++)
+                {
+                    if(tmpidx->data[csrdc->csrcol[k]*nbf+kappa]==0)
+                    {
+                        nunique+=1;
+                        idxarray[nunique-1]=csrdc->csrcol[k]*nbf+kappa;
+                    }
+                    tmpidx->data[csrdc->csrcol[k]*nbf+kappa]=1;
+                    tmpval->data[csrdc->csrcol[k]*nbf+kappa]+=csrh2d->csrval[j]*csrdc->csrval[k];
+                }
+            }
+            //printf("The number of unique elements in row %d is %d\n",i,nunique);
+            mergeSort1(idxarray, 0, nunique-1);
+            for(int l=0;l<nunique;l++)
+            {
+                int colidx=idxarray[l];
+                if(fabs(tmpval->data[colidx])>thres)
+                {
+                    idxlarge[nlarge]=colidx;
+                    valuelarge[nlarge]=tmpval->data[colidx];
+                    nlarge+=1;
+                }
+                tmpidx->data[colidx]=0;
+                tmpval->data[colidx]=0;
+                idxarray[l]=0;
+                
+            }
+            //printf("tmplength before loop: %ld\n", tmplength);
+            if(nlarge==0)
+            {
+                //printf("Here all small weird!%d\n",i);
+                H2E_int_vec_init(&eleidx[i], 0);
+                eleidx[i]->length=0;
+                H2E_dense_mat_init(&eleval[i], 0, 0);
+                continue;
+            }
+            //printf("The number of large elements in row %d is %d\n",i,nlarge);
+            H2E_int_vec_init(&eleidx[i], nlarge);
+            eleidx[i]->length=nlarge;
+            nval[i]=nlarge;
+            H2E_dense_mat_init(&eleval[i], 1, nlarge);
+            memset(eleidx[i]->data, 0, sizeof(int) * nlarge);
+            memset(eleval[i]->data, 0, sizeof(double) * nlarge);
+            //int ptrvec=0;
+            for(int l=0;l<nlarge;l++)
+            {
+                int colidx=idxlarge[l];
+                eleidx[i]->data[l]=colidx;
+                eleval[i]->data[l]=valuelarge[l];
+                idxlarge[l]=0;
+                valuelarge[l]=0;
+            }
+        }
+        else
+        {
+            H2E_int_vec_init(&eleidx[i], 0);
+            eleidx[i]->length=0;
+            H2E_dense_mat_init(&eleval[i], 0, 0);
+        }
+    }
+    //printf("Now destroy\n");
+    H2E_int_vec_destroy(&tmpidx);
+    H2E_dense_mat_destroy(&tmpval);
+    //printf("Now allocate\n");
+    size_t ntotal=0;
+    for(int i=0; i<nbf*nbf;i++)
+    {
+        if(nval[i]!=0)
+        {
+            ntotal+=nval[i];
+        }
+    }
+    //printf("The total number of elements in coomat : nto = %lu\n",ntotal);
+    csrtrans->csrrow = (size_t*) malloc(sizeof(size_t) * (nbf*nbf+1));
+    csrtrans->csrcol = (int*) malloc(sizeof(int) * (ntotal));
+    csrtrans->csrval = (double*) malloc(sizeof(double) * (ntotal));
+    ASSERT_PRINTF(csrtrans->csrrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrcol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    csrtrans->nnz=ntotal;
+    memset(csrtrans->csrrow, 0, sizeof(size_t) * (nbf*nbf+1));
+    for(int i=0; i<nbf*nbf;i++)
+    {
+        //if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {
+            csrtrans->csrrow[i+1]=csrtrans->csrrow[i]+nval[i];
+        }
+    }
+    //printf("Now fill\n");
+    size_t totv=0;
+    for(int i=0; i<nbf*nbf;i++)
+    {
+        if(nval[i]!=0)
+        {
+            //totv+=eleidx[i]->length;
+            //printf("2The number of elements in row %d is %d, total is %lu,%lu\n",i,eleidx[i]->length,totv,csrtrans->csrrow[i+1]);
+            for(size_t j=csrtrans->csrrow[i];j<csrtrans->csrrow[i+1];j++)
+            {
+                csrtrans->csrcol[j]=eleidx[i]->data[j-csrtrans->csrrow[i]];
+                csrtrans->csrval[j]=eleval[i]->data[j-csrtrans->csrrow[i]];
+            }
+            
+        }
+    }
+    printf("Now destroy\n");
+    for(int i=0; i<nbf*nbf;i++)
+    {
+        if(nval[i]!=0)
+        {
+            H2E_int_vec_destroy(&eleidx[i]);
+            H2E_dense_mat_destroy(&eleval[i]);
+        }
+    }
+    free(eleidx);
+    free(eleval);
+    free(nval);
+    free(idxarray);
+    free(idxlarge);
+    free(valuelarge);
+    printf("Destroy success\n");
+}
+
+
+
 void Yindextransform3(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans)
 {
     H2E_int_vec_p *eleidx;
@@ -2004,6 +2917,758 @@ void Yindextransform3(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtran
     free(nval);
 }
 
+void Yindextransform5(int nbf, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans,double thres)
+{
+    int nrow = csrh2d->nrow;
+    H2E_int_vec_p *eleidx;
+    H2E_dense_mat_p *eleval;
+    eleidx = (H2E_int_vec_p*) malloc(sizeof(H2E_int_vec_p) * (nrow));
+    eleval = (H2E_dense_mat_p*) malloc(sizeof(H2E_dense_mat_p) * (nrow));
+    int * nval;
+    nval = (int*) malloc(sizeof(int) * (nrow));
+    memset(nval, 0, sizeof(int) * (nrow));
+    H2E_int_vec_p tmpidx;
+    H2E_dense_mat_p tmpval;
+    H2E_int_vec_init(&tmpidx, nbf*nbf);
+    memset(tmpidx->data, 0, sizeof(int) * nbf*nbf);
+    H2E_dense_mat_init(&tmpval, 1, nbf*nbf);
+    memset(tmpval->data, 0, sizeof(double) *nbf*nbf);
+    
+    int * idxarray;
+    idxarray = (int*) malloc(sizeof(int) * nbf*nbf);
+    memset(idxarray, 0, sizeof(int) * nbf*nbf);
+    int * idxlarge;
+    idxlarge = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxlarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxlarge, 0, sizeof(int) * nbf*nbf);
+    double * valuelarge;
+    valuelarge = (double*) malloc(sizeof(double) * nbf*nbf);
+    ASSERT_PRINTF(valuelarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(valuelarge, 0, sizeof(double) * nbf*nbf);
+    for(int i=0;i<nrow;i++)
+    {
+        if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {     
+            int nunique=0;
+            int nlarge=0;
+            for(size_t j=csrh2d->csrrow[i];j<csrh2d->csrrow[i+1];j++)
+            {
+                int colidx=csrh2d->csrcol[j];
+                int epsilon = colidx / nbf;
+                int kappa = colidx % nbf;
+                for(int k=csrdc->csrrow[epsilon];k<csrdc->csrrow[epsilon+1];k++)
+                {
+                    if(tmpidx->data[csrdc->csrcol[k]*nbf+kappa]==0)
+                    {
+                        nunique+=1;
+                        idxarray[nunique-1]=csrdc->csrcol[k]*nbf+kappa;
+                    }
+                    tmpidx->data[csrdc->csrcol[k]*nbf+kappa]=1;
+                    tmpval->data[csrdc->csrcol[k]*nbf+kappa]+=csrh2d->csrval[j]*csrdc->csrval[k];
+                }
+            }
+            //printf("The number of unique elements in row %d is %d\n",i,nunique);
+            mergeSort1(idxarray, 0, nunique-1);
+            for(int l=0;l<nunique;l++)
+            {
+                int colidx=idxarray[l];
+                if(fabs(tmpval->data[colidx])>thres)
+                {
+                    idxlarge[nlarge]=colidx;
+                    valuelarge[nlarge]=tmpval->data[colidx];
+                    nlarge+=1;
+                }
+                tmpidx->data[colidx]=0;
+                tmpval->data[colidx]=0;
+                idxarray[l]=0;
+                
+            }
+            //printf("tmplength before loop: %ld\n", tmplength);
+            if(nlarge==0)
+            {
+                //printf("Here all small weird!%d\n",i);
+                H2E_int_vec_init(&eleidx[i], 0);
+                eleidx[i]->length=0;
+                H2E_dense_mat_init(&eleval[i], 0, 0);
+                continue;
+            }
+            //printf("The number of large elements in row %d is %d\n",i,nlarge);
+            H2E_int_vec_init(&eleidx[i], nlarge);
+            eleidx[i]->length=nlarge;
+            nval[i]=nlarge;
+            H2E_dense_mat_init(&eleval[i], 1, nlarge);
+            memset(eleidx[i]->data, 0, sizeof(int) * nlarge);
+            memset(eleval[i]->data, 0, sizeof(double) * nlarge);
+            //int ptrvec=0;
+            for(int l=0;l<nlarge;l++)
+            {
+                int colidx=idxlarge[l];
+                eleidx[i]->data[l]=colidx;
+                eleval[i]->data[l]=valuelarge[l];
+                idxlarge[l]=0;
+                valuelarge[l]=0;
+            }
+        }
+        else
+        {
+            H2E_int_vec_init(&eleidx[i], 0);
+            eleidx[i]->length=0;
+            H2E_dense_mat_init(&eleval[i], 0, 0);
+        }
+    }
+    //printf("Now destroy\n");
+    H2E_int_vec_destroy(&tmpidx);
+    H2E_dense_mat_destroy(&tmpval);
+    //printf("Now allocate\n");
+    size_t ntotal=0;
+    for(int i=0; i<nrow;i++)
+    {
+        if(nval[i]!=0)
+        {
+            ntotal+=nval[i];
+        }
+    }
+    //printf("The total number of elements in coomat : nto = %lu\n",ntotal);
+    csrtrans->csrrow = (size_t*) malloc(sizeof(size_t) * (nrow+1));
+    csrtrans->csrcol = (int*) malloc(sizeof(int) * (ntotal));
+    csrtrans->csrval = (double*) malloc(sizeof(double) * (ntotal));
+    ASSERT_PRINTF(csrtrans->csrrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrcol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    csrtrans->nnz=ntotal;
+    memset(csrtrans->csrrow, 0, sizeof(size_t) * (nrow+1));
+    for(int i=0; i<nrow;i++)
+    {
+        //if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {
+            csrtrans->csrrow[i+1]=csrtrans->csrrow[i]+nval[i];
+        }
+    }
+    //printf("Now fill\n");
+    size_t totv=0;
+    for(int i=0; i<nrow;i++)
+    {
+        if(nval[i]!=0)
+        {
+            //totv+=eleidx[i]->length;
+            //printf("2The number of elements in row %d is %d, total is %lu,%lu\n",i,eleidx[i]->length,totv,csrtrans->csrrow[i+1]);
+            for(size_t j=csrtrans->csrrow[i];j<csrtrans->csrrow[i+1];j++)
+            {
+                csrtrans->csrcol[j]=eleidx[i]->data[j-csrtrans->csrrow[i]];
+                csrtrans->csrval[j]=eleval[i]->data[j-csrtrans->csrrow[i]];
+            }
+            
+        }
+    }
+    printf("Now destroy\n");
+    for(int i=0; i<nrow;i++)
+    {
+        if(nval[i]!=0)
+        {
+            H2E_int_vec_destroy(&eleidx[i]);
+            H2E_dense_mat_destroy(&eleval[i]);
+        }
+    }
+    printf("Now free\n");
+    free(eleidx);
+    free(eleval);
+    free(nval);
+    free(idxarray);
+    free(idxlarge);
+    free(valuelarge);
+    printf("Destroy success!\n");
+}
+
+
+void Yindextransform6(int nbf, H2ERI_p h2eri, CSRmat_p csrh2d, CSRmat_p csrdc, CSRmat_p csrtrans,double thres)
+{
+    int nrow = csrh2d->nrow; // This is nbfp
+    int nbfp = nrow;
+    int *bfpidx = h2eri->bfpidx;
+    H2E_int_vec_p *eleidx;
+    H2E_dense_mat_p *eleval;
+    eleidx = (H2E_int_vec_p*) malloc(sizeof(H2E_int_vec_p) * (nrow));
+    eleval = (H2E_dense_mat_p*) malloc(sizeof(H2E_dense_mat_p) * (nrow));
+    int * nval;
+    nval = (int*) malloc(sizeof(int) * (nrow));
+    memset(nval, 0, sizeof(int) * (nrow));
+    H2E_int_vec_p tmpidx;
+    H2E_dense_mat_p tmpval;
+    H2E_int_vec_init(&tmpidx, nbfp);
+    memset(tmpidx->data, 0, sizeof(int) * nbfp);
+    H2E_dense_mat_init(&tmpval, 1, nbfp);
+    memset(tmpval->data, 0, sizeof(double) *nbfp);
+    
+    int * idxarray;
+    idxarray = (int*) malloc(sizeof(int) * nbfp);
+    memset(idxarray, 0, sizeof(int) * nbfp);
+    int * idxlarge;
+    idxlarge = (int*) malloc(sizeof(int) * nbfp);
+    ASSERT_PRINTF(idxlarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxlarge, 0, sizeof(int) * nbfp);
+    double * valuelarge;
+    valuelarge = (double*) malloc(sizeof(double) * nbfp);
+    ASSERT_PRINTF(valuelarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(valuelarge, 0, sizeof(double) * nbfp);
+    for(int i=0;i<nrow;i++)
+    {
+        if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {     
+            int nunique=0;
+            int nlarge=0;
+            for(size_t j=csrh2d->csrrow[i];j<csrh2d->csrrow[i+1];j++)
+            {
+                int colidx=csrh2d->csrcol[j];
+                int epsilon = colidx / nbf;
+                int kappa = colidx % nbf;
+                for(int k=csrdc->csrrow[epsilon];k<csrdc->csrrow[epsilon+1];k++)
+                {
+                    int bfpair = bfpidx[csrdc->csrcol[k]*nbf+kappa];
+                    if(bfpair==-1) continue;
+                    if(tmpidx->data[bfpair]==0)
+                    {
+                        nunique+=1;
+                        idxarray[nunique-1]=bfpair;
+                    }
+                    tmpidx->data[bfpair]=1;
+                    tmpval->data[bfpair]+=csrh2d->csrval[j]*csrdc->csrval[k];
+                }
+            }
+            //printf("The number of unique elements in row %d is %d\n",i,nunique);
+            mergeSort1(idxarray, 0, nunique-1);
+            for(int l=0;l<nunique;l++)
+            {
+                int colidx=idxarray[l];
+                if(fabs(tmpval->data[colidx])>thres)
+                {
+                    idxlarge[nlarge]=colidx;
+                    valuelarge[nlarge]=tmpval->data[colidx];
+                    nlarge+=1;
+                }
+                tmpidx->data[colidx]=0;
+                tmpval->data[colidx]=0;
+                idxarray[l]=0;
+                
+            }
+            //printf("tmplength before loop: %ld\n", tmplength);
+            if(nlarge==0)
+            {
+                //printf("Here all small weird!%d\n",i);
+                H2E_int_vec_init(&eleidx[i], 0);
+                eleidx[i]->length=0;
+                H2E_dense_mat_init(&eleval[i], 0, 0);
+                continue;
+            }
+            //printf("The number of large elements in row %d is %d\n",i,nlarge);
+            H2E_int_vec_init(&eleidx[i], nlarge);
+            eleidx[i]->length=nlarge;
+            nval[i]=nlarge;
+            H2E_dense_mat_init(&eleval[i], 1, nlarge);
+            memset(eleidx[i]->data, 0, sizeof(int) * nlarge);
+            memset(eleval[i]->data, 0, sizeof(double) * nlarge);
+            //int ptrvec=0;
+            for(int l=0;l<nlarge;l++)
+            {
+                int colidx=idxlarge[l];
+                eleidx[i]->data[l]=colidx;
+                eleval[i]->data[l]=valuelarge[l];
+                idxlarge[l]=0;
+                valuelarge[l]=0;
+            }
+        }
+        else
+        {
+            H2E_int_vec_init(&eleidx[i], 0);
+            eleidx[i]->length=0;
+            H2E_dense_mat_init(&eleval[i], 0, 0);
+        }
+    }
+    //printf("Now destroy\n");
+    H2E_int_vec_destroy(&tmpidx);
+    H2E_dense_mat_destroy(&tmpval);
+    //printf("Now allocate\n");
+    size_t ntotal=0;
+    for(int i=0; i<nrow;i++)
+    {
+        if(nval[i]!=0)
+        {
+            ntotal+=nval[i];
+        }
+    }
+    printf("The total number of elements in carmat : nto = %lu\n",ntotal);
+    csrtrans->csrrow = (size_t*) malloc(sizeof(size_t) * (nrow+1));
+    csrtrans->csrcol = (int*) malloc(sizeof(int) * (ntotal));
+    csrtrans->csrval = (double*) malloc(sizeof(double) * (ntotal));
+    ASSERT_PRINTF(csrtrans->csrrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrcol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    csrtrans->nnz=ntotal;
+    memset(csrtrans->csrrow, 0, sizeof(size_t) * (nrow+1));
+    for(int i=0; i<nrow;i++)
+    {
+        //if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {
+            csrtrans->csrrow[i+1]=csrtrans->csrrow[i]+nval[i];
+        }
+    }
+    //printf("Now fill\n");
+    size_t totv=0;
+    for(int i=0; i<nrow;i++)
+    {
+        if(nval[i]!=0)
+        {
+            //totv+=eleidx[i]->length;
+            //printf("2The number of elements in row %d is %d, total is %lu,%lu\n",i,eleidx[i]->length,totv,csrtrans->csrrow[i+1]);
+            for(size_t j=csrtrans->csrrow[i];j<csrtrans->csrrow[i+1];j++)
+            {
+                csrtrans->csrcol[j]=eleidx[i]->data[j-csrtrans->csrrow[i]];
+                csrtrans->csrval[j]=eleval[i]->data[j-csrtrans->csrrow[i]];
+            }
+            
+        }
+    }
+    printf("Now destroy\n");
+    for(int i=0; i<nrow;i++)
+    {
+        if(nval[i]!=0)
+        {
+            H2E_int_vec_destroy(&eleidx[i]);
+            H2E_dense_mat_destroy(&eleval[i]);
+        }
+    }
+    printf("Now free\n");
+    free(eleidx);
+    free(eleval);
+    free(nval);
+    free(idxarray);
+    free(idxlarge);
+    free(valuelarge);
+    printf("Destroy success!\n");
+}
+
+void H2Pmp2_build_S1(int nbf,H2ERI_p h2eri, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrdc, CSRmat_p csrtrans, double thres)
+{
+    double sumdata = 0.0;
+    double sumdata2 = 0.0;
+    int nrow = csrh2d->nrow;
+    int nbfp = nrow;
+    int *bfpidx = h2eri->bfpidx;
+    H2E_int_vec_p *eleidx;
+    H2E_dense_mat_p *eleval;
+    eleidx = (H2E_int_vec_p*) malloc(sizeof(H2E_int_vec_p) * (nrow));
+    eleval = (H2E_dense_mat_p*) malloc(sizeof(H2E_dense_mat_p) * (nrow));
+    ASSERT_PRINTF(eleidx != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(eleval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    int * nval;
+    nval = (int*) malloc(sizeof(int) * (nrow));
+    ASSERT_PRINTF(nval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(nval, 0, sizeof(int) * (nrow));
+    H2E_int_vec_p tmpidx;
+    H2E_dense_mat_p tmpval;
+    H2E_int_vec_init(&tmpidx, nbf*nbf);
+    memset(tmpidx->data, 0, sizeof(int) * nbf*nbf);
+    H2E_dense_mat_init(&tmpval, 1, nbf*nbf);
+    memset(tmpval->data, 0, sizeof(double) *nbf*nbf);
+    int * idxarray;
+    idxarray = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxarray != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxarray, 0, sizeof(int) * nbf*nbf);
+    int * idxlarge;
+    idxlarge = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxlarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxlarge, 0, sizeof(int) * nbf*nbf);
+    double * valuelarge;
+    valuelarge = (double*) malloc(sizeof(double) * nbf*nbf);
+    ASSERT_PRINTF(valuelarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(valuelarge, 0, sizeof(double) * nbf*nbf);
+
+    int tmpvalsize=0;
+    for(int i=0;i<nrow;i++)
+    {
+        if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {     
+            //printf("The number of elements in row %d is %ld\n",i,csrh2d->csrrow[i+1]-csrh2d->csrrow[i]);
+            int nunique=0;
+            int nlarge=0;
+            for(size_t j=csrh2d->csrrow[i];j<csrh2d->csrrow[i+1];j++)
+            {
+                int colidx=csrh2d->csrcol[j];
+                int epsilon = colidx / nbf;
+                int kappa = colidx % nbf;
+                for(int k=csrden->csrrow[kappa];k<csrden->csrrow[kappa+1];k++)
+                {
+                    if(tmpidx->data[epsilon*nbf+csrden->csrcol[k]]==0)
+                    {
+                        nunique+=1;
+                        idxarray[nunique-1]=epsilon*nbf+csrden->csrcol[k];
+                    }
+                    tmpidx->data[epsilon*nbf+csrden->csrcol[k]]=1;
+                    tmpval->data[epsilon*nbf+csrden->csrcol[k]]+=csrh2d->csrval[j]*csrden->csrval[k];
+                }
+            }
+            //printf("The number of unique elements in row %d is %d\n",i,nunique);
+            mergeSort1(idxarray, 0, nunique-1);
+            for(int l=0;l<nunique;l++)
+            {
+                int colidx=idxarray[l];
+                if(fabs(tmpval->data[colidx])>thres)
+                {
+                    idxlarge[nlarge]=colidx;
+                    valuelarge[nlarge]=tmpval->data[colidx];
+                    sumdata+=valuelarge[nlarge];
+                    nlarge+=1;
+                }
+                tmpidx->data[colidx]=0;
+                tmpval->data[colidx]=0;
+                idxarray[l]=0;
+                
+            }
+            if(nlarge==0)
+            {
+                //printf("Here all small weird!%d\n",i);
+                H2E_int_vec_init(&eleidx[i], 0);
+                eleidx[i]->length=0;
+                H2E_dense_mat_init(&eleval[i], 0, 0);
+                continue;
+            }
+            for(int l=0;l<nlarge;l++)
+            {
+                sumdata2+=valuelarge[l];
+            }
+            //printf("Now Y The number of large elements in row %d is %d\n",i,nlarge);
+            // Now we have build the X information stored in idxlarge and valuelarge
+            // Now we directly compute the Y information with this idxlarge and valuelarge
+            int nunique1=0;
+            int nlarge1=0;
+            for(size_t j=0;j<nlarge;j++)
+            {
+                int colidx=idxlarge[j];
+                int epsilon = colidx / nbf;
+                int kappa = colidx % nbf;
+                for(int k=csrdc->csrrow[epsilon];k<csrdc->csrrow[epsilon+1];k++)
+                {
+                    int bfpair = bfpidx[csrdc->csrcol[k]*nbf+kappa];
+                    if(bfpair==-1) continue;
+                    if(tmpidx->data[bfpair]==0)
+                    {
+                        nunique1+=1;
+                        idxarray[nunique1-1]=bfpair;
+                    }
+                    tmpidx->data[bfpair]=1;
+                    tmpval->data[bfpair]+=valuelarge[j]*csrdc->csrval[k];
+                }
+                idxlarge[j]=0;
+                valuelarge[j]=0;
+            }
+            //printf("The number of unique elements in row %d is %d\n",i,nunique);
+            mergeSort1(idxarray, 0, nunique1-1);
+            for(int l=0;l<nunique1;l++)
+            {
+                int colidx=idxarray[l];
+                if(fabs(tmpval->data[colidx])>thres)
+                {
+                    idxlarge[nlarge1]=colidx;
+                    valuelarge[nlarge1]=tmpval->data[colidx];
+                    nlarge1+=1;
+
+                }
+                tmpidx->data[colidx]=0;
+                tmpval->data[colidx]=0;
+                idxarray[l]=0;
+                
+            }
+            //printf("tmplength before loop: %ld\n", tmplength);
+            if(nlarge1==0)
+            {
+                //printf("Here all small weird!%d\n",i);
+                H2E_int_vec_init(&eleidx[i], 0);
+                eleidx[i]->length=0;
+                H2E_dense_mat_init(&eleval[i], 0, 0);
+                continue;
+            }
+            //printf("Now X The number of large elements in row %d is %d\n",i,nlarge);
+            //printf("The number of large elements in row %d is %d\n",i,nlarge);
+            H2E_int_vec_init(&eleidx[i], nlarge1);
+            eleidx[i]->length=nlarge1;
+            nval[i]=nlarge1;
+            H2E_dense_mat_init(&eleval[i], 1, nlarge1);
+            memset(eleidx[i]->data, 0, sizeof(int) * nlarge1);
+            memset(eleval[i]->data, 0, sizeof(double) * nlarge1);
+            //int ptrvec=0;
+            for(int l=0;l<nlarge1;l++)
+            {
+                int colidx=idxlarge[l];
+                eleidx[i]->data[l]=colidx;
+                eleval[i]->data[l]=valuelarge[l];
+                idxlarge[l]=0;
+                valuelarge[l]=0;
+            }
+            memset(tmpidx->data, 0, sizeof(int) * nbf*nbf);
+            //printf("Finish row %d\n",i);
+        }
+        else
+        {
+            H2E_int_vec_init(&eleidx[i], 0);
+            eleidx[i]->length=0;
+            H2E_dense_mat_init(&eleval[i], 0, 0);
+        }
+    }
+    //printf("Now destroy\n");
+    H2E_int_vec_destroy(&tmpidx);
+    H2E_dense_mat_destroy(&tmpval);
+    //printf("Now allocate\n");
+    size_t ntotal=0;
+    for(int i=0; i<nrow;i++) 
+    {
+        if(nval[i]!=0)
+        {
+            ntotal+=nval[i];
+        }
+    }
+    //printf("The total number of elements in coomat : nto = %lu\n",ntotal);
+    //printf("tempval size is %d\n",tmpvalsize);
+    csrtrans->csrrow = (size_t*) malloc(sizeof(size_t) * (nrow+1));
+    csrtrans->csrcol = (int*) malloc(sizeof(int) * (ntotal));
+    csrtrans->csrval = (double*) malloc(sizeof(double) * (ntotal));
+    ASSERT_PRINTF(csrtrans->csrrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrcol != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(csrtrans->csrval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    csrtrans->nnz=ntotal;
+    memset(csrtrans->csrrow, 0, sizeof(size_t) * (nrow+1));
+    for(int i=0; i<nrow;i++)
+    {
+        //if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {
+            csrtrans->csrrow[i+1]=csrtrans->csrrow[i]+nval[i];
+        }
+    }
+    //printf("Now fill\n");
+    size_t totv=0;
+    for(int i=0; i<nrow;i++)
+    {
+        if(nval[i]!=0)
+        {
+            //totv+=eleidx[i]->length;
+            //printf("2The number of elements in row %d is %d, total is %lu,%lu\n",i,eleidx[i]->length,totv,csrtrans->csrrow[i+1]);
+            for(size_t j=csrtrans->csrrow[i];j<csrtrans->csrrow[i+1];j++)
+            {
+                csrtrans->csrcol[j]=eleidx[i]->data[j-csrtrans->csrrow[i]];
+                csrtrans->csrval[j]=eleval[i]->data[j-csrtrans->csrrow[i]];
+            }
+            
+        }
+    }
+    //printf("Now destroy\n");
+    for(int i=0; i<nrow;i++)
+    {
+        if(nval[i]!=0)
+        {
+            H2E_int_vec_destroy(&eleidx[i]);
+            H2E_dense_mat_destroy(&eleval[i]);
+        }
+    }
+    free(eleidx);
+    free(eleval);
+    free(nval);
+    free(idxarray);
+    free(idxlarge);
+    free(valuelarge);
+    H2E_int_vec_destroy(&tmpidx);
+    H2E_dense_mat_destroy(&tmpval);
+    printf("sumdata is %.16g and sumdata2 is %.16g\n",sumdata,sumdata2);    
+}
+
+void H2Pmp2_build_S11(int nbf,H2ERI_p h2eri, CSRmat_p csrh2d, CSRmat_p csrden, CSRmat_p csrdc, CSRmat_p csrtrans, double thres)
+{
+    double sumdata = 0.0;
+    double sumdata2 = 0.0;
+    int nrow = csrh2d->nrow;
+    int nbfp = nrow;
+    int *bfpidx = h2eri->bfpidx;
+    H2E_int_vec_p *eleidx;
+    H2E_dense_mat_p *eleval;
+    eleidx = (H2E_int_vec_p*) malloc(sizeof(H2E_int_vec_p) * (nrow));
+    eleval = (H2E_dense_mat_p*) malloc(sizeof(H2E_dense_mat_p) * (nrow));
+    ASSERT_PRINTF(eleidx != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    ASSERT_PRINTF(eleval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    int * nval;
+    nval = (int*) malloc(sizeof(int) * (nrow));
+    ASSERT_PRINTF(nval != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(nval, 0, sizeof(int) * (nrow));
+    H2E_int_vec_p tmpidx;
+    H2E_dense_mat_p tmpval;
+    H2E_int_vec_init(&tmpidx, nbf*nbf);
+    memset(tmpidx->data, 0, sizeof(int) * nbf*nbf);
+    H2E_dense_mat_init(&tmpval, 1, nbf*nbf);
+    memset(tmpval->data, 0, sizeof(double) *nbf*nbf);
+    int * idxarray;
+    idxarray = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxarray != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxarray, 0, sizeof(int) * nbf*nbf);
+    int * idxlarge;
+    idxlarge = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(idxlarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(idxlarge, 0, sizeof(int) * nbf*nbf);
+    double * valuelarge;
+    valuelarge = (double*) malloc(sizeof(double) * nbf*nbf);
+    ASSERT_PRINTF(valuelarge != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(valuelarge, 0, sizeof(double) * nbf*nbf);
+
+    int tmpvalsize=0;
+    for(int i=0;i<nrow;i++)
+    {
+        if(csrh2d->csrrow[i+1]-csrh2d->csrrow[i]!=0)
+        {     
+            //printf("The number of elements in row %d is %ld\n",i,csrh2d->csrrow[i+1]-csrh2d->csrrow[i]);
+            int nunique=0;
+            int nlarge=0;
+            for(size_t j=csrh2d->csrrow[i];j<csrh2d->csrrow[i+1];j++)
+            {
+                int colidx=csrh2d->csrcol[j];
+                int epsilon = colidx / nbf;
+                int kappa = colidx % nbf;
+                for(int k=csrden->csrrow[kappa];k<csrden->csrrow[kappa+1];k++)
+                {
+                    if(tmpidx->data[epsilon*nbf+csrden->csrcol[k]]==0)
+                    {
+                        nunique+=1;
+                        idxarray[nunique-1]=epsilon*nbf+csrden->csrcol[k];
+                    }
+                    tmpidx->data[epsilon*nbf+csrden->csrcol[k]]=1;
+                    tmpval->data[epsilon*nbf+csrden->csrcol[k]]+=csrh2d->csrval[j]*csrden->csrval[k];
+                }
+            }
+            //printf("The number of unique elements in row %d is %d\n",i,nunique);
+            mergeSort1(idxarray, 0, nunique-1);
+            for(int l=0;l<nunique;l++)
+            {
+                int colidx=idxarray[l];
+                if(fabs(tmpval->data[colidx])>thres)
+                {
+                    idxlarge[nlarge]=colidx;
+                    valuelarge[nlarge]=tmpval->data[colidx];
+                    sumdata+=valuelarge[nlarge];
+                    nlarge+=1;
+                }
+                tmpidx->data[colidx]=0;
+                tmpval->data[colidx]=0;
+                idxarray[l]=0;
+                
+            }
+            if(nlarge==0)
+            {
+                //printf("Here all small weird!%d\n",i);
+                H2E_int_vec_init(&eleidx[i], 0);
+                eleidx[i]->length=0;
+                H2E_dense_mat_init(&eleval[i], 0, 0);
+                continue;
+            }
+            for(int l=0;l<nlarge;l++)
+            {
+                sumdata2+=valuelarge[l];
+            }            
+            printf("sumdata is %f and sumdata2 is %f and nlarge is %d and nunique is %d\n",sumdata,sumdata2,nlarge,nunique);
+            for(int l=0;l<nbf*nbf;l++)
+            {
+                if(tmpidx->data[l]!=0)
+                {
+                    printf("????????????The value of tmpval is %d\n",l);
+                }
+            }
+            int nunique1=0;
+            int nlarge1=0;
+            for(size_t j=0;j<nlarge;j++)
+            {
+                int colidx=idxlarge[j];
+                int epsilon = colidx / nbf;
+                int kappa = colidx % nbf;
+                for(int k=csrdc->csrrow[epsilon];k<csrdc->csrrow[epsilon+1];k++)
+                {
+                    int bfpair = bfpidx[csrdc->csrcol[k]*nbf+kappa];
+                    if(bfpair==-1) continue;
+                    if(tmpidx->data[bfpair]==0)
+                    {
+                        nunique1+=1;
+                        idxarray[nunique1-1]=bfpair;
+                        printf("added idxarray %d\n",bfpair);
+                    }
+                    tmpidx->data[bfpair]=1;
+                    tmpval->data[bfpair]+=valuelarge[j]*csrdc->csrval[k];
+                }
+                idxlarge[j]=0;
+                valuelarge[j]=0;
+            }
+            //printf("The number of unique elements in row %d is %d\n",i,nunique);
+            mergeSort1(idxarray, 0, nunique1-1);
+            printf("?????????????The number of unique elements in row %d is %d\n",i,nunique1);
+            for(int l=0;l<nunique1;l++)
+            {
+                
+                int colidx=idxarray[l];
+                printf("In point %d unique1\n",colidx);
+                if(fabs(tmpval->data[colidx])>thres)
+                {
+                    idxlarge[nlarge1]=colidx;
+                    valuelarge[nlarge1]=tmpval->data[colidx];
+                    nlarge1+=1;
+
+                }
+                tmpidx->data[colidx]=0;
+                tmpval->data[colidx]=0;
+                idxarray[l]=0;
+                
+            }
+            for(int l=0;l<nbf*nbf;l++)
+            {
+                if(tmpidx->data[l]!=0)
+                {
+                    printf("????????????The value of tmpvAl is %f\n",tmpval->data[l]);
+                    printf("????????????The value of tmpvdl is %d\n",l);
+                }
+            }
+            //memset(tmpidx->data, 0, sizeof(int) * nbf*nbf);
+            //memset(tmpval->data, 0, sizeof(double) * nbf*nbf);
+            //printf("tmplength before loop: %ld\n", tmplength);
+            if(nlarge1==0)
+            {
+                //printf("Here all small weird!%d\n",i);
+                H2E_int_vec_init(&eleidx[i], 0);
+                eleidx[i]->length=0;
+                H2E_dense_mat_init(&eleval[i], 0, 0);
+                continue;
+            }
+            //printf("Now X The number of large elements in row %d is %d\n",i,nlarge);
+            //printf("The number of large elements in row %d is %d\n",i,nlarge);
+            H2E_int_vec_init(&eleidx[i], nlarge1);
+            eleidx[i]->length=nlarge1;
+            nval[i]=nlarge1;
+            H2E_dense_mat_init(&eleval[i], 1, nlarge1);
+            memset(eleidx[i]->data, 0, sizeof(int) * nlarge1);
+            memset(eleval[i]->data, 0, sizeof(double) * nlarge1);
+            //int ptrvec=0;
+            for(int l=0;l<nlarge1;l++)
+            {
+                int colidx=idxlarge[l];
+                eleidx[i]->data[l]=colidx;
+                eleval[i]->data[l]=valuelarge[l];
+                idxlarge[l]=0;
+                valuelarge[l]=0;
+            }
+            
+        }
+        //printf("Finish row %d\n",i);
+    
+        else
+        {
+            H2E_int_vec_init(&eleidx[i], 0);
+            eleidx[i]->length=0;
+            H2E_dense_mat_init(&eleval[i], 0, 0);
+        }
+    
+    }
+    printf("sumdata is %f and sumdata2 is %f\n",sumdata,sumdata2);    
+}
+
 
 
 void CSR_to_CSC(const int ncol, CSRmat_p csrmat, CSRmat_p cscmat)
@@ -2052,6 +3717,9 @@ void CSR_to_CSC(const int ncol, CSRmat_p csrmat, CSRmat_p cscmat)
 }
 
 
+
+
+
 double Calc_S1energy(CSRmat_p csrs1, CSRmat_p cscs1)
 {
     double trace = 0;
@@ -2089,6 +3757,118 @@ double Calc_S1energy(CSRmat_p csrs1, CSRmat_p cscs1)
         
     }
     //    printf("The energy is %f\n", trace);
+    return trace;
+}
+
+double Calcs1self(H2ERI_p h2eri, CSRmat_p nodes1)
+{
+    int nbf=h2eri->num_bf;
+    int *rowptr;
+    rowptr = (int*) malloc(sizeof(int) * nbf*nbf);
+    ASSERT_PRINTF(rowptr != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(rowptr, -1, sizeof(int) * nbf*nbf);
+    //printf("the number of rows in nodes1 is %d\n",nodes1->nrow);
+    for(int i=0;i<nbf*nbf;i++)
+    {
+        int rowidx=h2eri->bfpidx[i];
+        if(rowidx==-1) continue;
+        //printf("rowidx is %d and i is\n",rowidx,i);
+        if(nodes1->csrrow[rowidx]!=nodes1->csrrow[rowidx+1])
+        {
+            rowptr[i]=0;
+        }
+    }
+    printf("1\n");
+    double trace=0;
+    for(int i=0;i<nbf*nbf;i++)
+    {
+        int rowidx=h2eri->bfpidx[i];
+        if(rowidx==-1 || nodes1->csrrow[rowidx]==nodes1->csrrow[rowidx+1]) continue;
+        for(size_t j=nodes1->csrrow[rowidx];j<nodes1->csrrow[rowidx+1];j++)
+        {
+            int colbfp=nodes1->csrcol[j];
+            int colidx=h2eri->bfpidx[colbfp];
+            int rank = rowptr[colbfp];
+            if(rank==-1 || i<nodes1->csrcol[nodes1->csrrow[colidx]+rank]) continue;
+            else if(i==nodes1->csrcol[nodes1->csrrow[colidx]+rank])
+            {
+                trace+=nodes1->csrval[j]*nodes1->csrval[nodes1->csrrow[colidx]+rank];
+                rowptr[colbfp]+=1;
+            }   
+            else
+            {
+                while(i>nodes1->csrcol[nodes1->csrrow[colidx]+rank]&&rank<nodes1->csrrow[colidx+1]-nodes1->csrrow[colidx])
+                {
+                    rank+=1;
+                }
+                if(i==nodes1->csrcol[nodes1->csrrow[colidx]+rank])
+                {
+                    trace+=nodes1->csrval[j]*nodes1->csrval[nodes1->csrrow[colidx]+rank];
+                    rowptr[colbfp]=rank+1;
+                }
+            }
+            if(rowptr[colbfp]==nodes1->csrrow[colidx+1]-nodes1->csrrow[colidx])
+            {
+                rowptr[colbfp]=-1;
+            }
+
+        }
+    }
+    free(rowptr);
+    return trace;
+}
+
+
+double Calcs1selfnode(H2ERI_p h2eri, CSRmat_p csrnode)
+{
+    int nbf=h2eri->num_bf;
+    int nbfp = h2eri->num_sp_bfp;
+    int *rowptr;
+    rowptr = (int*) malloc(sizeof(int) * nbfp);
+    ASSERT_PRINTF(rowptr != NULL, "Failed to allocate arrays for D matrices indexing\n");
+    memset(rowptr, -1, sizeof(int) * nbfp);
+    //printf("the number of rows in csrnode is %d\n",csrnode->nrow);
+    for(int i=0;i<nbfp;i++)
+    {
+        if(csrnode->csrrow[i]!=csrnode->csrrow[i+1])
+        {
+            rowptr[i]=0;
+        }
+    }
+    printf("1e\n");
+    double trace=0;
+    for(int i=0;i<nbfp;i++)
+    {
+        for(size_t j=csrnode->csrrow[i];j<csrnode->csrrow[i+1];j++)
+        {
+            int colidx=csrnode->csrcol[j];
+            int rank = rowptr[colidx];
+            if(rank==-1 || i<csrnode->csrcol[csrnode->csrrow[colidx]+rank]) continue;
+
+            if(csrnode->csrcol[csrnode->csrrow[colidx]+rank]==i)
+            {
+                trace+=csrnode->csrval[j]*csrnode->csrval[csrnode->csrrow[colidx]+rowptr[colidx]];
+                rowptr[colidx]+=1;
+            }
+            else
+            {
+                while(i>csrnode->csrcol[csrnode->csrrow[colidx]+rowptr[colidx]]&&rowptr[colidx]<csrnode->csrrow[colidx+1]-csrnode->csrrow[colidx])
+                {
+                    rowptr[colidx]+=1;
+                }
+                if(i==csrnode->csrcol[csrnode->csrrow[colidx]+rowptr[colidx]])
+                {
+                    trace+=csrnode->csrval[j]*csrnode->csrval[csrnode->csrrow[colidx]+rowptr[colidx]];
+                    rowptr[colidx]+=1;
+                }
+            }
+            if(rowptr[colidx]==csrnode->csrrow[colidx+1]-csrnode->csrrow[colidx])
+            {
+                rowptr[colidx]=-1;
+            }
+        }
+    }
+    free(rowptr);
     return trace;
 }
 
