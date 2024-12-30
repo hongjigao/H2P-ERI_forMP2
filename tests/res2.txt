@@ -26,46 +26,50 @@ Job information:
     electrons       = 402
 Simint screen method    = SIMINT_SCREEN_SCHWARZ 
 Simint prim screen tol  = 1.00e-14
-TinyDFT memory allocation and initialization over, elapsed time = 0.057 (s)
-CMS Simint memory usage = 34.48 MB 
-TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 0.052 (s)
+TinyDFT memory allocation and initialization over, elapsed time = 0.059 (s)
+CMS Simint memory usage = 34.49 MB 
+TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 0.055 (s)
 Screened unique shell pairs: 5397 out of 63504 (density = 8.50%)
+111
+222
 Eliminating linear dependency in overlap matrix S: 0 eigenvalues < 1.00e-05 are removed
 HFSCF iteration started...
 Nuclear repulsion energy = 4593.0806578843
 --------------- Iteration 0 ---------------
-* Iteration runtime     = 0.669 (s)
-* Energy = -1919.5856932823
+* Iteration runtime     = 0.698 (s)
+* Energy = -1919.5856932934
 --------------- Iteration 1 ---------------
-* Iteration runtime     = 0.678 (s)
-* Energy = -1929.7847738039, delta = -1.019908e+01
+* Iteration runtime     = 0.710 (s)
+* Energy = -1929.7847738043, delta = -1.019908e+01
 The Eoe, Ete and Eex are respectively -11752.063745, 5525.792999 and -296.594686
 --------------- Iteration 2 ---------------
-* Iteration runtime     = 0.701 (s)
+* Iteration runtime     = 0.732 (s)
 * Energy = -1930.0850187194, delta = -3.002449e-01
 The Eoe, Ete and Eex are respectively -11758.960711, 5532.424233 and -296.629198
 --------------- Iteration 3 ---------------
-* Iteration runtime     = 0.753 (s)
+* Iteration runtime     = 0.673 (s)
 * Energy = -1930.1033055840, delta = -1.828686e-02
 The Eoe, Ete and Eex are respectively -11758.116323, 5531.468571 and -296.536212
 --------------- Iteration 4 ---------------
-* Iteration runtime     = 0.712 (s)
+* Iteration runtime     = 0.737 (s)
 * Energy = -1930.1045455602, delta = -1.239976e-03
 The Eoe, Ete and Eex are respectively -11758.305931, 5531.641832 and -296.521104
 --------------- Iteration 5 ---------------
-* Iteration runtime     = 0.700 (s)
-* Energy = -1930.1045490171, delta = -3.456915e-06
+* Iteration runtime     = 0.668 (s)
+* Energy = -1930.1045490171, delta = -3.456924e-06
 The Eoe, Ete and Eex are respectively -11758.250422, 5531.583354 and -296.518139
 --------------- Iteration 6 ---------------
-* Iteration runtime     = 0.707 (s)
-* Energy = -1930.1045490540, delta = -3.695800e-08
+* Iteration runtime     = 0.696 (s)
+* Energy = -1930.1045490540, delta = -3.696437e-08
 The Eoe, Ete and Eex are respectively -11758.250881, 5531.583734 and -296.518061
 --------------- Iteration 7 ---------------
-* Iteration runtime     = 0.713 (s)
-* Energy = -1930.1045490543, delta = -3.021796e-10
-The Eoe, Ete and Eex are respectively -11758.250910, 5531.583763 and -296.518061
+* Iteration runtime     = 0.707 (s)
+* Energy = -1930.1045490543, delta = -2.921752e-10
+The Eoe, Ete and Eex are respectively -11758.250910, 5531.583764 and -296.518061
 --------------- Iteration 8 ---------------
-* Iteration runtime     = 0.712 (s)
-* Energy = -1930.1045490544, delta = -3.115019e-11
+* Iteration runtime     = 0.685 (s)
+* Energy = -1930.1045490544, delta = -2.819434e-11
 The Eoe, Ete and Eex are respectively -11758.250895, 5531.583749 and -296.518061
-/cm/local/apps/slurm/var/spool/job616266/slurm_script: line 10: 1986622 Killed                  ./mp2test.exe sto-3g/sto-3g.gbs alkane/alkane_152.xyz 50 1e-9 1e-5 alk152_1e5_1e6 1e-6
+[FATAL] H2ERI_build_S1.c, 2880: Failed to allocate arrays for D matrices indexing
+mp2test.exe: H2ERI_build_S1.c:2880: Yindextransform3: Assertion `csrtrans->csrcol != ((void *)0)' failed.
+/cm/local/apps/slurm/var/spool/job618910/slurm_script: line 10: 192554 Aborted                 ./mp2test.exe sto-3g/sto-3g.gbs alkane/alkane_152.xyz 50 1e-9 1e-5 alk152_1e5_1e6 1e-6

@@ -1,0 +1,47 @@
+nbf is 1000
+The total energy with xy is 6.412760503054065
+The number of basis functions is 1000
+The number of nodes is 63
+The scf time is 990.1779899597168
+The number of pairs is 2916
+The number of admissible pairs is 1042
+The number of inadmissible pairs is 389
+The largest number of X is 180477
+The largest number of Y is 236372
+The gap factor is 58.37445707128711
+The number of quadrature points is 8
+The threshold for X and Y is 0.0003
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 990.1779899597168
+Running time for building nodepairs, Ur and Uc is 0.356752872467041
+Running time for building Upinv is 0.0002560615539550781
+Running time for building xy is 5.805418729782104
+Running time for dense index transformation is 27252.81690907478
+Running time for calculating S1 is 169.8113236427307
+Running time for building S5x is 2966.250163078308
+Running time for building S5xy is 5806.716836929321
+Running time for calculating S1S51 is 13434.64583587646
+The total running time is 9227.398005962372
+memory cost for dense ERI is 3734336879
+Equals 28490.72936248779 
+memory cost for half ERI is 2954750976
+Equals 22542.9609375 
+memory cost for ERI is 1042634400
+memory cost for S5xy is 3521232366
+The number of flops for S5x is 1076421116380
+The number of flops for S5y is 2630369381152
+The sums1 energy is 9.122733645929419
+The sums5 energy is 2.709444520860599
+The sums1s5 energy is -2.709708831867977
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 120, 480, 1000
+  * Number of symm-unique screened shell pairs : 47803
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 47803
+  * Kernel matrix size             : 166654
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 7.500000e+00
+  * Number of levels (root at 0)   : 3
+  * Number of nodes                : 63
+  * Number of nodes on each level  : 1, 8, 54

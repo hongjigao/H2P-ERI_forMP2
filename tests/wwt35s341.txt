@@ -1,0 +1,47 @@
+nbf is 875
+The total energy with xy is 5.606488879927271
+The number of basis functions is 875
+The number of nodes is 63
+The scf time is 1789.718748092651
+The number of pairs is 2916
+The number of admissible pairs is 1044
+The number of inadmissible pairs is 387
+The largest number of X is 149965
+The largest number of Y is 196357
+The gap factor is 55.81106082808157
+The number of quadrature points is 8
+The threshold for X and Y is 0.0003
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 1789.718748092651
+Running time for building nodepairs, Ur and Uc is 0.4695329666137695
+Running time for building Upinv is 0.0001149177551269531
+Running time for building xy is 3.772910833358765
+Running time for dense index transformation is 19876.66239881516
+Running time for calculating S1 is 182.6657638549805
+Running time for building S5x is 2777.93895149231
+Running time for building S5xy is 5305.635303735733
+Running time for calculating S1S51 is 10091.23673295975
+The total running time is 7954.398382902145
+memory cost for dense ERI is 2694779786
+Equals 20559.53816223145 
+memory cost for half ERI is 2112276785
+Equals 16115.39295196533 
+memory cost for ERI is 750669655
+memory cost for S5xy is 3139344054
+The number of flops for S5x is 963537752839
+The number of flops for S5y is 2263590143793
+The sums1 energy is 8.141386407197272
+The sums5 energy is 2.534748641958969
+The sums1s5 energy is -2.534823084614485
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 105, 420, 875
+  * Number of symm-unique screened shell pairs : 39422
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 39422
+  * Kernel matrix size             : 138474
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 7.500000e+00
+  * Number of levels (root at 0)   : 3
+  * Number of nodes                : 63
+  * Number of nodes on each level  : 1, 8, 54

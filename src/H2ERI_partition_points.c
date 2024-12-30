@@ -109,8 +109,8 @@ H2E_tree_node_p H2E_bisection_partition_points(
     //    is smaller than the threshold, set current box as a leaf node
     //    changed!
     //if ((node_npts <= max_leaf_points) || (box_size <= max_leaf_size))
-    if ((box_size <= max_leaf_size))
-    //if ((box_size <= max_leaf_size)||(level>=3))
+    //if ((box_size <= max_leaf_size))
+    if ((box_size <= max_leaf_size)||(level>=3))
     {
         H2E_tree_node_p node;
         H2E_tree_node_init(&node, pt_dim);

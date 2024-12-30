@@ -1,36 +1,47 @@
 nbf is 760
-The total energy with xy is 3.451911658469771
+The total energy with xy is 3.451455751797296
 The number of basis functions is 760
-The number of nodes is 121
-The scf time is 148.7394239902496
-The number of pairs is 1792
-The number of admissible pairs is 528
-The number of inadmissible pairs is 336
+The number of nodes is 57
+The scf time is 207.5136590003967
+The number of pairs is 736
+The number of admissible pairs is 192
+The number of inadmissible pairs is 160
 The largest number of X is 305934
 The largest number of Y is 289604
-The gap factor is 28.50143810774055
+The gap factor is 28.50143815567325
 The number of quadrature points is 8
 The threshold for X and Y is 3e-06
 The threshold for ERI is 1e-06
 The threshold for S1 is 1e-06
-Running time for scf is 148.7394239902496
-Running time for building nodepairs, Ur and Uc is 1.006564855575562
-Running time for building Upinv is 0.9591081142425537
-Running time for building xy is 2.115889072418213
-Running time for dense index transformation is 10869.58785104752
-Running time for calculating S1 is 140.4537255764008
-Running time for building S5x is 19168.86822795868
-Running time for building S5xy is 32552.8454990387
-Running time for calculating S1S51 is 3773.229514122009
-The total running time is 7213.089809179306
-memory cost for dense ERI is 1562989904
-Equals 11924.66662597656 
-memory cost for half ERI is 1323305580
-Equals 10096.02035522461 
-memory cost for ERI is 619687213
-memory cost for S5xy is 1847523066
-The number of flops for S5x is 1018790681053
-The number of flops for S5y is 1320026380137
-The sums1 energy is 486.8820732469562
-The sums5 energy is 483.5585174657509
-The sums1s5 energy is -483.4943395271186
+Running time for scf is 207.5136590003967
+Running time for building nodepairs, Ur and Uc is 0.3646790981292725
+Running time for building Upinv is 0.1741969585418701
+Running time for building xy is 2.089387178421021
+Running time for dense index transformation is 15600.19314885139
+Running time for calculating S1 is 179.5361378192902
+Running time for building S5x is 4029.862855195999
+Running time for building S5xy is 7419.284035921097
+Running time for calculating S1S51 is 1897.958622217178
+The total running time is 4180.628520011902
+memory cost for dense ERI is 1826281935
+Equals 13933.42540740967 
+memory cost for half ERI is 1945663250
+Equals 14844.2325592041 
+memory cost for ERI is 1036403280
+memory cost for S5xy is 837083028
+The number of flops for S5x is 478655816621
+The number of flops for S5y is 796236165138
+The sums1 energy is 42.40753440729608
+The sums5 energy is 38.950655369133
+The sums1s5 energy is -38.9533670123159
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 92, 366, 760
+  * Number of symm-unique screened shell pairs : 21588
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 21588
+  * Kernel matrix size             : 87958
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 1.500000e+01
+  * Number of levels (root at 0)   : 4
+  * Number of nodes                : 57
+  * Number of nodes on each level  : 1, 8, 16, 32

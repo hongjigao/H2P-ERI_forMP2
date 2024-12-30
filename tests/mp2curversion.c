@@ -314,9 +314,12 @@ int main(int argc, char **argv)
     
     // Print H2P-ERI statistic info
     H2ERI_print_statistic(h2eri);
-    double thres=1e-5;
-    double thres1=atof(argv[5]);
-    double thres2=10*thres1;
+    
+    double thres1=atof(argv[5]); // X and Y S1 threshold
+    double thres= atof(argv[7]); // ERI threshold
+    //double thres2=10*thres1; // X and Y S5 threshold
+    double thres2=thres1;
+    double thres3=atof(argv[8]); // ERI S1 threshold
     double et = get_wtime_sec();
     printf("The time for SCF is %.3lf (s)\n", et - st);
     double scftime = et - st;
@@ -474,20 +477,21 @@ int main(int argc, char **argv)
     double buildpinv = et - st;
 
     // Step2: Build the dense ERI part
-    
+    int nbfp = h2eri->num_sp_bfp;
     COOmat_p cooh2d;
-    COOmat_init(&cooh2d,nbf*nbf,nbf*nbf);
-    H2ERI_build_COO_fulldensetest(h2eri,cooh2d);
+    COOmat_init(&cooh2d,nbfp,nbf*nbf);
+    H2ERI_build_COO_noderow(h2eri,cooh2d);
     size_t nnz=cooh2d->nnz;
     
     
     COOmat_p cooh2d1;
-    COOmat_init(&cooh2d1,nbf*nbf,nbf*nbf);
+    COOmat_init(&cooh2d1,nbfp,nbf*nbf);
     compresscoo(cooh2d, cooh2d1, thres);
     CSRmat_p csrh2d;
-    CSRmat_init(&csrh2d,nbf*nbf,nbf*nbf);
-
-    Double_COO_to_CSR( nbf*nbf,  cooh2d1->nnz, cooh2d1,csrh2d);
+    CSRmat_init(&csrh2d,nbfp,nbf*nbf);
+    Double_COO_to_CSR( nbfp,  cooh2d1->nnz, cooh2d1,csrh2d);
+    COOmat_destroy(cooh2d);
+    COOmat_destroy(cooh2d1);
     //printf("TestCSRh2d\n");
     //TestCSR(csrh2d);
     et = get_wtime_sec();
@@ -579,17 +583,25 @@ int main(int argc, char **argv)
     double denseindtrans=0;
     double calcs1=0;
     double builds5=0;
+    double builds5x=0;
+    double builds5y=0;
     double calcs51=0;
+    size_t erimem = csrh2d->nnz;
+    size_t mosthalf=0;
     size_t mostdense=0;
     size_t mosts5=0;
-    size_t nflop = 0;
+    size_t mosts5xy=0;
+    size_t nflopx = 0;
+    size_t nflopy = 0;
     double *Cocc_mat = TinyDFT->Cocc_mat;
     double *Cvir_mat = TinyDFT->Cvir_mat;
     double *orbitenergy_array = TinyDFT->orbitenergy_array;
-    double thresprod = atof(argv[7]);
     // Step 4: Do the MP2 calculation in the for loop
-    double sumenergy = 0;
+    double sumenergyxy = 0;
     double largerate = 0;
+    double sums1 = 0;
+    double sums5 = 0;
+    double sums1s5 = 0;
     #pragma omp parallel for
     for(int quad = 0;quad<n;quad++)
     {
@@ -601,9 +613,11 @@ int main(int argc, char **argv)
         st1 = get_wtime_sec();
         double *tmpD;
         tmpD = (double *) malloc(sizeof(double) * nbf * nbf);
+        ASSERT_PRINTF(tmpD, "Failed to allocate memory for tmpD\n");
         memset(tmpD, 0, sizeof(double) * nbf * nbf);
         double* tmpDC;
         tmpDC = (double *) malloc(sizeof(double) * nbf * nbf);
+        ASSERT_PRINTF(tmpDC, "Failed to allocate memory for tmpDC\n");
         memset(tmpDC, 0, sizeof(double) * nbf * nbf);
         int n_occ=TinyDFT->n_occ;
         int n_vir=TinyDFT->n_vir;
@@ -656,17 +670,6 @@ int main(int argc, char **argv)
 
         
         buildxy += et1-st1;
-        size_t nlz=0;
-        for(size_t i=0;i<csrden->nnz;i++)
-            for(size_t j=0;j<csrdc->nnz;j++)
-            {
-                if(fabs(csrden->csrval[i]*csrdc->csrval[j])>csrden->maxv*csrdc->maxv*thresprod)
-                    nlz+=1;
-            }
-        double lgrate = nlz*1.0/(csrden->nnz*csrdc->nnz);
-        printf("The number of large values in quad %d is %ld, rate %.16g\n",quad, nlz,nlz*1.0/(csrden->nnz*csrdc->nnz));
-        if(lgrate>largerate) largerate=lgrate;
-
         COOmat_p cood5;
         COOmat_init(&cood5,nbf,nbf);
         cood5->maxv = maxx;
@@ -686,28 +689,30 @@ int main(int argc, char **argv)
         CSRmat_p csrdc5;
         CSRmat_init(&csrdc5,nbf,nbf);
         Double_COO_to_CSR( nbf,  ndc5, coodc5,csrdc5);
+        COOmat_destroy(cood5);
+        COOmat_destroy(coodc5);
+        COOmat_destroy(cooden);
+        COOmat_destroy(coodc);
         CSRmat_p gdle;
-        CSRmat_init(&gdle,nbf*nbf,nbf*nbf);
+        CSRmat_init(&gdle,nbfp,nbf*nbf);
         //printf("now do x index transformation\n");
         st1 = get_wtime_sec();
-        Xindextransform3(nbf,csrh2d,csrden,gdle);
+        Xindextransform5(nbf,csrh2d,csrden,gdle,thres3);
         //printf("Finished X index transformation\n");
-        
+        if(gdle->nnz>mosthalf) mosthalf=gdle->nnz;
         CSRmat_p gdls;
-        CSRmat_init(&gdls,nbf*nbf,nbf*nbf);
+        CSRmat_init(&gdls,nbfp,nbfp);
             
         //printf("now do y index transformation\n");
-        Yindextransform3(nbf,gdle,csrdc,gdls);
+        Yindextransform6(nbf,h2eri,gdle,csrdc,gdls,thres3);
         et1 = get_wtime_sec();
-        //printf("Dense Index transformation time is %.16g\n",et1-st1);    
+        printf("Dense Index transformation time is %.16g\n",et1-st1);    
         if(gdls->nnz>mostdense) mostdense=gdls->nnz;
         denseindtrans += et1-st1;
+        CSRmat_destroy(gdle);
         st1 = get_wtime_sec();
-        CSRmat_p colgdls;
-        CSRmat_init(&colgdls,nbf*nbf,nbf*nbf);
-        CSR_to_CSC(nbf*nbf, gdls,colgdls);
         double energy;
-        energy = Calc_S1energy(gdls,colgdls);
+        energy = Calcs1selfnode(h2eri,gdls);
         printf("The S1 energy is %.16g\n",energy);
         et1 = get_wtime_sec();
         //printf("The time for calculating the S1 energy is %.3lf (s)\n", et1 - st1);
@@ -715,69 +720,88 @@ int main(int argc, char **argv)
         if(h2eri->n_r_adm_pair==0)
         {
             printf("The total energy in quadrature %d is %.16g\n",quad,energy);
-            sumenergy += omega_val*energy;
+            sumenergyxy += omega_val*energy;
             continue;
         }
         // Now we need to build the column basis set for every node pair including the inadmissible and self
         st1 = get_wtime_sec();
         //printf("Now we are going to build the S51cbasis\n");
-        double s51energy=0;
-        double s1s5 = 0;
-        sumenergy += omega_val*energy;
-        
-        H2E_dense_mat_p *S51cbasis;
-        S51cbasis = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs*2);
-        size_t nfq = H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrd5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasis,Upinv);
-        et1 = get_wtime_sec();
-        printf("build S5 time in quad %d is %.16g\n",quad, et1-st1);
-        builds5 += et1-st1;
-        st1 = get_wtime_sec();
-        nflop += nfq;
-
-
-        
-        s51energy = calc_S51_self_interaction(h2eri, Urbasis, S51cbasis, npairs, pair1st, pair2nd);
-        printf("The S51 energy is %.16g\n",s51energy);
-
-
-        
-        
-        s1s5 = calc_S1S51(gdls,h2eri, Urbasis,S51cbasis, nodepairs, nodepairidx);
-        printf("The S1S51 energy is %.16g\n",s1s5);
-        printf("The total energy in this quadrature point is %.16g\n",energy+2*s1s5+s51energy);
-        sumenergy += omega_val*(2*s1s5+s51energy);
-        et1 = get_wtime_sec();
-        printf("The time for calculating the S1S51 energy is %.3lf (s)\n", et1 - st1);
-        calcs51 += et1-st1;
-        size_t mosts5tmp=0;
-        for(int i=0;i<npairs;i++)
-        {
-            if(S51cbasis[i]!=NULL)
-            {
-                mosts5tmp += S51cbasis[i]->ncol*S51cbasis[i]->nrow;
-                H2E_dense_mat_destroy(&S51cbasis[i]);
-            }
-        }
-        if(mosts5tmp>mosts5) mosts5=mosts5tmp;
+        double s51energyxy=0;
+        double s1s5xy = 0;
+        sumenergyxy += omega_val*energy;
+        sums1 += omega_val*energy;
         free(tmpD);
         free(tmpDC);
-        /*
-        COOmat_destroy(cooden);
+        printf("Now we are going to build the S51cbasisxy in quad %d\n",quad);
+        st1 = get_wtime_sec();
+        H2E_dense_mat_p *S51cbasisx;
+        S51cbasisx = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs*2);
+        size_t nfqx = H2ERI_build_S5_X(h2eri,Urbasis,Ucbasis,csrd5,npairs,pair1st,pair2nd,nodepairs,nodeadmpairs,nodeadmpairidx,S51cbasisx,Upinv);
+        printf("Finish x build y in quad %d\n",quad);
+        et1 = get_wtime_sec();
+        printf("build S5x time in quad %d is %.16g\n",quad, et1-st1);
+        builds5x += et1-st1;
+        st1 = get_wtime_sec();
+        H2E_dense_mat_p *S51cbasisy;
+        S51cbasisy = (H2E_dense_mat_p *) malloc(sizeof(H2E_dense_mat_p) * npairs);
+        size_t nfqy = H2ERI_build_S5_Ytest(h2eri,Urbasis,S51cbasisx,csrdc5,npairs,pair1st,pair2nd,nodepairs,nodepairidx,S51cbasisy,Upinv);
+        et1 = get_wtime_sec();
+        printf("build S5y time in quad %d is %.16g\n",quad, et1-st1);
+
+        builds5y += et1-st1;
+        st1 = get_wtime_sec();
+        s51energyxy = calc_S51_self_interaction(h2eri, Urbasis, S51cbasisy, npairs, pair1st, pair2nd);
+        s1s5xy = calc_S1S51_bothnode(gdls,h2eri, Urbasis,S51cbasisy, nodepairs, nodepairidx);
+        et1 = get_wtime_sec();
+        calcs51 += et1-st1;
+        printf("The S51xy energy in quad %d is %.16g\n",quad,s51energyxy);
+        printf("The S1S51xy energy in quad %d is %.16g\n",quad,s1s5xy);
+        sumenergyxy += omega_val*(2*s1s5xy+s51energyxy);
+        sums5 += omega_val*s51energyxy;
+        sums1s5 += omega_val*s1s5xy;
+        nflopx += nfqx;
+        nflopy += nfqy;
+
+        
+        
+        //printf("Stat Finish quad %d\n",quad);
+        size_t mosts5tmp=0;
+        size_t mosts5tmpxy=0;
+        
+        
+        
+        for(int i=0;i<2*npairs;i++)
+        {
+            if(S51cbasisx[i]!=NULL)
+            {
+                mosts5tmpxy += S51cbasisx[i]->ncol*S51cbasisx[i]->nrow;
+                H2E_dense_mat_destroy(&S51cbasisx[i]);
+            }
+        }
+        for(int i=0;i<npairs;i++)
+        {    
+            if(S51cbasisy[i]!=NULL)
+            {
+                mosts5tmpxy += S51cbasisy[i]->ncol*S51cbasisy[i]->nrow;
+                H2E_dense_mat_destroy(&S51cbasisy[i]);
+            }
+        }
+        if(mosts5tmpxy>mosts5xy) mosts5xy=mosts5tmpxy;
+        printf("Finish1 quad %d\n",quad);
+        
         CSRmat_destroy(csrden);
-        COOmat_destroy(coodc);
         CSRmat_destroy(csrdc);
-        COOmat_destroy(cood5);
         CSRmat_destroy(csrd5);
-        CSRmat_destroy(gdle);
-        CSRmat_destroy(gdls);
-        CSRmat_destroy(colgdls);
-        COOmat_destroy(coodc5);
         CSRmat_destroy(csrdc5);
-        */
+        CSRmat_destroy(gdls);
+        printf("Finish quad %d\n",quad);
+
+        
     }
     
     
-    printf("The total energy is %.16g\n",sumenergy);
+    //printf("The total energy is %.16g\n",sumenergy);
+    builds5y += builds5x;
     double tmpval=0;
     // Now write the admissible blocks of ERI tensor into a file
     
@@ -804,7 +828,7 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     fprintf(fileou, "nbf is %d\n",nbf);
-    fprintf(fileou, "The total energy is %.16g\n",sumenergy);
+    fprintf(fileou, "The total energy with xy is %.16g\n",sumenergyxy);
     fprintf(fileou, "The number of basis functions is %d\n",nbf);
     fprintf(fileou, "The number of nodes is %d\n",h2eri->n_node);
     fprintf(fileou, "The scf time is %.16g\n",scftime);
@@ -816,22 +840,47 @@ int main(int argc, char **argv)
     fprintf(fileou, "The gap factor is %.16g\n",gap);
     fprintf(fileou, "The number of quadrature points is %d\n",n);
     fprintf(fileou, "The threshold for X and Y is %.16g\n",thres1);
-    fprintf(fileou, "The threshold for the product of X and Y is %.16g\n",thresprod);
-    fprintf(fileou, "The largest rate of large values is %.16g\n",largerate);
+    fprintf(fileou, "The threshold for ERI is %.16g\n",thres);
+    fprintf(fileou, "The threshold for S1 is %.16g\n",thres3);
     fprintf(fileou,"Running time for scf is %.16g\n",scftime);
     fprintf(fileou, "Running time for building nodepairs, Ur and Uc is %.16g\n",buildnodepairs);
     fprintf(fileou, "Running time for building Upinv is %.16g\n",buildpinv);
     fprintf(fileou, "Running time for building xy is %.16g\n",buildxy);
     fprintf(fileou, "Running time for dense index transformation is %.16g\n",denseindtrans);
     fprintf(fileou, "Running time for calculating S1 is %.16g\n",calcs1);
-    fprintf(fileou, "Running time for building S5 is %.16g\n",builds5);
+    fprintf(fileou, "Running time for building S5x is %.16g\n",builds5x);
+    fprintf(fileou, "Running time for building S5xy is %.16g\n",builds5y);
     fprintf(fileou, "Running time for calculating S1S51 is %.16g\n",calcs51);
     fprintf(fileou, "The total running time is %.16g\n",ett-stt);
     fprintf(fileou, "memory cost for dense ERI is %ld\n",mostdense);
     fprintf(fileou, "Equals %.16g \n", mostdense*DTYPE_MB);
-    fprintf(fileou, "memory cost for S5 is %ld\n",mosts5);
-    fprintf(fileou, "Equals %.16g \n", mosts5*DTYPE_MB);
-    fprintf(fileou, "The number of flops for S5 is %ld\n",nflop);
+    fprintf(fileou, "memory cost for half ERI is %ld\n",mosthalf);
+    fprintf(fileou, "Equals %.16g \n", mosthalf*DTYPE_MB);
+    fprintf(fileou, "memory cost for ERI is %ld\n",erimem);
+    fprintf(fileou, "memory cost for S5xy is %ld\n",mosts5xy);
+    fprintf(fileou, "The number of flops for S5x is %ld\n",nflopx);
+    fprintf(fileou, "The number of flops for S5y is %ld\n",nflopy);
+    fprintf(fileou,"The sums1 energy is %.16g\n",sums1);
+    fprintf(fileou,"The sums5 energy is %.16g\n",sums5);
+    fprintf(fileou,"The sums1s5 energy is %.16g\n",sums1s5);
+    fprintf(fileou,"================ H2ERI molecular system info ================\n");
+    fprintf(fileou,"  * Number of atoms / shells / basis functions : %d, %d, %d\n", h2eri->natom, h2eri->nshell, h2eri->num_bf);
+    fprintf(fileou,"  * Number of symm-unique screened shell pairs : %d\n", h2eri->num_sp);
+    fprintf(fileou,"==================== H2ERI H2 tree info ====================\n");
+    fprintf(fileou,"  * Number of points               : %d\n", h2eri->n_point);
+    fprintf(fileou,"  * Kernel matrix size             : %d\n", h2eri->krnl_mat_size);
+    fprintf(fileou,"  * Maximum points in a leaf node  : %d\n", h2eri->max_leaf_points);
+    fprintf(fileou,"  * Maximum leaf node box size     : %e\n", h2eri->max_leaf_size);
+    fprintf(fileou,"  * Number of levels (root at 0)   : %d\n", h2eri->max_level+1);
+    fprintf(fileou,"  * Number of nodes                : %d\n", h2eri->n_node);
+    fprintf(fileou,"  * Number of nodes on each level  : ");
+    for (int i = 0; i < h2eri->max_level; i++) 
+        fprintf(fileou,"%d, ", h2eri->level_n_node[i]);
+    fprintf(fileou,"%d\n", h2eri->level_n_node[h2eri->max_level]);
+    printf("  * Minimum admissible pair level  : %d\n", h2eri->min_adm_level);
+    printf("  * Number of reduced adm. pairs   : %d\n", h2eri->n_r_adm_pair);
+    printf("  * Number of reduced inadm. pairs : %d\n", h2eri->n_r_inadm_pair);
+
     // File operations here (e.g., reading or writing)
     printf("File '%s' opened successfully.\n", outname);
 

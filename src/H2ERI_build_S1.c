@@ -477,6 +477,7 @@ void H2ERI_build_COO_noderow(H2ERI_p h2eri , COOmat_p coomat)
     ASSERT_PRINTF(nodenrow != NULL, "Failed to allocate arrays for D matrices indexing\n");
     memset(nodenrow, 0, sizeof(int) * (n_node));
     int countleaf=0;
+    printf("Start to count the number of points in each node\n");
     //Count the number of points in each node
     for (int i = 0; i < n_node; i++)
     {
@@ -562,8 +563,8 @@ void H2ERI_build_COO_noderow(H2ERI_p h2eri , COOmat_p coomat)
         //       int node_npts = pt_e - pt_s + 1;
         int Di_nrow = D_nrow[i];
         int Di_ncol = D_ncol[i];
-        int dspot=0;
-        int pointspot=0;
+        size_t dspot=0;
+        size_t pointspot=0;
         H2E_dense_mat_p Di = c_D_blks[i];
         rowspot=rowD+numdata;
         colspot=colD+numdata;
@@ -636,8 +637,8 @@ void H2ERI_build_COO_noderow(H2ERI_p h2eri , COOmat_p coomat)
         //printf("Full rows and columns are %d and %d\n",fullnrow[node0],fullnrow[node1]);
         //printf("The number of elements is %d\n",fullnrow[node0]*fullnrow[node1]);
         H2E_dense_mat_p Di = c_D_blks[i+n_leaf_node];
-        int dspot=0;
-        int pointspot=0;
+        size_t dspot=0;
+        size_t pointspot=0;
         rowspot=rowN+numdataN;
         colspot=colN+numdataN;
         Dataspot=DataN+numdataN;

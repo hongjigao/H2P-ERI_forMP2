@@ -1,3 +1,75 @@
 INFO: use H2ERI J (relerr 1.00e-09), HF exchange K
 CMS_import_basis() line 455 Warning: no valid basis type in gbs file... assuming Simint
-/cm/local/apps/slurm/var/spool/job718780/slurm_script: line 10: 555273 Illegal instruction     (core dumped) ./mp2testxyboth.exe cc-pVDZ/cc-pVDZ.gbs alkane/alkane_62.xyz 50 1e-9 1e-6 mpccboth62job 1e-6 1e-6
+normalization() line 68 Warning: NOT performing normalization for CARTESIAN
+CMS_import_guess() line 682 Found SAD file for H
+CMS_import_guess() line 712 Using SAD file for H
+CMS_import_guess() line 682 Found SAD file for C
+CMS_import_guess() line 712 Using SAD file for C
+CMS_import_guess() line 682 Found SAD file for N
+CMS_import_guess() line 712 Using SAD file for N
+CMS_import_guess() line 682 Found SAD file for O
+CMS_import_guess() line 712 Using SAD file for O
+CMS_import_guess() line 682 Found SAD file for P
+CMS_import_guess() line 712 Using SAD file for P
+CMS_import_guess() line 682 Found SAD file for S
+CMS_import_guess() line 712 Using SAD file for S
+CMS basis set memory usage = 0.11 MB
+Job information:
+    basis set       = sto-3g
+    molecule        = alkane_152.xyz
+    atoms           = 152
+    shells          = 252
+    basis functions = 352
+    occupied orbits = 201
+    virtual orbits  = 151
+    charge          = 0
+    electrons       = 402
+Simint screen method    = SIMINT_SCREEN_SCHWARZ 
+Simint prim screen tol  = 1.00e-14
+TinyDFT memory allocation and initialization over, elapsed time = 0.009 (s)
+CMS Simint memory usage = 34.13 MB 
+TinyDFT shell pair screening over, tol = 1.00e-11, elapsed time = 0.051 (s)
+Screened unique shell pairs: 5397 out of 63504 (density = 8.50%)
+111
+222
+Eliminating linear dependency in overlap matrix S: 0 eigenvalues < 1.00e-05 are removed
+HFSCF iteration started...
+Nuclear repulsion energy = 4593.0806578843
+--------------- Iteration 0 ---------------
+* Iteration runtime     = 0.678 (s)
+* Energy = -1919.5856932944
+--------------- Iteration 1 ---------------
+* Iteration runtime     = 0.685 (s)
+* Energy = -1929.7847738030, delta = -1.019908e+01
+The Eoe, Ete and Eex are respectively -11752.063745, 5525.792999 and -296.594686
+--------------- Iteration 2 ---------------
+* Iteration runtime     = 0.701 (s)
+* Energy = -1930.0850187181, delta = -3.002449e-01
+The Eoe, Ete and Eex are respectively -11758.960711, 5532.424233 and -296.629198
+--------------- Iteration 3 ---------------
+* Iteration runtime     = 0.711 (s)
+* Energy = -1930.1033055826, delta = -1.828686e-02
+The Eoe, Ete and Eex are respectively -11758.116323, 5531.468571 and -296.536212
+--------------- Iteration 4 ---------------
+* Iteration runtime     = 0.719 (s)
+* Energy = -1930.1045455588, delta = -1.239976e-03
+The Eoe, Ete and Eex are respectively -11758.305931, 5531.641832 and -296.521104
+--------------- Iteration 5 ---------------
+* Iteration runtime     = 0.689 (s)
+* Energy = -1930.1045490157, delta = -3.456922e-06
+The Eoe, Ete and Eex are respectively -11758.250422, 5531.583354 and -296.518139
+--------------- Iteration 6 ---------------
+* Iteration runtime     = 0.727 (s)
+* Energy = -1930.1045490527, delta = -3.695891e-08
+The Eoe, Ete and Eex are respectively -11758.250881, 5531.583734 and -296.518061
+--------------- Iteration 7 ---------------
+* Iteration runtime     = 0.731 (s)
+* Energy = -1930.1045490530, delta = -2.928573e-10
+The Eoe, Ete and Eex are respectively -11758.250910, 5531.583764 and -296.518061
+--------------- Iteration 8 ---------------
+* Iteration runtime     = 0.690 (s)
+* Energy = -1930.1045490530, delta = -3.433342e-11
+The Eoe, Ete and Eex are respectively -11758.250895, 5531.583749 and -296.518061
+[FATAL] H2ERI_build_S1.c, 2880: Failed to allocate arrays for D matrices indexing
+mp2test.exe: H2ERI_build_S1.c:2880: Yindextransform3: Assertion `csrtrans->csrcol != ((void *)0)' failed.
+/cm/local/apps/slurm/var/spool/job639082/slurm_script: line 10: 196810 Aborted                 (core dumped) ./mp2test.exe sto-3g/sto-3g.gbs alkane/alkane_152.xyz 50 1e-9 1e-5 testalk152 1e-6

@@ -1,0 +1,47 @@
+nbf is 1750
+The total energy with xy is 11.22630862344665
+The number of basis functions is 1750
+The number of nodes is 66
+The scf time is 2538.554670095444
+The number of pairs is 3249
+The number of admissible pairs is 1177
+The number of inadmissible pairs is 419
+The largest number of X is 348105
+The largest number of Y is 470906
+The gap factor is 59.02710433573245
+The number of quadrature points is 8
+The threshold for X and Y is 0.0003
+The threshold for ERI is 1e-06
+The threshold for S1 is 1e-06
+Running time for scf is 2538.554670095444
+Running time for building nodepairs, Ur and Uc is 0.8065559864044189
+Running time for building Upinv is 0.0001308917999267578
+Running time for building xy is 42.21743083000183
+Running time for dense index transformation is 122159.6723883152
+Running time for calculating S1 is 2153.799796104431
+Running time for building S5x is 8428.981264591217
+Running time for building S5xy is 16565.84572315216
+Running time for calculating S1S51 is 42131.42352628708
+The total running time is 37379.74356102943
+memory cost for dense ERI is 11802052816
+Equals 90042.51721191406 
+memory cost for half ERI is 9209019210
+Equals 70259.2407989502 
+memory cost for ERI is 3113896893
+memory cost for S5xy is 7835250390
+The number of flops for S5x is 2656803132984
+The number of flops for S5y is 6295501612928
+The sums1 energy is 16.00694857577496
+The sums5 energy is 4.78152236956088
+The sums1s5 energy is -4.781081160944593
+================ H2ERI molecular system info ================
+  * Number of atoms / shells / basis functions : 210, 840, 1750
+  * Number of symm-unique screened shell pairs : 98381
+==================== H2ERI H2 tree info ====================
+  * Number of points               : 98381
+  * Kernel matrix size             : 330685
+  * Maximum points in a leaf node  : 300
+  * Maximum leaf node box size     : 1.500000e+01
+  * Number of levels (root at 0)   : 3
+  * Number of nodes                : 66
+  * Number of nodes on each level  : 1, 8, 57
